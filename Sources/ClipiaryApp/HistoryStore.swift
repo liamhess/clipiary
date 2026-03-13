@@ -24,10 +24,10 @@ final class HistoryStore {
     var filteredItems: [HistoryItem] {
         let normalizedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalizedQuery.isEmpty else {
-            return orderedItems(items)
+            return recencyOrderedItems(items)
         }
 
-        return orderedItems(items).filter { item in
+        return recencyOrderedItems(items).filter { item in
             item.text.localizedCaseInsensitiveContains(normalizedQuery) ||
             item.appName.localizedCaseInsensitiveContains(normalizedQuery) ||
             (item.bundleID?.localizedCaseInsensitiveContains(normalizedQuery) ?? false)
@@ -39,7 +39,8 @@ final class HistoryStore {
             return
         }
 
-        items = (try? decoder.decode([HistoryItem].self, from: data)) ?? []
+        let decodedItems = (try? decoder.decode([HistoryItem].self, from: data)) ?? []
+        items = recencyOrderedItems(decodedItems)
     }
 
     func add(_ item: HistoryItem, limit: Int) {
@@ -74,22 +75,18 @@ final class HistoryStore {
         }
 
         items[index].isFavorite.toggle()
-        items = orderedItems(items)
         persist()
     }
 
     private func trim(limit: Int) {
         let favorites = items.filter(\.isFavorite)
-        let nonFavorites = items.filter { !$0.isFavorite }
-        items = favorites + Array(nonFavorites.prefix(max(0, limit - favorites.count)))
+        let nonFavorites = recencyOrderedItems(items.filter { !$0.isFavorite })
+        let retainedItems = favorites + Array(nonFavorites.prefix(max(0, limit - favorites.count)))
+        items = recencyOrderedItems(retainedItems)
     }
 
-    private func orderedItems(_ source: [HistoryItem]) -> [HistoryItem] {
+    private func recencyOrderedItems(_ source: [HistoryItem]) -> [HistoryItem] {
         source.sorted {
-            if $0.isFavorite != $1.isFavorite {
-                return $0.isFavorite && !$1.isFavorite
-            }
-
             return $0.createdAt > $1.createdAt
         }
     }
