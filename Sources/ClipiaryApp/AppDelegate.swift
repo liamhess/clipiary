@@ -117,14 +117,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSSear
         }
 
         for item in items.prefix(30) {
-            let menuItem = NSMenuItem(
-                title: historyMenuTitle(for: item),
-                action: #selector(restoreHistoryItem(_:)),
-                keyEquivalent: ""
-            )
-            menuItem.target = self
-            menuItem.representedObject = item.id.uuidString
-            historyMenu.addItem(menuItem)
+            historyMenu.addItem(historyMenuItem(for: item))
         }
 
         historyMenu.addItem(.separator())
@@ -150,6 +143,44 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSSear
         let title = item.displayText.isEmpty ? "Untitled" : item.displayText
         let compact = title.count > 60 ? String(title.prefix(57)) + "..." : title
         return "\(pinPrefix)\(sourcePrefix)\(compact)"
+    }
+
+    private func historyMenuItem(for item: HistoryItem) -> NSMenuItem {
+        let menuItem = NSMenuItem(title: historyMenuTitle(for: item), action: #selector(restoreHistoryItem(_:)), keyEquivalent: "")
+        menuItem.target = self
+        menuItem.representedObject = item.id.uuidString
+
+        let submenu = NSMenu(title: historyMenuTitle(for: item))
+        submenu.autoenablesItems = false
+
+        let restoreItem = NSMenuItem(title: "Copy to Clipboard", action: #selector(restoreHistoryItem(_:)), keyEquivalent: "")
+        restoreItem.target = self
+        restoreItem.representedObject = item.id.uuidString
+        submenu.addItem(restoreItem)
+
+        let pinTitle = item.isPinned ? "Unpin" : "Pin"
+        let pinItem = NSMenuItem(title: pinTitle, action: #selector(togglePinnedHistoryItem(_:)), keyEquivalent: "")
+        pinItem.target = self
+        pinItem.representedObject = item.id.uuidString
+        submenu.addItem(pinItem)
+
+        let deleteItem = NSMenuItem(title: "Delete", action: #selector(deleteHistoryItem(_:)), keyEquivalent: "")
+        deleteItem.target = self
+        deleteItem.representedObject = item.id.uuidString
+        submenu.addItem(deleteItem)
+
+        submenu.addItem(.separator())
+        let detailItem = NSMenuItem(title: detailTitle(for: item), action: nil, keyEquivalent: "")
+        detailItem.isEnabled = false
+        submenu.addItem(detailItem)
+
+        menuItem.submenu = submenu
+        return menuItem
+    }
+
+    private func detailTitle(for item: HistoryItem) -> String {
+        let source = item.source == .autoSelect ? "Autoselect" : "Clipboard"
+        return "\(item.appName) • \(source)"
     }
 
     private func historySearchContainer() -> NSView {
@@ -224,14 +255,41 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSSear
 
     @objc
     private func restoreHistoryItem(_ sender: NSMenuItem) {
-        guard let identifier = sender.representedObject as? String,
-              let uuid = UUID(uuidString: identifier),
-              let item = appState.history.items.first(where: { $0.id == uuid }) else {
+        guard let item = historyItem(from: sender) else {
             return
         }
 
         appState.restore(item)
         rebuildMenus()
+    }
+
+    @objc
+    private func togglePinnedHistoryItem(_ sender: NSMenuItem) {
+        guard let item = historyItem(from: sender) else {
+            return
+        }
+
+        appState.history.togglePin(item)
+        rebuildMenus()
+    }
+
+    @objc
+    private func deleteHistoryItem(_ sender: NSMenuItem) {
+        guard let item = historyItem(from: sender) else {
+            return
+        }
+
+        appState.history.delete(item)
+        rebuildMenus()
+    }
+
+    private func historyItem(from sender: NSMenuItem) -> HistoryItem? {
+        guard let identifier = sender.representedObject as? String,
+              let uuid = UUID(uuidString: identifier) else {
+            return nil
+        }
+
+        return appState.history.items.first(where: { $0.id == uuid })
     }
 
     @objc

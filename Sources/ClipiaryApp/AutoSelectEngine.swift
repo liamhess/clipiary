@@ -54,9 +54,6 @@ final class AutoSelectEngine {
 
     private func handleFrontmostAppChange(_ app: NSRunningApplication?) {
         observer.attach(to: app)
-        if permissionManager.isTrusted {
-            _ = ThirdPartyAccessibilityActivator.enableIfSupported(for: app)
-        }
         scheduleRefresh(delay: 0.2)
     }
 
