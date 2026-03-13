@@ -36,19 +36,7 @@ struct PanelRootView: View {
                 Text("Clipiary")
                     .font(.system(size: 13, weight: .semibold))
                 Spacer()
-                Text(statusSummary)
-                    .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.secondary)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(
-                        Capsule(style: .continuous)
-                            .fill(panelFill)
-                    )
             }
-            Text("Clipboard history first. Capture settings stay secondary.")
-                .font(.system(size: 11))
-                .foregroundStyle(.secondary)
 
             tabBar
         }
@@ -341,19 +329,6 @@ struct PanelRootView: View {
 
     private var hoverFill: Color {
         Color.accentColor.opacity(0.09)
-    }
-
-    private var statusSummary: String {
-        switch (appState.settings.isClipboardMonitoringEnabled, appState.settings.isAutoSelectEnabled) {
-        case (true, true):
-            return "Clipboard + Select"
-        case (true, false):
-            return "Clipboard Only"
-        case (false, true):
-            return "Select Only"
-        case (false, false):
-            return "Paused"
-        }
     }
 
     private var historyItems: [HistoryItem] {
