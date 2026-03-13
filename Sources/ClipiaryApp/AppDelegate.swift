@@ -4,7 +4,6 @@ import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
-    private let favoriteShortcutKeyCode: UInt16 = 3
     private var statusSyncTimer: Timer?
     private var localKeyMonitor: Any?
     private var suppressedKeyUps = Set<UInt16>()
@@ -69,9 +68,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         let toggleFavoriteItem = NSMenuItem(
             title: "Toggle Favorite",
             action: #selector(toggleFavoriteCommand),
-            keyEquivalent: "f"
+            keyEquivalent: "d"
         )
-        toggleFavoriteItem.keyEquivalentModifierMask = [.command, .shift]
+        toggleFavoriteItem.keyEquivalentModifierMask = [.command]
         toggleFavoriteItem.target = self
         appMenu.addItem(toggleFavoriteItem)
 

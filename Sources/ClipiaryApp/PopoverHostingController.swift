@@ -30,7 +30,7 @@ final class PopoverHostingController: NSHostingController<AnyView> {
             return true
         }
 
-        if modifiers == [.command, .shift], normalizedCharacters == "f" {
+        if modifiers == .command, normalizedCharacters == "d" {
             appState.toggleFavoriteSelectedItem()
             return true
         }
