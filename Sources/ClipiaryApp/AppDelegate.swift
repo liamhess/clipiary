@@ -101,7 +101,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         popover.behavior = .transient
         popover.animates = true
         popover.delegate = self
-        popover.contentSize = NSSize(width: 376, height: 520)
+        popover.contentSize = NSSize(width: 376, height: 600)
         popover.contentViewController = PopoverHostingController(
             appState: appState,
             onClose: { [weak self] in
