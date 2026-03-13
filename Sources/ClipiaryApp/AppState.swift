@@ -76,7 +76,7 @@ final class AppState {
         let baseItems = filteredItems()
         switch tab {
         case .history:
-            return baseItems.filter { !$0.isFavorite }
+            return baseItems
         case .favorites:
             return baseItems.filter(\.isFavorite)
         }
