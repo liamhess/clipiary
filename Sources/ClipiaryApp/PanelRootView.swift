@@ -103,13 +103,8 @@ struct PanelRootView: View {
                 }
             } label: {
                 HStack(spacing: 10) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Settings")
-                            .font(.system(size: 12, weight: .semibold))
-                        Text(settingsSummary)
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundStyle(.secondary)
-                    }
+                    Text("Settings")
+                        .font(.system(size: 12, weight: .semibold))
                     Spacer()
                     Image(systemName: settingsExpanded ? "chevron.down" : "chevron.right")
                         .font(.system(size: 10, weight: .bold))
@@ -373,23 +368,6 @@ struct PanelRootView: View {
     private func rowBackground(for item: HistoryItem) -> some View {
         RoundedRectangle(cornerRadius: 8, style: .continuous)
             .fill(rowFill(for: item))
-    }
-
-    private var settingsSummary: String {
-        let captureMode = {
-            if appState.settings.isClipboardMonitoringEnabled && appState.settings.isAutoSelectEnabled {
-                return "Clipboard + autoselect"
-            }
-            if appState.settings.isClipboardMonitoringEnabled {
-                return "Clipboard only"
-            }
-            if appState.settings.isAutoSelectEnabled {
-                return "Autoselect only"
-            }
-            return "Capture paused"
-        }()
-
-        return "\(captureMode), shortcut \(appState.settings.globalShortcut.displayString)"
     }
 
     private var panelBackground: some View {
