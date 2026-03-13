@@ -19,7 +19,8 @@ final class AppState {
     let permissionManager = AccessibilityPermissionManager()
     var selectedTab: PopoverTab = .history
     var searchQuery = ""
-    var selectedHistoryItemID: HistoryItem.ID?
+    private var selectedHistoryTabItemID: HistoryItem.ID?
+    private var selectedFavoritesTabItemID: HistoryItem.ID?
     var isRecordingShortcut = false
     private(set) var searchFocusRequestID = 0
 
@@ -70,6 +71,25 @@ final class AppState {
 
     var activeItems: [HistoryItem] {
         selectedTab == .history ? historyItems : favoriteItems
+    }
+
+    var selectedHistoryItemID: HistoryItem.ID? {
+        get {
+            switch selectedTab {
+            case .history:
+                selectedHistoryTabItemID
+            case .favorites:
+                selectedFavoritesTabItemID
+            }
+        }
+        set {
+            switch selectedTab {
+            case .history:
+                selectedHistoryTabItemID = newValue
+            case .favorites:
+                selectedFavoritesTabItemID = newValue
+            }
+        }
     }
 
     func filteredItems(for tab: PopoverTab) -> [HistoryItem] {
@@ -172,6 +192,15 @@ final class AppState {
         }
 
         return activeItems.first(where: { $0.id == selectedHistoryItemID })
+    }
+
+    func clearSelection(for tab: PopoverTab) {
+        switch tab {
+        case .history:
+            selectedHistoryTabItemID = nil
+        case .favorites:
+            selectedFavoritesTabItemID = nil
+        }
     }
 
     func updateGlobalShortcut(from event: NSEvent) {
