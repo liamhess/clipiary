@@ -8,7 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     private lazy var statusItem: NSStatusItem = {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         item.behavior = .removalAllowed
-        item.button?.image = NSImage(systemSymbolName: "paperclip.circle.fill", accessibilityDescription: "Clipiary")
+        item.button?.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "Clipiary")
         item.button?.imagePosition = .imageLeft
         item.button?.target = self
         item.button?.action = #selector(togglePopover)

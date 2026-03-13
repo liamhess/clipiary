@@ -20,27 +20,11 @@ struct PanelRootView: View {
     }
 
     private var header: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 0) {
             HStack(alignment: .center, spacing: 8) {
                 Text("Clipiary")
                     .font(.system(size: 13, weight: .semibold))
                 Spacer()
-                iconToggle(
-                    systemName: "doc.on.clipboard",
-                    isOn: Binding(
-                        get: { appState.settings.isClipboardMonitoringEnabled },
-                        set: { appState.settings.isClipboardMonitoringEnabled = $0 }
-                    ),
-                    help: "Clipboard monitoring"
-                )
-                iconToggle(
-                    systemName: "cursorarrow.rays",
-                    isOn: Binding(
-                        get: { appState.settings.isAutoSelectEnabled },
-                        set: { appState.settings.isAutoSelectEnabled = $0 }
-                    ),
-                    help: "Autoselect"
-                )
             }
         }
         .padding(.horizontal, 12)
@@ -57,6 +41,19 @@ struct PanelRootView: View {
                     .buttonStyle(.borderless)
                     .font(.system(size: 12, weight: .medium))
                 }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Toggle("Monitor normal copy events", isOn: Binding(
+                        get: { appState.settings.isClipboardMonitoringEnabled },
+                        set: { appState.settings.isClipboardMonitoringEnabled = $0 }
+                    ))
+                    Toggle("Autoselect highlighted text", isOn: Binding(
+                        get: { appState.settings.isAutoSelectEnabled },
+                        set: { appState.settings.isAutoSelectEnabled = $0 }
+                    ))
+                }
+                .toggleStyle(.checkbox)
+                .font(.system(size: 12))
 
                 HStack(spacing: 12) {
                     Stepper("Min \(appState.settings.minimumSelectionLength)", value: Binding(
@@ -252,20 +249,6 @@ struct PanelRootView: View {
             .fill(hoveredItemID == item.id ? buttonFill : Color.clear)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-    }
-
-    private func iconToggle(systemName: String, isOn: Binding<Bool>, help: String) -> some View {
-        Button {
-            isOn.wrappedValue.toggle()
-        } label: {
-            Image(systemName: isOn.wrappedValue ? "\(systemName).fill" : systemName)
-                .font(.system(size: 13, weight: .medium))
-                .frame(width: 26, height: 26)
-        }
-        .buttonStyle(.plain)
-        .foregroundStyle(isOn.wrappedValue ? Color.accentColor : .secondary)
-        .background(Circle().fill(buttonFill))
-        .help(help)
     }
 
     private var panelBackground: some View {
