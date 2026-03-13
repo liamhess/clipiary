@@ -63,31 +63,31 @@ final class HistoryStore {
         persist()
     }
 
-    func clearUnpinned() {
-        items.removeAll { !$0.isPinned }
+    func clearNonFavorites() {
+        items.removeAll { !$0.isFavorite }
         persist()
     }
 
-    func togglePin(_ item: HistoryItem) {
+    func toggleFavorite(_ item: HistoryItem) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else {
             return
         }
 
-        items[index].isPinned.toggle()
+        items[index].isFavorite.toggle()
         items = orderedItems(items)
         persist()
     }
 
     private func trim(limit: Int) {
-        let pinned = items.filter(\.isPinned)
-        let unpinned = items.filter { !$0.isPinned }
-        items = pinned + Array(unpinned.prefix(max(0, limit - pinned.count)))
+        let favorites = items.filter(\.isFavorite)
+        let nonFavorites = items.filter { !$0.isFavorite }
+        items = favorites + Array(nonFavorites.prefix(max(0, limit - favorites.count)))
     }
 
     private func orderedItems(_ source: [HistoryItem]) -> [HistoryItem] {
         source.sorted {
-            if $0.isPinned != $1.isPinned {
-                return $0.isPinned && !$1.isPinned
+            if $0.isFavorite != $1.isFavorite {
+                return $0.isFavorite && !$1.isFavorite
             }
 
             return $0.createdAt > $1.createdAt

@@ -13,7 +13,7 @@ struct HistoryItem: Identifiable, Codable, Hashable, Sendable {
     var appName: String
     var bundleID: String?
     var createdAt: Date
-    var isPinned: Bool
+    var isFavorite: Bool
 
     init(
         id: UUID = UUID(),
@@ -22,7 +22,7 @@ struct HistoryItem: Identifiable, Codable, Hashable, Sendable {
         appName: String,
         bundleID: String?,
         createdAt: Date = .now,
-        isPinned: Bool = false
+        isFavorite: Bool = false
     ) {
         self.id = id
         self.text = text
@@ -30,7 +30,7 @@ struct HistoryItem: Identifiable, Codable, Hashable, Sendable {
         self.appName = appName
         self.bundleID = bundleID
         self.createdAt = createdAt
-        self.isPinned = isPinned
+        self.isFavorite = isFavorite
     }
 
     var displayText: String {

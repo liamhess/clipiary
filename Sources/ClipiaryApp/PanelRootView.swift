@@ -165,7 +165,7 @@ struct PanelRootView: View {
             accessibilityStatus
             Spacer()
             Button("Clear History") {
-                appState.history.clearUnpinned()
+                appState.history.clearNonFavorites()
             }
             Button("Quit") {
                 NSApplication.shared.terminate(nil)
@@ -267,15 +267,15 @@ struct PanelRootView: View {
                 Spacer(minLength: 8)
 
                 Button {
-                    appState.history.togglePin(item)
+                    appState.history.toggleFavorite(item)
                 } label: {
-                    Image(systemName: item.isPinned ? "star.fill" : "star")
+                    Image(systemName: item.isFavorite ? "star.fill" : "star")
                         .font(.system(size: 11, weight: .medium))
                         .frame(width: 22, height: 22)
                 }
                 .buttonStyle(.plain)
-                .foregroundStyle(item.isPinned ? Color.accentColor : .secondary)
-                .opacity(hoveredItemID == item.id || item.isPinned ? 1 : 0.55)
+                .foregroundStyle(item.isFavorite ? Color.accentColor : .secondary)
+                .opacity(hoveredItemID == item.id || item.isFavorite ? 1 : 0.55)
 
                 Button {
                     appState.history.delete(item)
@@ -384,9 +384,9 @@ struct PanelRootView: View {
     private func filteredItemsForSelectedTab(tab: Tab) -> [HistoryItem] {
         switch tab {
         case .history:
-            return filteredItems.filter { !$0.isPinned }
+            return filteredItems.filter { !$0.isFavorite }
         case .favorites:
-            return filteredItems.filter(\.isPinned)
+            return filteredItems.filter(\.isFavorite)
         }
     }
 
