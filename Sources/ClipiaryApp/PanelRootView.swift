@@ -524,6 +524,8 @@ struct PanelRootView: View {
                 Text(title)
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
                 if let value {
                     Text(value)
                         .font(.system(size: 12, weight: .semibold))
