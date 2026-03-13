@@ -1,3 +1,4 @@
 .build/
 .tmp-home/
 dist/
+.DS_Store
