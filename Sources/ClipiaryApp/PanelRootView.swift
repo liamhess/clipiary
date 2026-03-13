@@ -166,9 +166,6 @@ struct PanelRootView: View {
                         .foregroundStyle(.secondary)
                 }
                 Spacer()
-                Image(systemName: settingsExpanded ? "chevron.down" : "chevron.right")
-                    .font(.system(size: 10, weight: .bold))
-                    .foregroundStyle(.secondary)
             }
             .contentShape(Rectangle())
         }
