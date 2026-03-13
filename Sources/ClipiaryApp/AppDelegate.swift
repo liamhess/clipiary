@@ -41,6 +41,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         return true
     }
 
+    func applicationDidResignActive(_ notification: Notification) {
+        if popover.isShown {
+            popover.performClose(nil)
+        }
+    }
+
     private func updateStatusItem() {
         guard let button = statusItem.button else {
             return
