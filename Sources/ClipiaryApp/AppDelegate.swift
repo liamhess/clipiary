@@ -4,6 +4,7 @@ import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
+    private let favoriteShortcutKeyCode: UInt16 = 2
     private var statusSyncTimer: Timer?
     private var localKeyMonitor: Any?
     private var suppressedKeyUps = Set<UInt16>()
@@ -165,6 +166,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             default:
                 appState.updateGlobalShortcut(from: event)
             }
+            return suppressKeyUp(for: event)
+        }
+
+        if modifiers == .command, event.keyCode == favoriteShortcutKeyCode {
+            appState.toggleFavoriteSelectedItem()
             return suppressKeyUp(for: event)
         }
 
