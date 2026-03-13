@@ -19,6 +19,16 @@ Build a stable app bundle for Accessibility approval:
 ./scripts/build_app.sh
 ```
 
+Optional local signing configuration:
+
+Create a repo-local `.env` file with:
+
+```sh
+export CLIPIARY_CODESIGN_IDENTITY="Apple Development: Your Name (TEAMID)"
+```
+
+The build, run, and dev scripts will source `.env` automatically.
+
 Run the app bundle:
 
 ```sh

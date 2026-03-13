@@ -3,6 +3,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+source "$ROOT_DIR/scripts/load_env.sh"
 CONFIGURATION="${1:-debug}"
 APP_NAME="Clipiary"
 BUNDLE_ID="dev.liamhess.clipiary"
