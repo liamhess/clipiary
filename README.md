@@ -25,6 +25,12 @@ Run the app bundle:
 ./scripts/run_app.sh
 ```
 
+Run a dev watcher that rebuilds and relaunches the app on source changes:
+
+```sh
+./scripts/dev.sh
+```
+
 The app bundle path to approve in `System Settings > Privacy & Security > Accessibility` is:
 
 `dist/Clipiary.app`
