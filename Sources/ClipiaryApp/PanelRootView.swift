@@ -4,24 +4,26 @@ import SwiftUI
 struct PanelRootView: View {
     @Environment(AppState.self) private var appState
     @State private var hoveredItemID: HistoryItem.ID?
-    @State private var showSettings = false
+    @State private var showHistory = true
+    @State private var searchQuery = ""
 
     var body: some View {
         VStack(spacing: 0) {
             header
             Divider()
                 .overlay(Color.black.opacity(0.04))
-            historyList
+            controls
             footer
         }
-        .frame(width: 352, height: 492)
+        .frame(width: 360, height: 460)
         .background(panelBackground)
     }
 
     private var header: some View {
         VStack(spacing: 10) {
-            HStack(spacing: 8) {
-                searchField
+            HStack(alignment: .center, spacing: 8) {
+                Text("Clipiary")
+                    .font(.system(size: 13, weight: .semibold))
                 Spacer()
                 iconToggle(
                     systemName: "doc.on.clipboard",
@@ -39,42 +41,74 @@ struct PanelRootView: View {
                     ),
                     help: "Autoselect"
                 )
-                Button {
-                    showSettings.toggle()
-                } label: {
-                    Image(systemName: showSettings ? "slider.horizontal.3.circle.fill" : "slider.horizontal.3")
-                        .font(.system(size: 13, weight: .medium))
-                        .frame(width: 26, height: 26)
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(.secondary)
-                .background(Circle().fill(buttonFill))
-                .help("Settings")
-            }
-
-            if showSettings {
-                settingsTray
-                    .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
         .padding(.horizontal, 12)
-        .padding(.top, 12)
-        .padding(.bottom, showSettings ? 12 : 10)
+        .padding(.vertical, 12)
     }
 
-    private var historyList: some View {
+    private var controls: some View {
         ScrollView {
-            LazyVStack(spacing: 0) {
-                if appState.history.filteredItems.isEmpty {
+            VStack(alignment: .leading, spacing: 12) {
+                if !appState.permissionManager.isTrusted {
+                    Button("Grant Accessibility Access") {
+                        appState.refreshAutoSelectPermissions()
+                    }
+                    .buttonStyle(.borderless)
+                    .font(.system(size: 12, weight: .medium))
+                }
+
+                Toggle("Show recent item in menu bar", isOn: Binding(
+                    get: { appState.settings.showRecentItemInStatusBar },
+                    set: { appState.settings.showRecentItemInStatusBar = $0 }
+                ))
+                .toggleStyle(.checkbox)
+                .font(.system(size: 12))
+
+                HStack(spacing: 12) {
+                    Stepper("Min \(appState.settings.minimumSelectionLength)", value: Binding(
+                        get: { appState.settings.minimumSelectionLength },
+                        set: { appState.settings.minimumSelectionLength = max(1, $0) }
+                    ), in: 1...10)
+                    Stepper("\(appState.settings.autoSelectCooldownMilliseconds) ms", value: Binding(
+                        get: { appState.settings.autoSelectCooldownMilliseconds },
+                        set: { appState.settings.autoSelectCooldownMilliseconds = min(max(100, $0), 2000) }
+                    ), in: 100...2000, step: 50)
+                }
+                .font(.system(size: 11))
+
+                historySection
+            }
+            .padding(12)
+        }
+    }
+
+    private var historySection: some View {
+        DisclosureGroup(isExpanded: $showHistory) {
+            VStack(spacing: 8) {
+                searchField
+                if filteredHistoryItems.isEmpty {
                     emptyState
                 } else {
-                    ForEach(appState.history.filteredItems) { item in
-                        row(for: item)
+                    LazyVStack(spacing: 0) {
+                        ForEach(filteredHistoryItems.prefix(40)) { item in
+                            row(for: item)
+                        }
                     }
                 }
             }
+            .padding(.top, 8)
+        } label: {
+            HStack {
+                Text("History")
+                    .font(.system(size: 12, weight: .semibold))
+                Spacer()
+                Text("\(filteredHistoryItems.count)")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundStyle(.secondary)
+            }
         }
-        .background(Color(nsColor: .textBackgroundColor).opacity(0.001))
+        .tint(.primary)
     }
 
     private var footer: some View {
@@ -140,93 +174,66 @@ struct PanelRootView: View {
         )
     }
 
-    private var settingsTray: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 12) {
-                Toggle("Show status text", isOn: Binding(
-                    get: { appState.settings.showRecentItemInStatusBar },
-                    set: { appState.settings.showRecentItemInStatusBar = $0 }
-                ))
-            }
-            .toggleStyle(.checkbox)
-
-            HStack(spacing: 12) {
-                Stepper("Min \(appState.settings.minimumSelectionLength)", value: Binding(
-                    get: { appState.settings.minimumSelectionLength },
-                    set: { appState.settings.minimumSelectionLength = max(1, $0) }
-                ), in: 1...10)
-                Stepper("\(appState.settings.autoSelectCooldownMilliseconds) ms", value: Binding(
-                    get: { appState.settings.autoSelectCooldownMilliseconds },
-                    set: { appState.settings.autoSelectCooldownMilliseconds = min(max(100, $0), 2000) }
-                ), in: 100...2000, step: 50)
-            }
-
-            Text("Autoselect reads focused text selection through Accessibility and falls back to Cmd-C for Anki.")
-                .foregroundStyle(.secondary)
-        }
-        .font(.system(size: 11, weight: .medium))
-        .padding(10)
-        .background(
-            RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(buttonFill)
-        )
-    }
-
     private func row(for item: HistoryItem) -> some View {
-        Button {
-            appState.restore(item)
-        } label: {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(alignment: .top, spacing: 8) {
-                    Image(systemName: item.source == .autoSelect ? "cursorarrow.rays" : "doc.on.doc")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(item.source == .autoSelect ? Color.accentColor : .secondary)
-                        .frame(width: 14, alignment: .center)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(alignment: .top, spacing: 8) {
+                Button {
+                    appState.restore(item)
+                } label: {
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: item.source == .autoSelect ? "cursorarrow.rays" : "doc.on.doc")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(item.source == .autoSelect ? Color.accentColor : .secondary)
+                            .frame(width: 14, alignment: .center)
 
-                    Text(item.displayText.isEmpty ? "Untitled" : item.displayText)
-                        .font(.system(size: 13))
-                        .foregroundStyle(.primary)
-                        .lineLimit(2)
-                        .multilineTextAlignment(.leading)
-
-                    Spacer(minLength: 8)
-
-                    if item.isPinned {
-                        Image(systemName: "pin.fill")
-                            .font(.system(size: 10))
-                            .foregroundStyle(.secondary)
+                        Text(item.displayText.isEmpty ? "Untitled" : item.displayText)
+                            .font(.system(size: 13))
+                            .foregroundStyle(.primary)
+                            .lineLimit(2)
+                            .multilineTextAlignment(.leading)
                     }
                 }
+                .buttonStyle(.plain)
 
-                HStack(spacing: 6) {
-                    Text(item.appName)
-                    Text("·")
-                    Text(item.createdAt, style: .time)
+                Spacer(minLength: 8)
+
+                Button {
+                    appState.history.togglePin(item)
+                } label: {
+                    Image(systemName: item.isPinned ? "pin.fill" : "pin")
+                        .font(.system(size: 11, weight: .medium))
+                        .frame(width: 22, height: 22)
                 }
-                .font(.system(size: 10, weight: .medium))
+                .buttonStyle(.plain)
+                .foregroundStyle(item.isPinned ? Color.accentColor : .secondary)
+
+                Button {
+                    appState.history.delete(item)
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 10, weight: .bold))
+                        .frame(width: 22, height: 22)
+                }
+                .buttonStyle(.plain)
                 .foregroundStyle(.secondary)
-                .padding(.leading, 22)
             }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 9)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(rowBackground(for: item))
-            .contentShape(Rectangle())
+
+            HStack(spacing: 6) {
+                Text(item.appName)
+                Text("·")
+                Text(item.createdAt, style: .time)
+            }
+            .font(.system(size: 10, weight: .medium))
+            .foregroundStyle(.secondary)
+            .padding(.leading, 22)
         }
-        .buttonStyle(.plain)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 8)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(rowBackground(for: item))
+        .contentShape(Rectangle())
         .onHover { isHovered in
             hoveredItemID = isHovered ? item.id : (hoveredItemID == item.id ? nil : hoveredItemID)
-        }
-        .contextMenu {
-            Button(item.isPinned ? "Unpin" : "Pin") {
-                appState.history.togglePin(item)
-            }
-            Button("Copy Back to Clipboard") {
-                appState.restore(item)
-            }
-            Button("Delete") {
-                appState.history.delete(item)
-            }
         }
     }
 
@@ -275,10 +282,22 @@ struct PanelRootView: View {
             RoundedRectangle(cornerRadius: 12, style: .continuous)
                 .strokeBorder(Color.black.opacity(0.08), lineWidth: 1)
         }
-        .padding(6)
     }
 
     private var buttonFill: Color {
         Color(nsColor: .controlBackgroundColor).opacity(0.85)
+    }
+
+    private var filteredHistoryItems: [HistoryItem] {
+        let query = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !query.isEmpty else {
+            return appState.history.items
+        }
+
+        return appState.history.items.filter { item in
+            item.text.localizedCaseInsensitiveContains(query) ||
+            item.appName.localizedCaseInsensitiveContains(query) ||
+            (item.bundleID?.localizedCaseInsensitiveContains(query) ?? false)
+        }
     }
 }
