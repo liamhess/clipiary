@@ -5,6 +5,7 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP_NAME="Clipiary"
 APP_BUNDLE="$ROOT_DIR/dist/$APP_NAME.app"
+APP_EXECUTABLE="$APP_BUNDLE/Contents/MacOS/$APP_NAME"
 WATCH_INTERVAL="${WATCH_INTERVAL:-1}"
 
 watch_paths=(
@@ -20,7 +21,7 @@ build_and_restart() {
   echo "==> Restarting Clipiary"
   pkill -x "$APP_NAME" >/dev/null 2>&1 || true
   sleep 0.2
-  open "$APP_BUNDLE"
+  "$APP_EXECUTABLE" >/tmp/clipiary-dev.log 2>&1 &
 }
 
 snapshot() {
