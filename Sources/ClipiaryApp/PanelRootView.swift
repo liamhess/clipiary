@@ -2,12 +2,8 @@ import AppKit
 import SwiftUI
 
 struct PanelRootView: View {
-    private static let integerFormatter: NumberFormatter = {
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .none
-        formatter.generatesDecimalNumbers = false
-        return formatter
-    }()
+    private let cooldownOptions = [100, 200, 350, 500, 750, 1_000, 1_500, 2_000]
+    private let historyLimitOptions = [50, 100, 150, 250, 500, 750, 1_000]
 
     @Environment(AppState.self) private var appState
     @FocusState private var searchFocused: Bool
@@ -177,13 +173,14 @@ struct PanelRootView: View {
                             title: "Cooldown",
                             value: "\(appState.settings.autoSelectCooldownMilliseconds) ms"
                         ) {
-                            numericSettingField(
-                                value: Binding(
+                            optionPicker(
+                                selection: Binding(
                                     get: { appState.settings.autoSelectCooldownMilliseconds },
-                                    set: { appState.settings.autoSelectCooldownMilliseconds = min(max(100, $0), 2_000) }
+                                    set: { appState.settings.autoSelectCooldownMilliseconds = $0 }
                                 ),
-                                range: 100...2_000,
-                                width: 70
+                                options: cooldownOptions,
+                                label: { value in "\(value) ms" },
+                                width: 94
                             )
                         }
                     }
@@ -193,13 +190,14 @@ struct PanelRootView: View {
                             title: "History limit",
                             value: "\(appState.settings.historyLimit) items"
                         ) {
-                            numericSettingField(
-                                value: Binding(
+                            optionPicker(
+                                selection: Binding(
                                     get: { appState.settings.historyLimit },
-                                    set: { appState.settings.historyLimit = min(max(25, $0), 1_000) }
+                                    set: { appState.settings.historyLimit = $0 }
                                 ),
-                                range: 25...1_000,
-                                width: 70
+                                options: historyLimitOptions,
+                                label: { value in "\(value)" },
+                                width: 82
                             )
                         }
                     }
@@ -560,17 +558,19 @@ struct PanelRootView: View {
         )
     }
 
-    private func numericSettingField(value: Binding<Int>, range: ClosedRange<Int>, width: CGFloat) -> some View {
-        TextField("", value: value, formatter: Self.integerFormatter)
-            .textFieldStyle(.plain)
-            .multilineTextAlignment(.trailing)
-            .font(.system(size: 11, weight: .semibold, design: .monospaced))
-            .frame(width: width)
-            .padding(.horizontal, 8)
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 7, style: .continuous)
-                    .fill(Color.black.opacity(0.05))
-            )
+    private func optionPicker(
+        selection: Binding<Int>,
+        options: [Int],
+        label: @escaping (Int) -> String,
+        width: CGFloat
+    ) -> some View {
+        Picker("", selection: selection) {
+            ForEach(options, id: \.self) { option in
+                Text(label(option)).tag(option)
+            }
+        }
+        .labelsHidden()
+        .pickerStyle(.menu)
+        .frame(width: width)
     }
 }
