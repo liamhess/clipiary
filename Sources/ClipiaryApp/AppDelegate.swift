@@ -94,6 +94,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             return event
         }
 
+        let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        let normalizedCharacters = event.charactersIgnoringModifiers?.lowercased()
+
         if appState.isRecordingShortcut {
             switch event.keyCode {
             case 53:
@@ -104,10 +107,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             return nil
         }
 
-        let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         if modifiers == .command,
-           event.charactersIgnoringModifiers?.lowercased() == "f" {
+           normalizedCharacters == "f" {
             appState.requestSearchFocus()
+            return nil
+        }
+
+        if modifiers == [.command, .shift],
+           normalizedCharacters == "f" {
+            appState.toggleFavoriteSelectedItem()
             return nil
         }
 
@@ -133,9 +141,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             return nil
         case 51:
             appState.deleteSelectedItem()
-            return nil
-        case 49:
-            appState.toggleFavoriteSelectedItem()
             return nil
         case 53:
             popover.performClose(nil)
