@@ -41,10 +41,12 @@ final class AppState {
 
     func start() {
         history.load()
+        history.enforceLimit(settings.historyLimit)
         permissionManager.refreshTrust()
         clipboardMonitor.start()
         autoSelectEngine.start()
         ensureSelection()
+        synchronizeHistoryLimit()
     }
 
     func refreshAutoSelectPermissions() {
@@ -214,5 +216,21 @@ final class AppState {
 
     func requestSearchFocus() {
         searchFocusRequestID &+= 1
+    }
+
+    private func synchronizeHistoryLimit() {
+        _ = withObservationTracking {
+            settings.historyLimit
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in
+                guard let self else {
+                    return
+                }
+
+                self.history.enforceLimit(self.settings.historyLimit)
+                self.ensureSelection()
+                self.synchronizeHistoryLimit()
+            }
+        }
     }
 }

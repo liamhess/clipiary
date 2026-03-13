@@ -180,6 +180,19 @@ struct PanelRootView: View {
 
                     HStack(spacing: 12) {
                         settingMetric(
+                            title: "History limit",
+                            value: "\(appState.settings.historyLimit) items"
+                        ) {
+                            Stepper("", value: Binding(
+                                get: { appState.settings.historyLimit },
+                                set: { appState.settings.historyLimit = min(max(25, $0), 1_000) }
+                            ), in: 25...1_000, step: 25)
+                            .labelsHidden()
+                        }
+                    }
+
+                    HStack(spacing: 12) {
+                        settingMetric(
                             title: "Global shortcut",
                             value: appState.isRecordingShortcut ? "Press keys..." : appState.settings.globalShortcut.displayString
                         ) {

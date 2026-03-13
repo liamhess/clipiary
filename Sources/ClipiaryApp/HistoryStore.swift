@@ -78,6 +78,11 @@ final class HistoryStore {
         persist()
     }
 
+    func enforceLimit(_ limit: Int) {
+        trim(limit: limit)
+        persist()
+    }
+
     private func trim(limit: Int) {
         let favorites = items.filter(\.isFavorite)
         let nonFavorites = recencyOrderedItems(items.filter { !$0.isFavorite })
