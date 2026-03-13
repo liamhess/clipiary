@@ -6,6 +6,7 @@ struct PanelRootView: View {
     @FocusState private var searchFocused: Bool
     @State private var hoveredItemID: HistoryItem.ID?
     @State private var settingsExpanded = false
+    @State private var keyboardHelpExpanded = false
 
     var body: some View {
         VStack(spacing: 12) {
@@ -173,6 +174,8 @@ struct PanelRootView: View {
                             .font(.system(size: 11, weight: .medium))
                         }
                     }
+
+                    keyboardShortcutsSection
                 }
                 .transition(.opacity)
             }
@@ -370,6 +373,46 @@ struct PanelRootView: View {
             .fill(rowFill(for: item))
     }
 
+    private var keyboardShortcutsSection: some View {
+        VStack(alignment: .leading, spacing: keyboardHelpExpanded ? 10 : 0) {
+            Button {
+                withAnimation(.easeInOut(duration: 0.14)) {
+                    keyboardHelpExpanded.toggle()
+                }
+            } label: {
+                HStack(spacing: 10) {
+                    Text("Keyboard")
+                        .font(.system(size: 12, weight: .semibold))
+                    Spacer()
+                    Text("8 shortcuts")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(.secondary)
+                    Image(systemName: keyboardHelpExpanded ? "chevron.down" : "chevron.right")
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(.secondary)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+
+            if keyboardHelpExpanded {
+                VStack(spacing: 6) {
+                    shortcutRow("Open Clipiary", appState.settings.globalShortcut.displayString)
+                    shortcutRow("Focus search", "Cmd F")
+                    shortcutRow("Favorite or unfavorite", "Cmd D")
+                    shortcutRow("Move selection", "Up / Down")
+                    shortcutRow("Switch tabs", "Left / Right")
+                    shortcutRow("Restore selected item", "Return")
+                    shortcutRow("Delete selected item", "Delete")
+                    shortcutRow("Close popover", "Esc")
+                }
+                .transition(.opacity)
+            }
+        }
+        .padding(.top, 2)
+    }
+
     private var panelBackground: some View {
         RoundedRectangle(cornerRadius: 14, style: .continuous)
             .fill(.regularMaterial)
@@ -467,6 +510,30 @@ struct PanelRootView: View {
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.white.opacity(0.001))
+        )
+    }
+
+    private func shortcutRow(_ title: String, _ shortcut: String) -> some View {
+        HStack(spacing: 10) {
+            Text(title)
+                .font(.system(size: 11, weight: .medium))
+                .foregroundStyle(.primary)
+            Spacer(minLength: 12)
+            Text(shortcut)
+                .font(.system(size: 10, weight: .semibold, design: .monospaced))
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .background(
+                    Capsule(style: .continuous)
+                        .fill(Color.black.opacity(0.06))
+                )
+                .foregroundStyle(.secondary)
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 4)
         .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(Color.white.opacity(0.001))
