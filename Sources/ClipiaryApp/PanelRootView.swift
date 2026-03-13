@@ -3,7 +3,6 @@ import SwiftUI
 
 struct PanelRootView: View {
     @Environment(AppState.self) private var appState
-    @FocusState private var searchFocused: Bool
     @State private var hoveredItemID: HistoryItem.ID?
 
     var body: some View {
@@ -18,9 +17,6 @@ struct PanelRootView: View {
         .background(panelBackground)
         .task {
             appState.requestSearchFocus()
-        }
-        .onChange(of: appState.searchFocusRequestID) {
-            searchFocused = true
         }
     }
 
@@ -47,7 +43,7 @@ struct PanelRootView: View {
                 if !appState.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     Button("Clear Search") {
                         appState.searchQuery = ""
-                        searchFocused = true
+                        appState.requestSearchFocus()
                         appState.ensureSelection()
                     }
                     .buttonStyle(.plain)
@@ -212,19 +208,11 @@ struct PanelRootView: View {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(.secondary)
-            TextField("Search clipboard history", text: Binding(
-                get: { appState.searchQuery },
-                set: { appState.searchQuery = $0 }
-            ))
-                .textFieldStyle(.plain)
-                .focused($searchFocused)
-                .onChange(of: appState.searchQuery) {
-                    appState.ensureSelection()
-                }
+            PopoverSearchField()
             if !appState.searchQuery.isEmpty {
                 Button {
                     appState.searchQuery = ""
-                    searchFocused = true
+                    appState.requestSearchFocus()
                     appState.ensureSelection()
                 } label: {
                     Image(systemName: "xmark.circle.fill")
@@ -403,7 +391,6 @@ struct PanelRootView: View {
 
         return Button {
             appState.setSelectedTab(tab)
-            searchFocused = true
         } label: {
             HStack(spacing: 6) {
                 Text(tab.rawValue)
