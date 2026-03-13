@@ -4,8 +4,10 @@ import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
+    private let favoriteShortcutKeyCode: UInt16 = 3
     private var statusSyncTimer: Timer?
     private var localKeyMonitor: Any?
+    private var suppressFavoriteShortcutKeyUp = false
     private let popover = NSPopover()
     private let hotKeyManager = GlobalHotKeyManager()
     private lazy var statusItem: NSStatusItem = {
@@ -63,15 +65,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         focusSearchItem.keyEquivalentModifierMask = [.command]
         focusSearchItem.target = self
         appMenu.addItem(focusSearchItem)
-
-        let toggleFavoriteItem = NSMenuItem(
-            title: "Toggle Favorite",
-            action: #selector(toggleFavoriteCommand),
-            keyEquivalent: "f"
-        )
-        toggleFavoriteItem.keyEquivalentModifierMask = [.command, .shift]
-        toggleFavoriteItem.target = self
-        appMenu.addItem(toggleFavoriteItem)
 
         let closePopoverItem = NSMenuItem(
             title: "Close Popover",
@@ -167,6 +160,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
             return nil
         }
 
+        if modifiers.contains([.command, .shift]), event.keyCode == favoriteShortcutKeyCode {
+            suppressFavoriteShortcutKeyUp = true
+            appState.toggleFavoriteSelectedItem()
+            return nil
+        }
+
         if !modifiers.isDisjoint(with: [.command, .option, .control]) {
             return event
         }
@@ -199,6 +198,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         guard popover.isShown, event.type == .keyUp else {
             return false
         }
+
+        if suppressFavoriteShortcutKeyUp, event.keyCode == favoriteShortcutKeyCode {
+            suppressFavoriteShortcutKeyUp = false
+            return true
+        }
+
         return false
     }
 
@@ -209,15 +214,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         }
 
         appState.requestSearchFocus()
-    }
-
-    @objc
-    private func toggleFavoriteCommand() {
-        guard popover.isShown else {
-            return
-        }
-
-        appState.toggleFavoriteSelectedItem()
     }
 
     @objc
