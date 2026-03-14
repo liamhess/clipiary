@@ -73,7 +73,7 @@ final class AppSettings {
             Keys.minimumSelectionLength: 2,
             Keys.copyOnSelectCooldownMilliseconds: 350,
             Keys.ignoredBundleIDs: [],
-            Keys.historyLimit: 150,
+            Keys.historyLimit: 1_000,
             Keys.globalHotKeyKeyCode: 9,
             Keys.globalHotKeyModifiers: Int((NSEvent.ModifierFlags.command.union(.shift)).rawValue),
             Keys.panelWidth: 376.0,

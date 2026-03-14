@@ -3,7 +3,7 @@ import SwiftUI
 
 struct PanelRootView: View {
     private let cooldownOptions = [100, 200, 350, 500, 750, 1_000, 1_500, 2_000]
-    private let historyLimitOptions = [50, 100, 150, 250, 500, 750, 1_000]
+    private let historyLimitOptions = [50, 100, 250, 500, 1_000, 2_500, 5_000, 10_000]
 
     @Environment(AppState.self) private var appState
     @FocusState private var searchFocused: Bool
@@ -210,7 +210,7 @@ struct PanelRootView: View {
                             ),
                             options: historyLimitOptions,
                             label: { value in "\(value)" },
-                            width: 82
+                            width: 94
                         )
                     }
 
