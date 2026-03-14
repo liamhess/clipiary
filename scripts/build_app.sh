@@ -26,7 +26,7 @@ swift_build() {
   HOME="$TMP_HOME" \
   SWIFTPM_MODULECACHE_OVERRIDE="$MODULE_CACHE" \
   CLANG_MODULE_CACHE_PATH="$CLANG_CACHE" \
-  swift build "$@"
+  /usr/bin/swift build "$@"
 }
 
 swift_build --configuration "$CONFIGURATION"
