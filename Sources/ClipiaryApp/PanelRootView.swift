@@ -19,7 +19,7 @@ struct PanelRootView: View {
             footer
         }
         .padding(12)
-        .frame(width: 376, height: 600)
+        .frame(minWidth: 300, maxWidth: .infinity, minHeight: 400, maxHeight: .infinity)
         .background(panelBackground)
         .task {
             appState.requestSearchFocus()
