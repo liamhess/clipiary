@@ -7,9 +7,9 @@ import Observation
 final class AppSettings {
     private enum Keys {
         static let clipboardMonitoringEnabled = "clipboardMonitoringEnabled"
-        static let autoSelectEnabled = "autoSelectEnabled"
+        static let copyOnSelectEnabled = "copyOnSelectEnabled"
         static let minimumSelectionLength = "minimumSelectionLength"
-        static let autoSelectCooldownMilliseconds = "autoSelectCooldownMilliseconds"
+        static let copyOnSelectCooldownMilliseconds = "copyOnSelectCooldownMilliseconds"
         static let ignoredBundleIDs = "ignoredBundleIDs"
         static let historyLimit = "historyLimit"
         static let globalHotKeyKeyCode = "globalHotKeyKeyCode"
@@ -24,16 +24,16 @@ final class AppSettings {
         didSet { defaults.set(isClipboardMonitoringEnabled, forKey: Keys.clipboardMonitoringEnabled) }
     }
 
-    var isAutoSelectEnabled: Bool {
-        didSet { defaults.set(isAutoSelectEnabled, forKey: Keys.autoSelectEnabled) }
+    var isCopyOnSelectEnabled: Bool {
+        didSet { defaults.set(isCopyOnSelectEnabled, forKey: Keys.copyOnSelectEnabled) }
     }
 
     var minimumSelectionLength: Int {
         didSet { defaults.set(minimumSelectionLength, forKey: Keys.minimumSelectionLength) }
     }
 
-    var autoSelectCooldownMilliseconds: Int {
-        didSet { defaults.set(autoSelectCooldownMilliseconds, forKey: Keys.autoSelectCooldownMilliseconds) }
+    var copyOnSelectCooldownMilliseconds: Int {
+        didSet { defaults.set(copyOnSelectCooldownMilliseconds, forKey: Keys.copyOnSelectCooldownMilliseconds) }
     }
 
     var ignoredBundleIDs: [String] {
@@ -64,9 +64,9 @@ final class AppSettings {
         self.defaults = defaults
         defaults.register(defaults: [
             Keys.clipboardMonitoringEnabled: true,
-            Keys.autoSelectEnabled: false,
+            Keys.copyOnSelectEnabled: false,
             Keys.minimumSelectionLength: 2,
-            Keys.autoSelectCooldownMilliseconds: 350,
+            Keys.copyOnSelectCooldownMilliseconds: 350,
             Keys.ignoredBundleIDs: [],
             Keys.historyLimit: 150,
             Keys.globalHotKeyKeyCode: 9,
@@ -76,9 +76,9 @@ final class AppSettings {
         ])
 
         isClipboardMonitoringEnabled = defaults.bool(forKey: Keys.clipboardMonitoringEnabled)
-        isAutoSelectEnabled = defaults.bool(forKey: Keys.autoSelectEnabled)
+        isCopyOnSelectEnabled = defaults.bool(forKey: Keys.copyOnSelectEnabled)
         minimumSelectionLength = defaults.integer(forKey: Keys.minimumSelectionLength)
-        autoSelectCooldownMilliseconds = defaults.integer(forKey: Keys.autoSelectCooldownMilliseconds)
+        copyOnSelectCooldownMilliseconds = defaults.integer(forKey: Keys.copyOnSelectCooldownMilliseconds)
         ignoredBundleIDs = defaults.stringArray(forKey: Keys.ignoredBundleIDs) ?? []
         historyLimit = defaults.integer(forKey: Keys.historyLimit)
         globalHotKeyKeyCode = defaults.integer(forKey: Keys.globalHotKeyKeyCode)

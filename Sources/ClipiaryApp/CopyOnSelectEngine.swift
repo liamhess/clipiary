@@ -3,7 +3,7 @@ import Combine
 import Foundation
 
 @MainActor
-final class AutoSelectEngine {
+final class CopyOnSelectEngine {
     private let settings: AppSettings
     private let permissionManager: AccessibilityPermissionManager
     private let captureCoordinator: CaptureCoordinator
@@ -71,11 +71,11 @@ final class AutoSelectEngine {
 
     private func refreshSelection() {
         permissionManager.refreshTrust()
-        guard settings.isAutoSelectEnabled, permissionManager.isTrusted else {
+        guard settings.isCopyOnSelectEnabled, permissionManager.isTrusted else {
             return
         }
 
         let snapshot = SelectionReader.read(from: appMonitor.currentApp)
-        captureCoordinator.consumeAutoSelectSnapshot(snapshot)
+        captureCoordinator.consumeCopyOnSelectSnapshot(snapshot)
     }
 }

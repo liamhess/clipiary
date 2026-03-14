@@ -1,6 +1,6 @@
 # Clipiary
 
-Clipiary is a macOS clipboard manager with an opt-in global autoselect mode.
+Clipiary is a macOS clipboard manager with an opt-in global copy-on-select mode.
 
 ## Development
 

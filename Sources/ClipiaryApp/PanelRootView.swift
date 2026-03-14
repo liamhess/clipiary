@@ -143,7 +143,7 @@ struct PanelRootView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     if !appState.permissionManager.isTrusted {
                         Button("Grant Accessibility Access") {
-                            appState.refreshAutoSelectPermissions()
+                            appState.refreshCopyOnSelectPermissions()
                         }
                         .buttonStyle(.plain)
                         .font(.system(size: 11, weight: .medium))
@@ -158,10 +158,10 @@ struct PanelRootView: View {
                     )
 
                     settingsToggleRow(
-                        title: "Autoselect highlighted text",
+                        title: "Copy on select",
                         isOn: Binding(
-                            get: { appState.settings.isAutoSelectEnabled },
-                            set: { appState.settings.isAutoSelectEnabled = $0 }
+                            get: { appState.settings.isCopyOnSelectEnabled },
+                            set: { appState.settings.isCopyOnSelectEnabled = $0 }
                         )
                     )
 
@@ -182,8 +182,8 @@ struct PanelRootView: View {
                     ) {
                         optionPicker(
                             selection: Binding(
-                                get: { appState.settings.autoSelectCooldownMilliseconds },
-                                set: { appState.settings.autoSelectCooldownMilliseconds = $0 }
+                                get: { appState.settings.copyOnSelectCooldownMilliseconds },
+                                set: { appState.settings.copyOnSelectCooldownMilliseconds = $0 }
                             ),
                             options: cooldownOptions,
                             label: { value in "\(value) ms" },
@@ -254,11 +254,11 @@ struct PanelRootView: View {
                 .fill(appState.permissionManager.isTrusted ? Color(nsColor: .systemGreen) : Color(nsColor: .systemOrange))
                 .frame(width: 6, height: 6)
             if appState.permissionManager.isTrusted {
-                Text(appState.settings.isAutoSelectEnabled ? "Autoselect ready" : "Clipboard only")
+                Text(appState.settings.isCopyOnSelectEnabled ? "Copy-on-select ready" : "Clipboard only")
                     .font(.system(size: 11, weight: .medium))
             } else {
                 Button("Accessibility Required") {
-                    appState.refreshAutoSelectPermissions()
+                    appState.refreshCopyOnSelectPermissions()
                 }
                 .buttonStyle(.plain)
                 .font(.system(size: 11, weight: .medium))
@@ -325,9 +325,9 @@ struct PanelRootView: View {
                     appState.restore(item)
                 } label: {
                     HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: item.source == .autoSelect ? "cursorarrow.rays" : "doc.on.doc")
+                        Image(systemName: item.source == .copyOnSelect ? "cursorarrow.rays" : "doc.on.doc")
                             .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(item.source == .autoSelect ? Color.accentColor : .secondary)
+                            .foregroundStyle(item.source == .copyOnSelect ? Color.accentColor : .secondary)
                             .frame(width: 14, alignment: .center)
 
                         Text(item.displayText.isEmpty ? "Untitled" : item.displayText)
@@ -370,7 +370,7 @@ struct PanelRootView: View {
 
             HStack(spacing: 6) {
                 Text(item.appName)
-                Text(item.source == .autoSelect ? "Selection" : "Clipboard")
+                Text(item.source == .copyOnSelect ? "Selection" : "Clipboard")
                 Text(item.createdAt.formatted(date: .omitted, time: .shortened))
             }
             .font(.system(size: 10, weight: .medium))
@@ -449,7 +449,7 @@ struct PanelRootView: View {
     private var emptyMessage: String {
         switch appState.selectedTab {
         case .history:
-            return "Copy something, or enable autoselect to capture highlighted text."
+            return "Copy something, or enable copy-on-select to capture highlighted text."
         case .favorites:
             return "Mark important items as favorites so they stay separate from the stream."
         }

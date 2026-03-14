@@ -27,13 +27,13 @@ final class AppState {
 
     @ObservationIgnored private let captureCoordinator: CaptureCoordinator
     @ObservationIgnored private let clipboardMonitor: ClipboardMonitor
-    @ObservationIgnored private let autoSelectEngine: AutoSelectEngine
+    @ObservationIgnored private let copyOnSelectEngine: CopyOnSelectEngine
 
     private init() {
         let captureCoordinator = CaptureCoordinator(history: history, settings: settings)
         self.captureCoordinator = captureCoordinator
         self.clipboardMonitor = ClipboardMonitor(settings: settings, captureCoordinator: captureCoordinator)
-        self.autoSelectEngine = AutoSelectEngine(
+        self.copyOnSelectEngine = CopyOnSelectEngine(
             settings: settings,
             permissionManager: permissionManager,
             captureCoordinator: captureCoordinator
@@ -45,12 +45,12 @@ final class AppState {
         history.enforceLimit(settings.historyLimit)
         permissionManager.refreshTrust()
         clipboardMonitor.start()
-        autoSelectEngine.start()
+        copyOnSelectEngine.start()
         ensureSelection()
         synchronizeHistoryLimit()
     }
 
-    func refreshAutoSelectPermissions() {
+    func refreshCopyOnSelectPermissions() {
         permissionManager.requestAccessPrompt()
         permissionManager.openPrivacySettings()
     }

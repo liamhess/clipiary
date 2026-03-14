@@ -15,7 +15,7 @@ jobs:
       CLIPIARY_RELEASE_REPO: liamhess/clipiary
       CLIPIARY_CASK_TOKEN: clipiary
       CLIPIARY_HOMEPAGE: https://github.com/liamhess/clipiary
-      CLIPIARY_DESCRIPTION: macOS clipboard manager with an opt-in global autoselect mode
+      CLIPIARY_DESCRIPTION: macOS clipboard manager with an opt-in global copy-on-select mode
       CLIPIARY_APP_NAME: Clipiary
       CLIPIARY_BUNDLE_ID: dev.liamhess.clipiary
       CLIPIARY_CODESIGN_IDENTITY: ${{ secrets.CLIPIARY_DEVELOPER_ID_APPLICATION }}

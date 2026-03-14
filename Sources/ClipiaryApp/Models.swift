@@ -2,7 +2,7 @@ import Foundation
 
 enum CaptureSource: String, Codable, Sendable {
     case clipboard
-    case autoSelect
+    case copyOnSelect
     case restored
 }
 

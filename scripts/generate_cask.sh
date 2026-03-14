@@ -15,7 +15,7 @@ CASK_TOKEN="${CLIPIARY_CASK_TOKEN:-clipiary}"
 HOMEPAGE="${CLIPIARY_HOMEPAGE:-https://github.com/liamhess/clipiary}"
 RELEASE_REPO="${CLIPIARY_RELEASE_REPO:-liamhess/clipiary}"
 MACOS_DEPENDS_ON="${CLIPIARY_MACOS_DEPENDS_ON:-sonoma}"
-DESCRIPTION="${CLIPIARY_DESCRIPTION:-macOS clipboard manager with an opt-in global autoselect mode}"
+DESCRIPTION="${CLIPIARY_DESCRIPTION:-macOS clipboard manager with an opt-in global copy-on-select mode}"
 ARCHIVE_NAME="${CLIPIARY_ARCHIVE_NAME:-${APP_NAME}-${VERSION}.zip}"
 URL="https://github.com/${RELEASE_REPO}/releases/download/v${VERSION}/${ARCHIVE_NAME}"
 

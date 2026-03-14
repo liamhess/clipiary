@@ -56,7 +56,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        let isPaused = !appState.settings.isClipboardMonitoringEnabled && !appState.settings.isAutoSelectEnabled
+        let isPaused = !appState.settings.isClipboardMonitoringEnabled && !appState.settings.isCopyOnSelectEnabled
         button.appearsDisabled = isPaused
         button.title = ""
     }
