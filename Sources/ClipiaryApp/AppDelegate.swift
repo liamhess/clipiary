@@ -224,7 +224,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func shouldSuppressKeyUp(_ event: NSEvent) -> Bool {
-        guard isPanelVisible, event.type == .keyUp else {
+        guard event.type == .keyUp else {
             return false
         }
 
@@ -288,6 +288,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.button?.isHighlighted = false
         appState.isRecordingShortcut = false
         suppressedKeyUps.removeAll()
+        let targetApp = previousApp
+        previousApp = nil
+        targetApp?.activate()
     }
 
     private func observePasteRequests() {
