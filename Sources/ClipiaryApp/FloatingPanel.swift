@@ -19,7 +19,7 @@ final class FloatingPanel: NSPanel {
 
         super.init(
             contentRect: contentRect,
-            styleMask: [.nonactivatingPanel, .titled, .resizable, .fullSizeContentView],
+            styleMask: [.nonactivatingPanel, .resizable],
             backing: .buffered,
             defer: false
         )
@@ -28,16 +28,11 @@ final class FloatingPanel: NSPanel {
         isFloatingPanel = true
         level = .statusBar
         collectionBehavior = [.auxiliary, .stationary, .moveToActiveSpace, .fullScreenAuxiliary]
-        titleVisibility = .hidden
-        titlebarAppearsTransparent = true
         isMovableByWindowBackground = true
         hidesOnDeactivate = false
         backgroundColor = .clear
         minSize = NSSize(width: 300, height: 400)
         maxSize = NSSize(width: 800, height: 1200)
-        standardWindowButton(.closeButton)?.isHidden = true
-        standardWindowButton(.miniaturizeButton)?.isHidden = true
-        standardWindowButton(.zoomButton)?.isHidden = true
 
         let hostingView = PanelHostingView(
             rootView: AnyView(PanelRootView().environment(appState)),
