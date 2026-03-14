@@ -69,6 +69,8 @@ struct PanelRootView: View {
             }
 
             searchField
+                .frame(height: appState.settings.alwaysShowSearch || !appState.searchQuery.isEmpty ? nil : 0)
+                .clipped()
 
             ScrollViewReader { proxy in
                 ScrollView {
@@ -170,6 +172,14 @@ struct PanelRootView: View {
                         isOn: Binding(
                             get: { appState.settings.showItemDetails },
                             set: { appState.settings.showItemDetails = $0 }
+                        )
+                    )
+
+                    settingsToggleRow(
+                        title: "Always show search field",
+                        isOn: Binding(
+                            get: { appState.settings.alwaysShowSearch },
+                            set: { appState.settings.alwaysShowSearch = $0 }
                         )
                     )
 

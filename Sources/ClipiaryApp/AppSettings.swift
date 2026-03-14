@@ -18,6 +18,7 @@ final class AppSettings {
         static let panelHeight = "panelHeight"
         static let moveToTopOnPaste = "moveToTopOnPaste"
         static let showItemDetails = "showItemDetails"
+        static let alwaysShowSearch = "alwaysShowSearch"
     }
 
     private let defaults: UserDefaults
@@ -70,6 +71,10 @@ final class AppSettings {
         didSet { defaults.set(showItemDetails, forKey: Keys.showItemDetails) }
     }
 
+    var alwaysShowSearch: Bool {
+        didSet { defaults.set(alwaysShowSearch, forKey: Keys.alwaysShowSearch) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -85,6 +90,7 @@ final class AppSettings {
             Keys.panelHeight: 600.0,
             Keys.moveToTopOnPaste: true,
             Keys.showItemDetails: true,
+            Keys.alwaysShowSearch: true,
         ])
 
         isClipboardMonitoringEnabled = defaults.bool(forKey: Keys.clipboardMonitoringEnabled)
@@ -99,6 +105,7 @@ final class AppSettings {
         panelHeight = defaults.double(forKey: Keys.panelHeight)
         moveToTopOnPaste = defaults.bool(forKey: Keys.moveToTopOnPaste)
         showItemDetails = defaults.bool(forKey: Keys.showItemDetails)
+        alwaysShowSearch = defaults.bool(forKey: Keys.alwaysShowSearch)
     }
 
     var globalShortcut: GlobalShortcut {
