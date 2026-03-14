@@ -199,9 +199,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             appState.togglePreview()
             return suppressKeyUp(for: event)
         case 123:
+            guard appState.searchQuery.isEmpty else { return event }
             appState.moveTab(direction: -1)
             return suppressKeyUp(for: event)
         case 124:
+            guard appState.searchQuery.isEmpty else { return event }
             appState.moveTab(direction: 1)
             return suppressKeyUp(for: event)
         case 125:
