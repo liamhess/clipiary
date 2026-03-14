@@ -6,7 +6,9 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 source "$ROOT_DIR/scripts/load_env.sh"
 CONFIGURATION="${1:-debug}"
 APP_NAME="Clipiary"
-BUNDLE_ID="dev.liamhess.clipiary"
+BUNDLE_ID="${CLIPIARY_BUNDLE_ID:-dev.liamhess.clipiary}"
+APP_VERSION="${CLIPIARY_VERSION:-0.1.0}"
+BUILD_NUMBER="${CLIPIARY_BUILD_NUMBER:-1}"
 APP_BUNDLE="$ROOT_DIR/dist/$APP_NAME.app"
 CONTENTS_DIR="$APP_BUNDLE/Contents"
 MACOS_DIR="$CONTENTS_DIR/MacOS"
@@ -15,6 +17,7 @@ TMP_HOME="$ROOT_DIR/.tmp-home"
 MODULE_CACHE="$ROOT_DIR/.build/module-cache"
 CLANG_CACHE="$ROOT_DIR/.build/clang-module-cache"
 CODESIGN_IDENTITY="${CLIPIARY_CODESIGN_IDENTITY:-}"
+CODESIGN_FLAGS="${CLIPIARY_CODESIGN_FLAGS:-}"
 
 mkdir -p "$TMP_HOME" "$MODULE_CACHE" "$CLANG_CACHE" "$MACOS_DIR" "$RESOURCES_DIR"
 
@@ -46,14 +49,16 @@ chmod +x "$MACOS_DIR/$APP_NAME"
 /usr/libexec/PlistBuddy -c "Add :CFBundleInfoDictionaryVersion string 6.0" "$CONTENTS_DIR/Info.plist"
 /usr/libexec/PlistBuddy -c "Add :CFBundleName string $APP_NAME" "$CONTENTS_DIR/Info.plist"
 /usr/libexec/PlistBuddy -c "Add :CFBundlePackageType string APPL" "$CONTENTS_DIR/Info.plist"
-/usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string 0.1.0" "$CONTENTS_DIR/Info.plist"
-/usr/libexec/PlistBuddy -c "Add :CFBundleVersion string 1" "$CONTENTS_DIR/Info.plist"
+/usr/libexec/PlistBuddy -c "Add :CFBundleShortVersionString string $APP_VERSION" "$CONTENTS_DIR/Info.plist"
+/usr/libexec/PlistBuddy -c "Add :CFBundleVersion string $BUILD_NUMBER" "$CONTENTS_DIR/Info.plist"
 /usr/libexec/PlistBuddy -c "Add :LSMinimumSystemVersion string 14.0" "$CONTENTS_DIR/Info.plist"
 /usr/libexec/PlistBuddy -c "Add :LSUIElement bool true" "$CONTENTS_DIR/Info.plist"
 /usr/libexec/PlistBuddy -c "Add :NSPrincipalClass string NSApplication" "$CONTENTS_DIR/Info.plist"
 
 if [[ -n "$CODESIGN_IDENTITY" ]]; then
-  codesign --force --deep --sign "$CODESIGN_IDENTITY" "$APP_BUNDLE"
+  # Extra flags are injected by release automation for hardened runtime and timestamps.
+  read -r -a EXTRA_CODESIGN_FLAGS <<<"$CODESIGN_FLAGS"
+  codesign --force --deep --sign "$CODESIGN_IDENTITY" "${EXTRA_CODESIGN_FLAGS[@]}" "$APP_BUNDLE"
   echo "Signed app bundle with identity: $CODESIGN_IDENTITY"
 else
   codesign --remove-signature "$APP_BUNDLE" 2>/dev/null || true

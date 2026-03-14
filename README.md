@@ -44,3 +44,87 @@ Run a dev watcher that rebuilds and relaunches the app on source changes:
 The app bundle path to approve in `System Settings > Privacy & Security > Accessibility` is:
 
 `dist/Clipiary.app`
+
+## Private Homebrew tap
+
+This app is best distributed through a Homebrew cask in your own tap rather than `homebrew/cask`.
+
+The install shape looks like this:
+
+```sh
+brew tap liamhess/tap
+brew install --cask clipiary
+```
+
+The cask should live in a separate repository named `homebrew-tap` with:
+
+```text
+Casks/clipiary.rb
+```
+
+To build a release archive and generate the cask file locally:
+
+```sh
+./scripts/package_release.sh 0.1.0
+```
+
+That command writes:
+
+- `dist/Clipiary-0.1.0.zip`
+- `dist/Clipiary-0.1.0.sha256`
+- `dist/clipiary.rb`
+
+### CI release flow
+
+The workflow in `.github/workflows/release.yml` is tag-driven and release-only. Pushing a tag such as `v0.1.0` from a commit on `main` will:
+
+1. build the macOS app bundle
+2. sign and notarize it only when the Apple signing secrets are configured
+3. upload `Clipiary-<version>.zip` to the GitHub release
+4. update `liamhess/homebrew-tap` with a new `Casks/clipiary.rb`
+
+If a tag points to a commit that is not contained in `main`, the workflow exits without publishing.
+
+Minimum GitHub Actions secret for unsigned private releases:
+
+- `HOMEBREW_TAP_DEPLOY_KEY`
+
+Optional GitHub Actions secrets for signed and notarized releases later:
+
+- `CLIPIARY_DEVELOPER_ID_APPLICATION`
+- `CLIPIARY_DEVELOPER_ID_P12_BASE64`
+- `CLIPIARY_DEVELOPER_ID_P12_PASSWORD`
+- `CLIPIARY_KEYCHAIN_PASSWORD`
+- `CLIPIARY_NOTARY_APPLE_ID`
+- `CLIPIARY_NOTARY_TEAM_ID`
+- `CLIPIARY_NOTARY_PASSWORD`
+
+If the Apple signing and notarization secrets are omitted, the workflow still works for a private tap. It will publish an unsigned app archive and update the cask, but macOS Gatekeeper will treat the app as unsigned.
+
+### Deploy key setup
+
+Generate a dedicated SSH keypair for the tap:
+
+```sh
+mkdir -p ~/.ssh
+ssh-keygen -t ed25519 -C "homebrew tap deploy key" -N "" -f ~/.ssh/homebrew-tap-deploy
+```
+
+Add the public key to `liamhess/homebrew-tap` as a write-enabled deploy key:
+
+```sh
+gh repo deploy-key add ~/.ssh/homebrew-tap-deploy.pub \
+  --repo liamhess/homebrew-tap \
+  --allow-write \
+  --title "homebrew tap deploy key"
+```
+
+Store the private key as a GitHub Actions secret in `liamhess/clipiary`:
+
+```sh
+gh secret set HOMEBREW_TAP_DEPLOY_KEY \
+  --repo liamhess/clipiary \
+  < ~/.ssh/homebrew-tap-deploy
+```
+
+After that, tagged releases can push cask updates to the tap over SSH without any personal access token.
