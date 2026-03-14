@@ -208,7 +208,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case 36:
             appState.restoreSelectedItem()
             return suppressKeyUp(for: event)
-        case 51:
+        case 117:
             appState.deleteSelectedItem()
             return suppressKeyUp(for: event)
         default:
