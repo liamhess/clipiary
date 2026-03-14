@@ -14,16 +14,24 @@ enum ThirdPartyAccessibilityActivator {
         }
 
         let appElement = AXUIElementCreateApplication(app.processIdentifier)
-        let manualAccessibilityAttribute = "AXManualAccessibility" as CFString
-        let error = AXUIElementSetAttributeValue(appElement, manualAccessibilityAttribute, kCFBooleanTrue)
 
-        switch error {
-        case .success:
+        let manualError = AXUIElementSetAttributeValue(
+            appElement, "AXManualAccessibility" as CFString, kCFBooleanTrue
+        )
+        let enhancedError = AXUIElementSetAttributeValue(
+            appElement, "AXEnhancedUserInterface" as CFString, kCFBooleanTrue
+        )
+
+        if manualError == .success || enhancedError == .success {
             return .enabled
+        }
+
+        let primaryError = manualError
+        switch primaryError {
         case .attributeUnsupported, .noValue, .cannotComplete:
             return .unsupported
         default:
-            return .failed(error)
+            return .failed(primaryError)
         }
     }
 }
