@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   release:
-    runs-on: macos-14
+    runs-on: macos-26
     env:
       CLIPIARY_RELEASE_REPO: liamhess/clipiary
       CLIPIARY_CASK_TOKEN: clipiary
@@ -42,6 +42,20 @@ jobs:
           VERSION="${TAG#v}"
           echo "tag=$TAG" >>"$GITHUB_OUTPUT"
           echo "version=$VERSION" >>"$GITHUB_OUTPUT"
+
+      - name: Select Xcode 26
+        shell: bash
+        run: |
+          set -euo pipefail
+          XCODE_APP="$(find /Applications -maxdepth 1 -type d -name 'Xcode_26*.app' | sort -V | tail -n 1)"
+          if [[ -z "$XCODE_APP" ]]; then
+            echo "No Xcode 26 installation found on runner." >&2
+            ls -1 /Applications | sed 's/^/  /'
+            exit 1
+          fi
+          sudo xcode-select -s "$XCODE_APP/Contents/Developer"
+          xcodebuild -version
+          swift --version
 
       - name: Verify tagged commit is on main
         shell: bash
