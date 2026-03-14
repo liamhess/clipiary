@@ -35,6 +35,8 @@ export CLIPIARY_CODESIGN_IDENTITY="Apple Development: Your Name (TEAMID)"
 
 The build, run, and dev scripts will source `.env` automatically.
 
+If `CLIPIARY_CODESIGN_IDENTITY` is not set, the app bundle is still ad-hoc signed so unsigned private releases behave more like standard "untrusted developer" apps on macOS.
+
 Run the app bundle:
 
 ```sh
@@ -71,21 +73,21 @@ Casks/clipiary.rb
 To build a release archive and generate the cask file locally:
 
 ```sh
-./scripts/package_release.sh 0.2.0
+./scripts/package_release.sh 0.2.1
 ```
 
 That command writes:
 
-- `dist/Clipiary-0.2.0.zip`
-- `dist/Clipiary-0.2.0.sha256`
+- `dist/Clipiary-0.2.1.zip`
+- `dist/Clipiary-0.2.1.sha256`
 - `dist/clipiary.rb`
 
 ### CI release flow
 
-The workflow in `.github/workflows/release.yml` is tag-driven and release-only. Pushing a tag such as `v0.2.0` from a commit on `main` will:
+The workflow in `.github/workflows/release.yml` is tag-driven and release-only. Pushing a tag such as `v0.2.1` from a commit on `main` will:
 
 1. build the macOS app bundle
-2. sign and notarize it only when the Apple signing secrets are configured
+2. sign and notarize it when the Apple signing secrets are configured, otherwise fall back to ad-hoc signing
 3. upload `Clipiary-<version>.zip` to the GitHub release
 4. update `liamhess/homebrew-tap` with a new `Casks/clipiary.rb`
 
@@ -105,7 +107,7 @@ Optional GitHub Actions secrets for signed and notarized releases later:
 - `CLIPIARY_NOTARY_TEAM_ID`
 - `CLIPIARY_NOTARY_PASSWORD`
 
-If the Apple signing and notarization secrets are omitted, the workflow still works for a private tap. It will publish an unsigned app archive and update the cask, but macOS Gatekeeper will treat the app as unsigned.
+If the Apple signing and notarization secrets are omitted, the workflow still works for a private tap. It will publish an ad-hoc-signed app archive and update the cask, but macOS will still treat it as an untrusted developer build rather than a trusted notarized app.
 
 ### Deploy key setup
 

@@ -7,7 +7,7 @@ source "$ROOT_DIR/scripts/load_env.sh"
 CONFIGURATION="${1:-debug}"
 APP_NAME="Clipiary"
 BUNDLE_ID="${CLIPIARY_BUNDLE_ID:-dev.liamhess.clipiary}"
-APP_VERSION="${CLIPIARY_VERSION:-0.2.0}"
+APP_VERSION="${CLIPIARY_VERSION:-0.2.1}"
 BUILD_NUMBER="${CLIPIARY_BUILD_NUMBER:-1}"
 APP_BUNDLE="$ROOT_DIR/dist/$APP_NAME.app"
 CONTENTS_DIR="$APP_BUNDLE/Contents"
@@ -71,8 +71,8 @@ if [[ -n "$CODESIGN_IDENTITY" ]]; then
   fi
   echo "Signed app bundle with identity: $CODESIGN_IDENTITY"
 else
-  codesign --remove-signature "$APP_BUNDLE" 2>/dev/null || true
-  echo "Built app bundle without code signing."
+  codesign --force --deep --sign - "$APP_BUNDLE"
+  echo "Built app bundle with ad-hoc signing."
   echo "Tip: set CLIPIARY_CODESIGN_IDENTITY to a stable signing identity to preserve TCC permissions."
 fi
 
