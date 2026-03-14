@@ -243,6 +243,8 @@ enum SelectionReader {
             "org.chromium.Chromium",
             "com.microsoft.edgemac",
             "com.brave.Browser",
+            "com.microsoft.VSCode",
+            "com.microsoft.VSCode.Insiders",
         ].contains(bundleID) {
             return "Selected text unavailable; browser accessibility may need to be enabled"
         }
