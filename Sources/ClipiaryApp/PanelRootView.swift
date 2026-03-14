@@ -278,6 +278,9 @@ struct PanelRootView: View {
             ))
                 .textFieldStyle(.plain)
                 .focused($searchFocused)
+                .onSubmit {
+                    appState.requestPasteSelected()
+                }
                 .onChange(of: appState.searchQuery) {
                     appState.ensureSelection()
                 }

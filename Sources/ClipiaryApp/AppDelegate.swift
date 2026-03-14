@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var localKeyMonitor: Any?
     private var suppressedKeyUps = Set<UInt16>()
     private var panel: FloatingPanel?
+    private var previousApp: NSRunningApplication?
     private let hotKeyManager = GlobalHotKeyManager()
     private lazy var statusItem: NSStatusItem = {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -32,6 +33,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         configurePanel()
         configureHotKey()
         configureKeyMonitor()
+        observePasteRequests()
         updateStatusItem()
         statusSyncTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
             Task { @MainActor [weak self] in
@@ -206,7 +208,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             appState.moveSelection(direction: -1)
             return suppressKeyUp(for: event)
         case 36:
-            appState.restoreSelectedItem()
+            appState.requestPasteSelected()
             return suppressKeyUp(for: event)
         case 117:
             appState.deleteSelectedItem()
@@ -270,6 +272,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if panel.isVisible {
             panel.close()
         } else {
+            previousApp = NSWorkspace.shared.frontmostApplication
             NSApp.activate(ignoringOtherApps: true)
             appState.didOpenPopover()
             panel.open()
@@ -280,5 +283,52 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem.button?.isHighlighted = false
         appState.isRecordingShortcut = false
         suppressedKeyUps.removeAll()
+    }
+
+    private func observePasteRequests() {
+        _ = withObservationTracking {
+            appState.pasteSelectedRequestID
+        } onChange: { [weak self] in
+            Task { @MainActor [weak self] in
+                self?.pasteSelectedAndClose()
+                self?.observePasteRequests()
+            }
+        }
+    }
+
+    private func pasteSelectedAndClose() {
+        guard isPanelVisible else {
+            return
+        }
+        let canPaste = AXIsProcessTrusted()
+        panel?.close()
+        let targetApp = previousApp
+        previousApp = nil
+        targetApp?.activate()
+        if canPaste {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                Self.postPaste()
+            }
+        }
+    }
+
+    private nonisolated static func postPaste() {
+        guard let source = CGEventSource(stateID: .hidSystemState) else {
+            return
+        }
+
+        let vKey: CGKeyCode = 9
+
+        guard
+            let keyDown = CGEvent(keyboardEventSource: source, virtualKey: vKey, keyDown: true),
+            let keyUp = CGEvent(keyboardEventSource: source, virtualKey: vKey, keyDown: false)
+        else {
+            return
+        }
+
+        keyDown.flags = .maskCommand
+        keyUp.flags = .maskCommand
+        keyDown.post(tap: .cghidEventTap)
+        keyUp.post(tap: .cghidEventTap)
     }
 }

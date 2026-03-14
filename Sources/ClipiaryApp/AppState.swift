@@ -24,6 +24,7 @@ final class AppState {
     var isRecordingShortcut = false
     private(set) var searchFocusRequestID = 0
     private(set) var popoverOpenRequestID = 0
+    private(set) var pasteSelectedRequestID = 0
 
     @ObservationIgnored private let captureCoordinator: CaptureCoordinator
     @ObservationIgnored private let clipboardMonitor: ClipboardMonitor
@@ -220,6 +221,11 @@ final class AppState {
 
     func requestSearchFocus() {
         searchFocusRequestID &+= 1
+    }
+
+    func requestPasteSelected() {
+        restoreSelectedItem()
+        pasteSelectedRequestID &+= 1
     }
 
     private func synchronizeHistoryLimit() {

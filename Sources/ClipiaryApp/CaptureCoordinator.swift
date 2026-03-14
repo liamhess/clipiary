@@ -147,28 +147,32 @@ final class CaptureCoordinator {
     }
 
     private func postCommandC() -> Bool {
+        postCommandKey(vKey: 8)
+    }
+
+    @discardableResult
+    private func postCommandKey(vKey: CGKeyCode) -> Bool {
         guard let source = CGEventSource(stateID: .combinedSessionState) else {
             return false
         }
 
         let commandKey: CGKeyCode = 55
-        let cKey: CGKeyCode = 8
 
         guard
             let commandDown = CGEvent(keyboardEventSource: source, virtualKey: commandKey, keyDown: true),
-            let cDown = CGEvent(keyboardEventSource: source, virtualKey: cKey, keyDown: true),
-            let cUp = CGEvent(keyboardEventSource: source, virtualKey: cKey, keyDown: false),
+            let keyDown = CGEvent(keyboardEventSource: source, virtualKey: vKey, keyDown: true),
+            let keyUp = CGEvent(keyboardEventSource: source, virtualKey: vKey, keyDown: false),
             let commandUp = CGEvent(keyboardEventSource: source, virtualKey: commandKey, keyDown: false)
         else {
             return false
         }
 
-        cDown.flags = .maskCommand
-        cUp.flags = .maskCommand
+        keyDown.flags = .maskCommand
+        keyUp.flags = .maskCommand
 
         commandDown.post(tap: .cghidEventTap)
-        cDown.post(tap: .cghidEventTap)
-        cUp.post(tap: .cghidEventTap)
+        keyDown.post(tap: .cghidEventTap)
+        keyUp.post(tap: .cghidEventTap)
         commandUp.post(tap: .cghidEventTap)
         return true
     }
