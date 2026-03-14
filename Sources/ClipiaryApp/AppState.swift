@@ -228,6 +228,7 @@ final class AppState {
 
     func requestPasteSelected() {
         restoreSelectedItem()
+        searchQuery = ""
         pasteSelectedRequestID &+= 1
     }
 
