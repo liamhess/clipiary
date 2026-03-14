@@ -3,11 +3,11 @@ import Observation
 import SwiftUI
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
+final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusSyncTimer: Timer?
     private var localKeyMonitor: Any?
     private var suppressedKeyUps = Set<UInt16>()
-    private let popover = NSPopover()
+    private var panel: FloatingPanel?
     private let hotKeyManager = GlobalHotKeyManager()
     private lazy var statusItem: NSStatusItem = {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -21,11 +21,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
     private let appState = AppState.shared
 
+    private var isPanelVisible: Bool {
+        panel?.isVisible ?? false
+    }
+
     func applicationWillFinishLaunching(_ notification: Notification) {
         NSApplication.shared.setActivationPolicy(.accessory)
         appState.start()
         configureCommandMenu()
-        configurePopover()
+        configurePanel()
         configureHotKey()
         configureKeyMonitor()
         updateStatusItem()
@@ -42,8 +46,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     }
 
     func applicationDidResignActive(_ notification: Notification) {
-        if popover.isShown {
-            popover.performClose(nil)
+        if isPanelVisible {
+            panel?.close()
         }
     }
 
@@ -103,17 +107,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
         NSApplication.shared.mainMenu = mainMenu
     }
 
-    private func configurePopover() {
-        popover.behavior = .transient
-        popover.animates = true
-        popover.delegate = self
-        popover.contentSize = NSSize(width: 376, height: 600)
-        popover.contentViewController = PopoverHostingController(
-            appState: appState,
-            onClose: { [weak self] in
-                self?.closePopoverCommand()
-            }
+    private func configurePanel() {
+        let panel = FloatingPanel(
+            statusBarButton: statusItem.button,
+            appState: appState
         )
+        panel.onClose = { [weak self] in
+            self?.panelDidClose()
+        }
+        self.panel = panel
     }
 
     private func configureHotKey() {
@@ -170,7 +172,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     }
 
     private func handleKeyDownEvent(_ event: NSEvent) -> NSEvent? {
-        guard popover.isShown else {
+        guard isPanelVisible else {
             return event
         }
 
@@ -215,7 +217,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
     }
 
     private func shouldSuppressKeyUp(_ event: NSEvent) -> Bool {
-        guard popover.isShown, event.type == .keyUp else {
+        guard isPanelVisible, event.type == .keyUp else {
             return false
         }
 
@@ -234,7 +236,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
     @objc
     private func focusSearchCommand() {
-        if !popover.isShown {
+        if !isPanelVisible {
             togglePopover()
         }
 
@@ -243,7 +245,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
     @objc
     private func toggleFavoriteCommand() {
-        guard popover.isShown else {
+        guard isPanelVisible else {
             return
         }
 
@@ -252,33 +254,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSPopoverDelegate {
 
     @objc
     private func closePopoverCommand() {
-        guard popover.isShown else {
+        guard isPanelVisible else {
             return
         }
 
-        popover.performClose(nil)
+        panel?.close()
     }
 
     @objc
     private func togglePopover() {
-        guard let button = statusItem.button else {
+        guard let panel else {
             return
         }
 
-        if popover.isShown {
-            popover.performClose(nil)
+        if panel.isVisible {
+            panel.close()
         } else {
             NSApp.activate(ignoringOtherApps: true)
-            button.isHighlighted = true
             appState.didOpenPopover()
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            DispatchQueue.main.async { [weak self] in
-                self?.popover.contentViewController?.view.window?.makeKey()
-            }
+            panel.open()
         }
     }
 
-    func popoverDidClose(_ notification: Notification) {
+    private func panelDidClose() {
         statusItem.button?.isHighlighted = false
         appState.isRecordingShortcut = false
         suppressedKeyUps.removeAll()

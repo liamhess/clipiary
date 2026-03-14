@@ -14,6 +14,8 @@ final class AppSettings {
         static let historyLimit = "historyLimit"
         static let globalHotKeyKeyCode = "globalHotKeyKeyCode"
         static let globalHotKeyModifiers = "globalHotKeyModifiers"
+        static let panelWidth = "panelWidth"
+        static let panelHeight = "panelHeight"
     }
 
     private let defaults: UserDefaults
@@ -50,6 +52,14 @@ final class AppSettings {
         didSet { defaults.set(globalHotKeyModifiers, forKey: Keys.globalHotKeyModifiers) }
     }
 
+    var panelWidth: Double {
+        didSet { defaults.set(panelWidth, forKey: Keys.panelWidth) }
+    }
+
+    var panelHeight: Double {
+        didSet { defaults.set(panelHeight, forKey: Keys.panelHeight) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -61,6 +71,8 @@ final class AppSettings {
             Keys.historyLimit: 150,
             Keys.globalHotKeyKeyCode: 9,
             Keys.globalHotKeyModifiers: Int((NSEvent.ModifierFlags.command.union(.shift)).rawValue),
+            Keys.panelWidth: 376.0,
+            Keys.panelHeight: 600.0,
         ])
 
         isClipboardMonitoringEnabled = defaults.bool(forKey: Keys.clipboardMonitoringEnabled)
@@ -71,6 +83,8 @@ final class AppSettings {
         historyLimit = defaults.integer(forKey: Keys.historyLimit)
         globalHotKeyKeyCode = defaults.integer(forKey: Keys.globalHotKeyKeyCode)
         globalHotKeyModifiers = defaults.integer(forKey: Keys.globalHotKeyModifiers)
+        panelWidth = defaults.double(forKey: Keys.panelWidth)
+        panelHeight = defaults.double(forKey: Keys.panelHeight)
     }
 
     var globalShortcut: GlobalShortcut {
