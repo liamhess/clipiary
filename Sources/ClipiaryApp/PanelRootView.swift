@@ -166,6 +166,14 @@ struct PanelRootView: View {
                     )
 
                     settingsToggleRow(
+                        title: "Show item details",
+                        isOn: Binding(
+                            get: { appState.settings.showItemDetails },
+                            set: { appState.settings.showItemDetails = $0 }
+                        )
+                    )
+
+                    settingsToggleRow(
                         title: "Copy on select",
                         isOn: Binding(
                             get: { appState.settings.isCopyOnSelectEnabled },
@@ -379,14 +387,16 @@ struct PanelRootView: View {
                 .opacity(hoveredItemID == item.id ? 1 : 0.45)
             }
 
-            HStack(spacing: 6) {
-                Text(item.appName)
-                Text(item.source == .copyOnSelect ? "Selection" : "Clipboard")
-                Text(item.createdAt.formatted(date: .omitted, time: .shortened))
+            if appState.settings.showItemDetails {
+                HStack(spacing: 6) {
+                    Text(item.appName)
+                    Text(item.source == .copyOnSelect ? "Selection" : "Clipboard")
+                    Text(item.createdAt.formatted(date: .omitted, time: .shortened))
+                }
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(.secondary)
+                .padding(.leading, 22)
             }
-            .font(.system(size: 10, weight: .medium))
-            .foregroundStyle(.secondary)
-            .padding(.leading, 22)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 8)
