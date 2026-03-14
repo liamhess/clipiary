@@ -33,11 +33,18 @@ build_and_restart() {
 }
 
 snapshot() {
+  local stat_fmt
+  if stat -f "%m %N" /dev/null >/dev/null 2>&1; then
+    stat_fmt=(stat -f "%m %N")   # BSD stat (macOS default)
+  else
+    stat_fmt=(stat -c "%Y %n")   # GNU stat (coreutils)
+  fi
+
   find "${watch_paths[@]}" \
     \( -name "*.swift" -o -name "*.sh" -o -name "Package.swift" \) \
     -type f \
     -print0 |
-    xargs -0 stat -f "%m %N" |
+    xargs -0 "${stat_fmt[@]}" |
     sort |
     shasum -a 256 |
     awk '{print $1}'
