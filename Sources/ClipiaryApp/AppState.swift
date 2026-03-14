@@ -22,6 +22,7 @@ final class AppState {
     private var selectedHistoryTabItemID: HistoryItem.ID?
     private var selectedFavoritesTabItemID: HistoryItem.ID?
     var isRecordingShortcut = false
+    var isPreviewVisible = false
     private(set) var searchFocusRequestID = 0
     private(set) var popoverOpenRequestID = 0
     private(set) var pasteSelectedRequestID = 0
@@ -63,6 +64,7 @@ final class AppState {
     func didOpenPopover() {
         selectedTab = .history
         selectedHistoryTabItemID = nil
+        isPreviewVisible = false
         ensureSelection()
         popoverOpenRequestID &+= 1
         requestSearchFocus()
@@ -138,7 +140,15 @@ final class AppState {
         setSelectedTab(tabs[nextIndex])
     }
 
+    func togglePreview() {
+        isPreviewVisible.toggle()
+        if !isPreviewVisible {
+            requestSearchFocus()
+        }
+    }
+
     func moveSelection(direction: Int) {
+        isPreviewVisible = false
         let items = activeItems
         guard !items.isEmpty else {
             selectedHistoryItemID = nil
@@ -229,6 +239,7 @@ final class AppState {
     func requestPasteSelected() {
         restoreSelectedItem()
         searchQuery = ""
+        isPreviewVisible = false
         pasteSelectedRequestID &+= 1
     }
 

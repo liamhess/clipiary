@@ -300,10 +300,17 @@ struct PanelRootView: View {
                 .foregroundStyle(.secondary)
             TextField("Search clipboard history", text: Binding(
                 get: { appState.searchQuery },
-                set: { appState.searchQuery = $0 }
+                set: {
+                    if $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        appState.searchQuery = ""
+                    } else {
+                        appState.searchQuery = $0
+                    }
+                }
             ))
                 .textFieldStyle(.plain)
                 .focused($searchFocused)
+                .onKeyPress(keys: [.upArrow, .downArrow, .space]) { _ in .handled }
                 .onSubmit {
                     appState.requestPasteSelected()
                 }
@@ -420,6 +427,15 @@ struct PanelRootView: View {
         .onHover { isHovered in
             hoveredItemID = isHovered ? item.id : (hoveredItemID == item.id ? nil : hoveredItemID)
         }
+        .popover(
+            isPresented: Binding(
+                get: { appState.isPreviewVisible && appState.selectedHistoryItemID == item.id },
+                set: { if !$0 { appState.isPreviewVisible = false } }
+            ),
+            arrowEdge: .trailing
+        ) {
+            itemPreview(for: item)
+        }
     }
 
     private var emptyState: some View {
@@ -444,6 +460,16 @@ struct PanelRootView: View {
             .fill(rowFill(for: item))
     }
 
+    private func itemPreview(for item: HistoryItem) -> some View {
+        ScrollView {
+            Text(item.text)
+                .font(.system(size: 13))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(12)
+        }
+        .frame(idealWidth: 500, maxHeight: 600)
+    }
+
     private var shortcutsHelpPopover: some View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Keyboard Shortcuts")
@@ -456,6 +482,7 @@ struct PanelRootView: View {
                 shortcutRow("Move selection", "Up / Down")
                 shortcutRow("Switch tabs", "Left / Right")
                 shortcutRow("Restore selected item", "Return")
+                shortcutRow("Preview selected item", "Space")
                 shortcutRow("Delete selected item", "Delete")
                 shortcutRow("Close popover", "Esc")
             }
