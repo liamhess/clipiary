@@ -158,6 +158,14 @@ struct PanelRootView: View {
                     )
 
                     settingsToggleRow(
+                        title: "Move to top on paste",
+                        isOn: Binding(
+                            get: { appState.settings.moveToTopOnPaste },
+                            set: { appState.settings.moveToTopOnPaste = $0 }
+                        )
+                    )
+
+                    settingsToggleRow(
                         title: "Copy on select",
                         isOn: Binding(
                             get: { appState.settings.isCopyOnSelectEnabled },

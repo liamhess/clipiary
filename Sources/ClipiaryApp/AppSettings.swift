@@ -16,6 +16,7 @@ final class AppSettings {
         static let globalHotKeyModifiers = "globalHotKeyModifiers"
         static let panelWidth = "panelWidth"
         static let panelHeight = "panelHeight"
+        static let moveToTopOnPaste = "moveToTopOnPaste"
     }
 
     private let defaults: UserDefaults
@@ -60,6 +61,10 @@ final class AppSettings {
         didSet { defaults.set(panelHeight, forKey: Keys.panelHeight) }
     }
 
+    var moveToTopOnPaste: Bool {
+        didSet { defaults.set(moveToTopOnPaste, forKey: Keys.moveToTopOnPaste) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -73,6 +78,7 @@ final class AppSettings {
             Keys.globalHotKeyModifiers: Int((NSEvent.ModifierFlags.command.union(.shift)).rawValue),
             Keys.panelWidth: 376.0,
             Keys.panelHeight: 600.0,
+            Keys.moveToTopOnPaste: true,
         ])
 
         isClipboardMonitoringEnabled = defaults.bool(forKey: Keys.clipboardMonitoringEnabled)
@@ -85,6 +91,7 @@ final class AppSettings {
         globalHotKeyModifiers = defaults.integer(forKey: Keys.globalHotKeyModifiers)
         panelWidth = defaults.double(forKey: Keys.panelWidth)
         panelHeight = defaults.double(forKey: Keys.panelHeight)
+        moveToTopOnPaste = defaults.bool(forKey: Keys.moveToTopOnPaste)
     }
 
     var globalShortcut: GlobalShortcut {

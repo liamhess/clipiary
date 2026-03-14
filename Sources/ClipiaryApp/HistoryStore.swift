@@ -78,6 +78,16 @@ final class HistoryStore {
         persist()
     }
 
+    func moveToTop(_ item: HistoryItem) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else {
+            return
+        }
+
+        items[index].createdAt = Date()
+        items = recencyOrderedItems(items)
+        persist()
+    }
+
     func enforceLimit(_ limit: Int) {
         trim(limit: limit)
         persist()

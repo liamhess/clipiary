@@ -175,6 +175,9 @@ final class AppState {
             return
         }
         restore(item)
+        if settings.moveToTopOnPaste {
+            history.moveToTop(item)
+        }
     }
 
     func toggleFavoriteSelectedItem() {
