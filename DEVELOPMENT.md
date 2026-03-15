@@ -77,6 +77,8 @@ python3 tools/clipiary.py start-release minor
 python3 tools/clipiary.py start-release major
 ```
 
+That command creates an empty `release: prepare vX.Y.Z` commit, pushes it to `origin/main`, then pushes the matching tag.
+
 ### CI release flow
 
 The workflow in `.github/workflows/release.yml` is tag-driven and release-only. Pushing a tag such as `v<version>` from a commit on `main` will:

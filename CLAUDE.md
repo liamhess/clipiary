@@ -41,6 +41,8 @@ python3 tools/clipiary.py start-release minor
 python3 tools/clipiary.py start-release major
 ```
 
+`start-release` creates an empty `release: prepare vX.Y.Z` commit, pushes it to `origin/main`, and then pushes the matching tag.
+
 There are no tests or linter configured in this project.
 
 ## Architecture

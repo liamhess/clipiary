@@ -69,12 +69,15 @@ def import_signing_certificate(root: Path, env: dict[str, str], runner: Runner) 
 def verify_tagged_commit_on_main(root: Path, runner: Runner, git_sha: str | None) -> None:
     if not git_sha:
         return
-    runner.run(["git", "fetch", "origin", "main", "--depth=1"], cwd=root, read_only=True)
-    runner.run(
-        ["git", "merge-base", "--is-ancestor", git_sha, "origin/main"],
+    runner.run(["git", "fetch", "origin", "main"], cwd=root, read_only=True)
+    is_ancestor = runner.run(
+        ["git", "merge-base", "--is-ancestor", git_sha, "FETCH_HEAD"],
         cwd=root,
         read_only=True,
+        check=False,
     )
+    if is_ancestor.returncode != 0:
+        raise ToolError(f"Refusing release: tagged commit {git_sha} is not contained in origin/main")
 
 
 def publish_release(root: Path, env: dict[str, str], runner: Runner, metadata: ReleaseMetadata) -> None:
@@ -260,6 +263,7 @@ def remote_slug(root: Path, runner: Runner) -> str | None:
 def start_release(root: Path, runner: Runner, bump: str) -> dict[str, str]:
     current_tag = latest_release_tag(root, runner)
     next_tag = bump_version(current_tag, bump)
+    release_message = f"release: prepare {next_tag}"
 
     existing_local = runner.run(
         ["git", "rev-parse", "-q", "--verify", f"refs/tags/{next_tag}"],
@@ -271,8 +275,11 @@ def start_release(root: Path, runner: Runner, bump: str) -> dict[str, str]:
     if existing_local.returncode == 0:
         raise ToolError(f"Tag already exists locally: {next_tag}")
 
+    runner.run(["git", "commit", "--allow-empty", "-m", release_message], cwd=root)
     runner.run(["git", "tag", "-a", next_tag, "-m", f"Clipiary {next_tag[1:]}"], cwd=root)
+    runner.run(["git", "push", "origin", "HEAD:main"], cwd=root)
     runner.run(["git", "push", "origin", next_tag], cwd=root)
+    release_commit = runner.read(["git", "rev-parse", "HEAD"], cwd=root)
 
     slug = remote_slug(root, runner)
     actions_url = ""
@@ -284,6 +291,7 @@ def start_release(root: Path, runner: Runner, bump: str) -> dict[str, str]:
     return {
         "previous_tag": current_tag,
         "tag": next_tag,
+        "commit": release_commit,
         "actions_url": actions_url,
         "release_url": release_url,
     }
