@@ -44,12 +44,14 @@ final class AppState {
     var searchQuery = ""
     private var selectedItemIDByTab: [String: HistoryItem.ID] = [:]
     var isRecordingShortcut = false
+    var isRecordingQuickPasteShortcut = false
     var isPreviewVisible = false
     var showingFavoriteTabPicker = false
     var favoriteTabPickerIndex = 0
     private(set) var searchFocusRequestID = 0
     private(set) var popoverOpenRequestID = 0
     private(set) var pasteSelectedRequestID = 0
+    private(set) var quickPasteRequestID = 0
 
     @ObservationIgnored private let captureCoordinator: CaptureCoordinator
     @ObservationIgnored private let clipboardMonitor: ClipboardMonitor
@@ -285,6 +287,15 @@ final class AppState {
         isRecordingShortcut = false
     }
 
+    func updateQuickPasteShortcut(from event: NSEvent) {
+        guard let shortcut = GlobalShortcut(event: event) else {
+            return
+        }
+
+        settings.updateQuickPasteShortcut(shortcut)
+        isRecordingQuickPasteShortcut = false
+    }
+
     func requestSearchFocus() {
         searchFocusRequestID &+= 1
     }
@@ -294,6 +305,16 @@ final class AppState {
         searchQuery = ""
         isPreviewVisible = false
         pasteSelectedRequestID &+= 1
+    }
+
+    func requestQuickPaste() {
+        guard history.items.count >= 2 else { return }
+        let item = history.items[1]
+        restore(item)
+        if settings.moveToTopOnPaste {
+            history.moveToTop(item)
+        }
+        quickPasteRequestID &+= 1
     }
 
     private func seedConfigEntries() {

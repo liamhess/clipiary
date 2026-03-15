@@ -248,6 +248,17 @@ struct PanelRootView: View {
                         .buttonStyle(.borderless)
                         .font(.system(size: 11, weight: .medium))
                     }
+
+                    settingMetric(
+                        title: "Quick paste previous",
+                        value: appState.isRecordingQuickPasteShortcut ? "Press keys..." : appState.settings.quickPasteShortcut.displayString
+                    ) {
+                        Button(appState.isRecordingQuickPasteShortcut ? "Cancel" : "Record") {
+                            appState.isRecordingQuickPasteShortcut.toggle()
+                        }
+                        .buttonStyle(.borderless)
+                        .font(.system(size: 11, weight: .medium))
+                    }
                 }
                 .transition(.opacity)
             }
@@ -465,6 +476,7 @@ struct PanelRootView: View {
 
             VStack(spacing: 6) {
                 shortcutRow("Open Clipiary", appState.settings.globalShortcut.displayString)
+                shortcutRow("Quick paste previous", appState.settings.quickPasteShortcut.displayString)
                 shortcutRow("Focus search", "Cmd F")
                 shortcutRow("Favorite or unfavorite", "Cmd D")
                 shortcutRow("Move selection", "Up / Down")

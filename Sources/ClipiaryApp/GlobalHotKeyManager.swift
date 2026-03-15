@@ -4,11 +4,12 @@ import Carbon.HIToolbox
 final class GlobalHotKeyManager {
     private var hotKeyRef: EventHotKeyRef?
     private var eventHandler: EventHandlerRef?
-    private let hotKeyID = EventHotKeyID(signature: OSType(0x434C4950), id: 1)
+    private let hotKeyID: EventHotKeyID
 
     var onTrigger: (() -> Void)?
 
-    init() {
+    init(id: UInt32 = 1) {
+        self.hotKeyID = EventHotKeyID(signature: OSType(0x434C4950), id: id)
         var eventType = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard),
             eventKind: UInt32(kEventHotKeyPressed)
@@ -35,9 +36,10 @@ final class GlobalHotKeyManager {
 
                 if hotKeyID.signature == manager.hotKeyID.signature && hotKeyID.id == manager.hotKeyID.id {
                     manager.onTrigger?()
+                    return noErr
                 }
 
-                return noErr
+                return OSStatus(eventNotHandledErr)
             },
             1,
             &eventType,

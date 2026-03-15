@@ -14,6 +14,8 @@ final class AppSettings {
         static let historyLimit = "historyLimit"
         static let globalHotKeyKeyCode = "globalHotKeyKeyCode"
         static let globalHotKeyModifiers = "globalHotKeyModifiers"
+        static let quickPasteHotKeyKeyCode = "quickPasteHotKeyKeyCode"
+        static let quickPasteHotKeyModifiers = "quickPasteHotKeyModifiers"
         static let panelWidth = "panelWidth"
         static let panelHeight = "panelHeight"
         static let moveToTopOnPaste = "moveToTopOnPaste"
@@ -55,6 +57,14 @@ final class AppSettings {
         didSet { defaults.set(globalHotKeyModifiers, forKey: Keys.globalHotKeyModifiers) }
     }
 
+    var quickPasteHotKeyKeyCode: Int {
+        didSet { defaults.set(quickPasteHotKeyKeyCode, forKey: Keys.quickPasteHotKeyKeyCode) }
+    }
+
+    var quickPasteHotKeyModifiers: Int {
+        didSet { defaults.set(quickPasteHotKeyModifiers, forKey: Keys.quickPasteHotKeyModifiers) }
+    }
+
     var panelWidth: Double {
         didSet { defaults.set(panelWidth, forKey: Keys.panelWidth) }
     }
@@ -86,6 +96,8 @@ final class AppSettings {
             Keys.historyLimit: 1_000,
             Keys.globalHotKeyKeyCode: 9,
             Keys.globalHotKeyModifiers: Int((NSEvent.ModifierFlags.command.union(.shift)).rawValue),
+            Keys.quickPasteHotKeyKeyCode: 35,
+            Keys.quickPasteHotKeyModifiers: Int((NSEvent.ModifierFlags.control.union(.option).union(.command)).rawValue),
             Keys.panelWidth: 376.0,
             Keys.panelHeight: 600.0,
             Keys.moveToTopOnPaste: true,
@@ -101,6 +113,8 @@ final class AppSettings {
         historyLimit = defaults.integer(forKey: Keys.historyLimit)
         globalHotKeyKeyCode = defaults.integer(forKey: Keys.globalHotKeyKeyCode)
         globalHotKeyModifiers = defaults.integer(forKey: Keys.globalHotKeyModifiers)
+        quickPasteHotKeyKeyCode = defaults.integer(forKey: Keys.quickPasteHotKeyKeyCode)
+        quickPasteHotKeyModifiers = defaults.integer(forKey: Keys.quickPasteHotKeyModifiers)
         panelWidth = defaults.double(forKey: Keys.panelWidth)
         panelHeight = defaults.double(forKey: Keys.panelHeight)
         moveToTopOnPaste = defaults.bool(forKey: Keys.moveToTopOnPaste)
@@ -118,6 +132,18 @@ final class AppSettings {
     func updateGlobalShortcut(_ shortcut: GlobalShortcut) {
         globalHotKeyKeyCode = Int(shortcut.keyCode)
         globalHotKeyModifiers = Int(shortcut.modifiers.rawValue)
+    }
+
+    var quickPasteShortcut: GlobalShortcut {
+        GlobalShortcut(
+            keyCode: UInt32(quickPasteHotKeyKeyCode),
+            modifiers: NSEvent.ModifierFlags(rawValue: UInt(quickPasteHotKeyModifiers))
+        )
+    }
+
+    func updateQuickPasteShortcut(_ shortcut: GlobalShortcut) {
+        quickPasteHotKeyKeyCode = Int(shortcut.keyCode)
+        quickPasteHotKeyModifiers = Int(shortcut.modifiers.rawValue)
     }
 
     func ignores(bundleID: String?) -> Bool {

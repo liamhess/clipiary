@@ -19,6 +19,8 @@ For the copy-on-select feature to work you will have to grant Accessibility righ
 
 Clipiary lives in your menu bar. Click the icon or press **Cmd+Shift+V** (configurable) to open it. Use **arrow keys** to navigate, **Return** to paste, and **Cmd+D** to favorite an item.
 
+**Quick paste previous** — Press **Ctrl+Opt+Cmd+P** (configurable) to instantly paste the second item from your history without opening Clipiary. Useful for swapping between two clipboard entries.
+
 ### Custom Favorites Tabs
 
 By default there is a single "Favorites" tab. You can configure multiple named favorites tabs by creating a config file at:
