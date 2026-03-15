@@ -1,6 +1,8 @@
 .build/
 .tmp-home/
+.tmp/
 dist/
 .DS_Store
 .env
 Resources/AppIcon.iconset/
+__pycache__/

@@ -24,9 +24,9 @@ jobs:
       CLIPIARY_NOTARY_PASSWORD: ${{ secrets.CLIPIARY_NOTARY_PASSWORD }}
       HOMEBREW_TAP_REPOSITORY: liamhess/homebrew-tap
       HOMEBREW_TAP_DEPLOY_KEY: ${{ secrets.HOMEBREW_TAP_DEPLOY_KEY }}
-      CERTIFICATE_P12_BASE64: ${{ secrets.CLIPIARY_CODESIGN_P12_BASE64 || secrets.CLIPIARY_DEVELOPER_ID_P12_BASE64 }}
-      CERTIFICATE_PASSWORD: ${{ secrets.CLIPIARY_CODESIGN_P12_PASSWORD || secrets.CLIPIARY_DEVELOPER_ID_P12_PASSWORD }}
-      KEYCHAIN_PASSWORD: ${{ secrets.CLIPIARY_KEYCHAIN_PASSWORD }}
+      CLIPIARY_CODESIGN_P12_BASE64: ${{ secrets.CLIPIARY_CODESIGN_P12_BASE64 || secrets.CLIPIARY_DEVELOPER_ID_P12_BASE64 }}
+      CLIPIARY_CODESIGN_P12_PASSWORD: ${{ secrets.CLIPIARY_CODESIGN_P12_PASSWORD || secrets.CLIPIARY_DEVELOPER_ID_P12_PASSWORD }}
+      CLIPIARY_KEYCHAIN_PASSWORD: ${{ secrets.CLIPIARY_KEYCHAIN_PASSWORD }}
     steps:
       - name: Check out source
         uses: actions/checkout@v4
@@ -57,98 +57,11 @@ jobs:
           xcodebuild -version
           swift --version
 
-      - name: Verify tagged commit is on main
+      - name: Run release flow
         shell: bash
         run: |
           set -euo pipefail
-          git fetch origin main --depth=1
-          if ! git merge-base --is-ancestor "$GITHUB_SHA" origin/main; then
-            echo "Refusing release: tagged commit $GITHUB_SHA is not contained in origin/main." >&2
-            exit 1
-          fi
-
-      - name: Import signing certificate (optional)
-        if: ${{ env.CERTIFICATE_P12_BASE64 != '' && env.CERTIFICATE_PASSWORD != '' && env.KEYCHAIN_PASSWORD != '' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          CERT_PATH="$RUNNER_TEMP/clipiary-signing-certificate.p12"
-          KEYCHAIN_PATH="$RUNNER_TEMP/clipiary-signing.keychain-db"
-          printf '%s' "$CERTIFICATE_P12_BASE64" | base64 -D >"$CERT_PATH"
-          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security import "$CERT_PATH" -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
-          security list-keychains -d user -s "$KEYCHAIN_PATH" login.keychain-db
-          security default-keychain -s "$KEYCHAIN_PATH"
-          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
-
-      - name: Build release artifacts
-        id: package
-        shell: bash
-        run: |
-          set -euo pipefail
-          PACK_OUTPUT_FILE="$RUNNER_TEMP/package-release-output.txt"
-          ./scripts/package_release.sh "${{ steps.version.outputs.version }}" "${{ github.run_number }}" | tee "$PACK_OUTPUT_FILE"
-          while IFS= read -r line; do
-            case "$line" in
-              version=*|build_number=*|archive_path=*|sha256=*|sha256_path=*|cask_path=*|release_notes_path=*)
-                echo "$line" >>"$GITHUB_OUTPUT"
-                ;;
-            esac
-          done <"$PACK_OUTPUT_FILE"
-
-      - name: Summarize release mode
-        shell: bash
-        run: |
-          set -euo pipefail
-          if [[ -n "${CLIPIARY_CODESIGN_IDENTITY}" && -n "${CLIPIARY_NOTARY_APPLE_ID}" && -n "${CLIPIARY_NOTARY_TEAM_ID}" && -n "${CLIPIARY_NOTARY_PASSWORD}" ]]; then
-            echo "Signed and notarized release path enabled."
-          elif [[ -n "${CLIPIARY_CODESIGN_IDENTITY}" ]]; then
-            echo "Signed but not notarized release path enabled."
-          else
-            echo "Ad-hoc signed release path enabled."
-          fi
-
-      - name: Create or update GitHub release
-        env:
-          GH_TOKEN: ${{ github.token }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          TAG="${{ steps.version.outputs.tag }}"
-          TITLE="Clipiary ${{ steps.version.outputs.version }}"
-          NOTES_FILE="${{ steps.package.outputs.release_notes_path }}"
-          if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" "${{ steps.package.outputs.archive_path }}" --clobber
-            gh release edit "$TAG" --title "$TITLE" --notes-file "$NOTES_FILE"
-          else
-            gh release create "$TAG" "${{ steps.package.outputs.archive_path }}" --title "$TITLE" --notes-file "$NOTES_FILE"
-          fi
-
-      - name: Update private Homebrew tap
-        if: ${{ env.HOMEBREW_TAP_DEPLOY_KEY != '' }}
-        shell: bash
-        run: |
-          set -euo pipefail
-          TAP_DIR="$RUNNER_TEMP/homebrew-tap"
-          SSH_KEY_PATH="$RUNNER_TEMP/homebrew-tap-deploy-key"
-          KNOWN_HOSTS_PATH="$RUNNER_TEMP/github-known-hosts"
-          printf '%s\n' "$HOMEBREW_TAP_DEPLOY_KEY" >"$SSH_KEY_PATH"
-          chmod 600 "$SSH_KEY_PATH"
-          ssh-keyscan -H github.com >"$KNOWN_HOSTS_PATH"
-          export GIT_SSH_COMMAND="ssh -i $SSH_KEY_PATH -o IdentitiesOnly=yes -o UserKnownHostsFile=$KNOWN_HOSTS_PATH"
-          git clone "git@github.com:${HOMEBREW_TAP_REPOSITORY}.git" "$TAP_DIR"
-          mkdir -p "$TAP_DIR/Casks"
-          cp "${{ steps.package.outputs.cask_path }}" "$TAP_DIR/Casks/${CLIPIARY_CASK_TOKEN}.rb"
-          cd "$TAP_DIR"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add "Casks/${CLIPIARY_CASK_TOKEN}.rb"
-          if git diff --cached --quiet -- "Casks/${CLIPIARY_CASK_TOKEN}.rb"; then
-            echo "Tap already up to date."
-            exit 0
-          fi
-          git commit -m "clipiary ${{ steps.version.outputs.version }}"
-          git push origin HEAD
+          export GH_TOKEN="${{ github.token }}"
+          python3 tools/clipiary.py ci-release \
+            --version "${{ steps.version.outputs.version }}" \
+            --build-number "${{ github.run_number }}"

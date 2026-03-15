@@ -18,3 +18,5 @@ For the copy-on-select feature to work you will have to grant Accessibility righ
 ## Development
 
 Development, release, and tap-maintainer notes live in [DEVELOPMENT.md](DEVELOPMENT.md).
+
+The repo automation lives in `python3 tools/clipiary.py`, with no external Python packages required.

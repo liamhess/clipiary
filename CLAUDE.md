@@ -15,23 +15,30 @@ swift build
 
 Build an app bundle at `dist/Clipiary.app`:
 ```sh
-./scripts/build_app.sh          # debug (default)
-./scripts/build_app.sh release  # release
+python3 tools/clipiary.py build
+python3 tools/clipiary.py build --configuration release
 ```
 
 Run the app bundle:
 ```sh
-./scripts/run_app.sh
+python3 tools/clipiary.py run
 ```
 
 Dev watcher (rebuilds and relaunches on source changes):
 ```sh
-./scripts/dev.sh
+python3 tools/clipiary.py dev
 ```
 
 Package a release (creates zip, sha256, Homebrew cask):
 ```sh
-./scripts/package_release.sh <version> [build-number]
+python3 tools/clipiary.py release --version <version> [--build-number <build-number>]
+```
+
+Start the tag-driven release flow locally:
+```sh
+python3 tools/clipiary.py start-release patch
+python3 tools/clipiary.py start-release minor
+python3 tools/clipiary.py start-release major
 ```
 
 There are no tests or linter configured in this project.
@@ -79,7 +86,7 @@ Tag-driven CI via `.github/workflows/release.yml`. Pushing a `v*` tag on `main` 
 
 ## Environment Variables
 
-Optional `.env` file (sourced automatically by scripts):
+Optional `.env` file (loaded automatically by the Python tooling):
 - `CLIPIARY_CODESIGN_IDENTITY` — code signing identity (Apple or self-signed)
 - `CLIPIARY_BUNDLE_ID` — bundle identifier override
 - `CLIPIARY_VERSION` / `CLIPIARY_BUILD_NUMBER` — version overrides

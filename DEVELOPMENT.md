@@ -12,13 +12,13 @@ swift build
 Build a stable app bundle for Accessibility approval:
 
 ```sh
-./scripts/build_app.sh
+python3 tools/clipiary.py build
 ```
 
 Regenerate the app icon from a custom `1024x1024` PNG export:
 
 ```sh
-./scripts/build_app_icon.sh /path/to/icon-1024.png
+python3 tools/clipiary.py icon --source /path/to/icon-1024.png
 ```
 
 Optional local signing configuration:
@@ -29,20 +29,20 @@ Create a repo-local `.env` file with:
 export CLIPIARY_CODESIGN_IDENTITY="Clipiary Release Signing"
 ```
 
-The build, run, and dev scripts will source `.env` automatically.
+The Python tooling loads `.env` automatically.
 
 Use one stable signing identity for every build you expect users to approve in Accessibility settings. That can be an Apple certificate or a long-lived self-signed code-signing certificate. If `CLIPIARY_CODESIGN_IDENTITY` is not set, the app bundle falls back to ad-hoc signing, which is convenient for local testing but can cause macOS to treat upgrades as a new app for TCC permissions like Accessibility.
 
 Run the app bundle:
 
 ```sh
-./scripts/run_app.sh
+python3 tools/clipiary.py run
 ```
 
 Run a dev watcher that rebuilds and relaunches the app on source changes:
 
 ```sh
-./scripts/dev.sh
+python3 tools/clipiary.py dev
 ```
 
 The app bundle path to approve in `System Settings > Privacy & Security > Accessibility` is:
@@ -60,7 +60,7 @@ Casks/clipiary.rb
 To build a release archive and generate the cask file locally:
 
 ```sh
-./scripts/package_release.sh <version>
+python3 tools/clipiary.py release --version <version>
 ```
 
 That command writes:
@@ -68,6 +68,14 @@ That command writes:
 - `dist/Clipiary-<version>.zip`
 - `dist/Clipiary-<version>.sha256`
 - `dist/clipiary.rb`
+
+To kick off the tag-driven release flow from your machine:
+
+```sh
+python3 tools/clipiary.py start-release patch
+python3 tools/clipiary.py start-release minor
+python3 tools/clipiary.py start-release major
+```
 
 ### CI release flow
 
@@ -79,6 +87,12 @@ The workflow in `.github/workflows/release.yml` is tag-driven and release-only. 
 4. update `liamhess/homebrew-tap` with a new `Casks/clipiary.rb`
 
 If a tag points to a commit that is not contained in `main`, the workflow exits without publishing.
+
+The workflow keeps release logic in the repo by delegating to:
+
+```sh
+python3 tools/clipiary.py ci-release --version <version> --build-number <run-number>
+```
 
 Minimum GitHub Actions secret for private tap releases:
 
