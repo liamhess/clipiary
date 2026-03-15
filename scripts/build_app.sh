@@ -7,7 +7,6 @@ source "$ROOT_DIR/scripts/load_env.sh"
 CONFIGURATION="${1:-debug}"
 APP_NAME="Clipiary"
 BUNDLE_ID="${CLIPIARY_BUNDLE_ID:-dev.liamhess.clipiary}"
-APP_VERSION="${CLIPIARY_VERSION:-0.3.4}"
 BUILD_NUMBER="${CLIPIARY_BUILD_NUMBER:-1}"
 APP_BUNDLE="$ROOT_DIR/dist/$APP_NAME.app"
 CONTENTS_DIR="$APP_BUNDLE/Contents"
@@ -19,6 +18,20 @@ MODULE_CACHE="$ROOT_DIR/.build/module-cache"
 CLANG_CACHE="$ROOT_DIR/.build/clang-module-cache"
 CODESIGN_IDENTITY="${CLIPIARY_CODESIGN_IDENTITY:-}"
 CODESIGN_FLAGS="${CLIPIARY_CODESIGN_FLAGS:-}"
+
+resolve_default_version() {
+  local latest_tag
+
+  latest_tag="$(git -C "$ROOT_DIR" describe --tags --abbrev=0 2>/dev/null || true)"
+  if [[ -n "$latest_tag" ]]; then
+    echo "${latest_tag#v}"
+    return
+  fi
+
+  echo "0.0.0"
+}
+
+APP_VERSION="${CLIPIARY_VERSION:-$(resolve_default_version)}"
 
 mkdir -p "$TMP_HOME" "$MODULE_CACHE" "$CLANG_CACHE" "$MACOS_DIR" "$RESOURCES_DIR"
 

@@ -73,18 +73,18 @@ Casks/clipiary.rb
 To build a release archive and generate the cask file locally:
 
 ```sh
-./scripts/package_release.sh 0.3.4
+./scripts/package_release.sh <version>
 ```
 
 That command writes:
 
-- `dist/Clipiary-0.3.4.zip`
-- `dist/Clipiary-0.3.4.sha256`
+- `dist/Clipiary-<version>.zip`
+- `dist/Clipiary-<version>.sha256`
 - `dist/clipiary.rb`
 
 ### CI release flow
 
-The workflow in `.github/workflows/release.yml` is tag-driven and release-only. Pushing a tag such as `v0.3.4` from a commit on `main` will:
+The workflow in `.github/workflows/release.yml` is tag-driven and release-only. Pushing a tag such as `v<version>` from a commit on `main` will:
 
 1. build the macOS app bundle
 2. sign it when a stable signing identity is configured, and notarize it when the Apple notary secrets are also configured
