@@ -162,4 +162,5 @@ final class AppSettings {
             ignoredBundleIDs.sort()
         }
     }
+
 }

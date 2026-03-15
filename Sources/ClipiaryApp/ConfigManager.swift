@@ -1,9 +1,34 @@
 import Foundation
 import Observation
 
+struct FavoritesEntryConfig: Codable, Sendable, Equatable {
+    let text: String
+    var monospace: Bool?
+
+    init(text: String, monospace: Bool? = nil) {
+        self.text = text
+        self.monospace = monospace
+    }
+
+    init(from decoder: Decoder) throws {
+        if let plain = try? decoder.singleValueContainer().decode(String.self) {
+            text = plain
+            monospace = nil
+        } else {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            text = try container.decode(String.self, forKey: .text)
+            monospace = try container.decodeIfPresent(Bool.self, forKey: .monospace)
+        }
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case text, monospace
+    }
+}
+
 struct FavoritesTabConfig: Codable, Sendable, Identifiable, Equatable {
     let name: String
-    var entries: [String]?
+    var entries: [FavoritesEntryConfig]?
 
     var id: String { name }
 }
@@ -19,12 +44,9 @@ final class ConfigManager {
 
     private let fileManager: FileManager
     private let configURL: URL
-    private let defaults: UserDefaults
-    private let seededTabsKey = "seededFavoriteTabs"
 
-    init(fileManager: FileManager = .default, defaults: UserDefaults = .standard) {
+    init(fileManager: FileManager = .default) {
         self.fileManager = fileManager
-        self.defaults = defaults
         let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
         configURL = appSupport.appending(path: "Clipiary/config.json")
     }
@@ -39,25 +61,16 @@ final class ConfigManager {
         favoriteTabs = tabs
     }
 
-    func unseededTabs() -> [FavoritesTabConfig] {
-        let seeded = Set(defaults.stringArray(forKey: seededTabsKey) ?? [])
-        return favoriteTabs.filter { tab in
-            tab.entries != nil && !tab.entries!.isEmpty && !seeded.contains(tab.name)
+    var tabsWithEntries: [FavoritesTabConfig] {
+        favoriteTabs.filter { tab in
+            tab.entries != nil && !tab.entries!.isEmpty
         }
-    }
-
-    func markSeeded(_ tabNames: [String]) {
-        var seeded = Set(defaults.stringArray(forKey: seededTabsKey) ?? [])
-        for name in tabNames {
-            seeded.insert(name)
-        }
-        defaults.set(Array(seeded), forKey: seededTabsKey)
     }
 
     func isSeededEntry(_ text: String, inTab tabName: String) -> Bool {
         guard let tab = favoriteTabs.first(where: { $0.name == tabName }),
               let entries = tab.entries else { return false }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        return entries.contains { $0.trimmingCharacters(in: .whitespacesAndNewlines) == trimmed }
+        return entries.contains { $0.text.trimmingCharacters(in: .whitespacesAndNewlines) == trimmed }
     }
 }

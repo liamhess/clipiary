@@ -14,6 +14,7 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     var bundleID: String?
     var createdAt: Date
     var favoriteTabs: Set<String>
+    var isMonospace: Bool
 
     init(
         id: UUID = UUID(),
@@ -22,7 +23,8 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         appName: String,
         bundleID: String?,
         createdAt: Date = .now,
-        favoriteTabs: Set<String> = []
+        favoriteTabs: Set<String> = [],
+        isMonospace: Bool = false
     ) {
         self.id = id
         self.text = text
@@ -31,6 +33,7 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         self.bundleID = bundleID
         self.createdAt = createdAt
         self.favoriteTabs = favoriteTabs
+        self.isMonospace = isMonospace
     }
 
     var isFavorite: Bool {
@@ -49,6 +52,7 @@ extension HistoryItem: Codable {
         case id, text, source, appName, bundleID, createdAt
         case favoriteTabs
         case isFavorite // legacy key for decoding only
+        case monospace
     }
 
     init(from decoder: Decoder) throws {
@@ -59,6 +63,7 @@ extension HistoryItem: Codable {
         appName = try container.decode(String.self, forKey: .appName)
         bundleID = try container.decodeIfPresent(String.self, forKey: .bundleID)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
+        isMonospace = (try? container.decode(Bool.self, forKey: .monospace)) ?? false
 
         if let tabs = try? container.decode(Set<String>.self, forKey: .favoriteTabs) {
             favoriteTabs = tabs
@@ -78,6 +83,7 @@ extension HistoryItem: Codable {
         try container.encodeIfPresent(bundleID, forKey: .bundleID)
         try container.encode(createdAt, forKey: .createdAt)
         try container.encode(favoriteTabs, forKey: .favoriteTabs)
+        try container.encode(isMonospace, forKey: .monospace)
     }
 }
 

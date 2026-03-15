@@ -102,6 +102,30 @@ final class FloatingPanel: NSPanel {
         close()
     }
 
+    override func sendEvent(_ event: NSEvent) {
+        if event.type == .keyDown, appState.showingFavoriteTabPicker {
+            let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            if modifiers.isDisjoint(with: [.command, .option, .control]) {
+                switch event.keyCode {
+                case 125: // Down
+                    appState.movePickerSelection(direction: 1)
+                case 126: // Up
+                    appState.movePickerSelection(direction: -1)
+                case 36, 49: // Return, Space
+                    appState.confirmPickerSelection()
+                case 46: // M
+                    appState.togglePickerMonospace()
+                case 53: // Escape
+                    close()
+                default:
+                    break
+                }
+                return
+            }
+        }
+        super.sendEvent(event)
+    }
+
     override func close() {
         if appState.showingFavoriteTabPicker {
             appState.showingFavoriteTabPicker = false

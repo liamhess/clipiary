@@ -82,20 +82,34 @@ final class HistoryStore {
         persist()
     }
 
+    func toggleMonospace(_ item: HistoryItem) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else {
+            return
+        }
+
+        items[index].isMonospace.toggle()
+        persist()
+    }
+
     func seedEntries(for tabConfig: FavoritesTabConfig) {
         guard let entries = tabConfig.entries else { return }
-        for text in entries {
-            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        for entry in entries {
+            let trimmed = entry.text.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !trimmed.isEmpty else { continue }
+            let isMonospace = entry.monospace ?? false
             if let existingIndex = items.firstIndex(where: { $0.text == trimmed }) {
                 items[existingIndex].favoriteTabs.insert(tabConfig.name)
+                if isMonospace {
+                    items[existingIndex].isMonospace = true
+                }
             } else {
                 let item = HistoryItem(
                     text: trimmed,
                     source: .restored,
                     appName: "Config",
                     bundleID: nil,
-                    favoriteTabs: [tabConfig.name]
+                    favoriteTabs: [tabConfig.name],
+                    isMonospace: isMonospace
                 )
                 items.insert(item, at: 0)
             }

@@ -216,19 +216,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         if appState.showingFavoriteTabPicker {
-            switch event.keyCode {
-            case 125: // Down
-                appState.movePickerSelection(direction: 1)
-                return suppressKeyUp(for: event)
-            case 126: // Up
-                appState.movePickerSelection(direction: -1)
-                return suppressKeyUp(for: event)
-            case 36, 49: // Return, Space
-                appState.confirmPickerSelection()
-                return suppressKeyUp(for: event)
-            default:
-                return event
-            }
+            return suppressKeyUp(for: event)
         }
 
         switch event.keyCode {

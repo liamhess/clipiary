@@ -14,9 +14,9 @@
     {
       "name": "Shell",
       "entries": [
-        "ls -la",
-        "git status",
-        "docker ps",
+        {"text": "ls -la", "monospace": true},
+        {"text": "git status", "monospace": true},
+        {"text": "docker ps", "monospace": true},
         "find . -name '*.swift' | head -20"
       ]
     },

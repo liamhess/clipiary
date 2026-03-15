@@ -258,6 +258,11 @@ final class AppState {
         history.toggleFavoriteTab(item, tabName: tabName)
     }
 
+    func togglePickerMonospace() {
+        guard let item = selectedItem else { return }
+        history.toggleMonospace(item)
+    }
+
     func deleteSelectedItem() {
         guard let item = selectedItem else {
             return
@@ -318,12 +323,9 @@ final class AppState {
     }
 
     private func seedConfigEntries() {
-        let unseeded = configManager.unseededTabs()
-        guard !unseeded.isEmpty else { return }
-        for tab in unseeded {
+        for tab in configManager.tabsWithEntries {
             history.seedEntries(for: tab)
         }
-        configManager.markSeeded(unseeded.map(\.name))
     }
 
     private func synchronizeHistoryLimit() {

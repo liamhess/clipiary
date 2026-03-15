@@ -377,7 +377,9 @@ struct PanelRootView: View {
                             .frame(width: 14, alignment: .center)
 
                         Text(item.displayText.isEmpty ? "Untitled" : item.displayText)
-                            .font(.system(size: 13))
+                            .font(item.isMonospace
+                                ? .system(size: 12, design: .monospaced)
+                                : .system(size: 13))
                             .foregroundStyle(.primary)
                             .lineLimit(2)
                             .multilineTextAlignment(.leading)
@@ -630,7 +632,7 @@ struct PanelRootView: View {
                     let isInTab = appState.selectedItem?.favoriteTabs.contains(tabConfig.name) ?? false
                     let isFocused = index == appState.favoriteTabPickerIndex
 
-                    HStack {
+                    HStack(spacing: 6) {
                         Text(tabConfig.name)
                             .font(.system(size: 12))
                         Spacer()
@@ -652,9 +654,35 @@ struct PanelRootView: View {
                         appState.confirmPickerSelection()
                     }
                 }
+
+                Divider()
+                    .padding(.vertical, 2)
+
+                HStack(spacing: 6) {
+                    Image(systemName: appState.selectedItem?.isMonospace == true ? "checkmark.square" : "square")
+                        .font(.system(size: 11))
+                    Text("Console font")
+                        .font(.system(size: 11))
+                    Spacer()
+                    Text("M")
+                        .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(
+                            RoundedRectangle(cornerRadius: 3, style: .continuous)
+                                .fill(Color.secondary.opacity(0.12))
+                        )
+                }
+                .foregroundStyle(appState.selectedItem?.isMonospace == true ? .primary : .secondary)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                .contentShape(Rectangle())
+                .onTapGesture {
+                    appState.togglePickerMonospace()
+                }
             }
             .padding(10)
-            .frame(width: 200)
+            .frame(width: 220)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(.regularMaterial)
