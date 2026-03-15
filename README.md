@@ -2,16 +2,18 @@
 
 Clipiary is a vibe coded macOS clipboard manager with an optional global copy-on-select mode (works for most apps).
 
-## Private Homebrew tap
+## Installation
 
-This app is best distributed through a Homebrew cask in my private tap rather than `homebrew/cask`.
-
-The install shape looks like this:
+Clipiary can be installed through my own homebrew tap:
 
 ```sh
 brew tap liamhess/tap
 brew install --cask clipiary
 ```
+
+Since I don't pay for a Apple Developer ID you will have to access the untrusted signing in the Privacy & Security settings.
+
+For the copy-on-select feature to work you will have to grant Accessibility rights.
 
 ## Development
 
