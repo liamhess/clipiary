@@ -65,16 +65,42 @@ final class HistoryStore {
     }
 
     func clearNonFavorites() {
-        items.removeAll { !$0.isFavorite }
+        items.removeAll { $0.favoriteTabs.isEmpty }
         persist()
     }
 
-    func toggleFavorite(_ item: HistoryItem) {
+    func toggleFavoriteTab(_ item: HistoryItem, tabName: String) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else {
             return
         }
 
-        items[index].isFavorite.toggle()
+        if items[index].favoriteTabs.contains(tabName) {
+            items[index].favoriteTabs.remove(tabName)
+        } else {
+            items[index].favoriteTabs.insert(tabName)
+        }
+        persist()
+    }
+
+    func seedEntries(for tabConfig: FavoritesTabConfig) {
+        guard let entries = tabConfig.entries else { return }
+        for text in entries {
+            let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !trimmed.isEmpty else { continue }
+            if let existingIndex = items.firstIndex(where: { $0.text == trimmed }) {
+                items[existingIndex].favoriteTabs.insert(tabConfig.name)
+            } else {
+                let item = HistoryItem(
+                    text: trimmed,
+                    source: .restored,
+                    appName: "Config",
+                    bundleID: nil,
+                    favoriteTabs: [tabConfig.name]
+                )
+                items.insert(item, at: 0)
+            }
+        }
+        items = recencyOrderedItems(items)
         persist()
     }
 
@@ -94,8 +120,8 @@ final class HistoryStore {
     }
 
     private func trim(limit: Int) {
-        let favorites = items.filter(\.isFavorite)
-        let nonFavorites = recencyOrderedItems(items.filter { !$0.isFavorite })
+        let favorites = items.filter { !$0.favoriteTabs.isEmpty }
+        let nonFavorites = recencyOrderedItems(items.filter { $0.favoriteTabs.isEmpty })
         let retainedItems = favorites + Array(nonFavorites.prefix(max(0, limit - favorites.count)))
         items = recencyOrderedItems(retainedItems)
     }

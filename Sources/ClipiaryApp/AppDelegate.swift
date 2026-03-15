@@ -194,6 +194,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             return event
         }
 
+        if appState.showingFavoriteTabPicker {
+            switch event.keyCode {
+            case 125: // Down
+                appState.movePickerSelection(direction: 1)
+                return suppressKeyUp(for: event)
+            case 126: // Up
+                appState.movePickerSelection(direction: -1)
+                return suppressKeyUp(for: event)
+            case 36, 49: // Return, Space
+                appState.confirmPickerSelection()
+                return suppressKeyUp(for: event)
+            default:
+                return event
+            }
+        }
+
         switch event.keyCode {
         case 49:
             guard appState.searchQuery.isEmpty else { return event }
@@ -288,6 +304,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func panelDidClose() {
         statusItem.button?.isHighlighted = false
         appState.isRecordingShortcut = false
+        appState.showingFavoriteTabPicker = false
         appState.searchQuery = ""
         suppressedKeyUps.removeAll()
         let targetApp = previousApp

@@ -103,6 +103,10 @@ final class FloatingPanel: NSPanel {
     }
 
     override func close() {
+        if appState.showingFavoriteTabPicker {
+            appState.showingFavoriteTabPicker = false
+            return
+        }
         super.close()
         statusBarButton?.isHighlighted = false
         onClose?()

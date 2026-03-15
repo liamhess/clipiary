@@ -15,6 +15,31 @@ Since I don't pay for a Apple Developer ID you will have to access the untrusted
 
 For the copy-on-select feature to work you will have to grant Accessibility rights.
 
+## Usage
+
+Clipiary lives in your menu bar. Click the icon or press **Cmd+Shift+V** (configurable) to open it. Use **arrow keys** to navigate, **Return** to paste, and **Cmd+D** to favorite an item.
+
+### Custom Favorites Tabs
+
+By default there is a single "Favorites" tab. You can configure multiple named favorites tabs by creating a config file at:
+
+```
+~/Library/Application Support/Clipiary/config.json
+```
+
+Example (see [docs/config.example.json](docs/config.example.json) for a full template):
+
+```json
+{
+  "favorites": [
+    { "name": "Snippets" },
+    { "name": "Shell", "entries": ["git status", "docker ps"] }
+  ]
+}
+```
+
+Each tab can optionally include `entries` that are pre-populated on first launch and pinned (they cannot be unfavorited). When multiple tabs are configured, **Cmd+D** opens a picker where you can toggle an item's membership with **Space** or **arrow keys + Enter**, and dismiss with **Esc**.
+
 ## Development
 
 Development, release, and tap-maintainer notes live in [DEVELOPMENT.md](DEVELOPMENT.md).

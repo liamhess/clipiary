@@ -1,0 +1,31 @@
+// Clipiary configuration file
+//
+// Copy this file to:
+//   ~/Library/Application Support/Clipiary/config.json
+//
+// Remove all comment lines (starting with //) before saving —
+// standard JSON does not support comments.
+
+{
+  "favorites": [
+    {
+      "name": "Snippets"
+    },
+    {
+      "name": "Shell",
+      "entries": [
+        "ls -la",
+        "git status",
+        "docker ps",
+        "find . -name '*.swift' | head -20"
+      ]
+    },
+    {
+      "name": "Templates",
+      "entries": [
+        "Hi, thanks for reaching out!",
+        "Best regards,"
+      ]
+    }
+  ]
+}

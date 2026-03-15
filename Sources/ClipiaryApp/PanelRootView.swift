@@ -31,6 +31,11 @@ struct PanelRootView: View {
             settingsExpanded = false
             shortcutsHelpPresented = false
         }
+        .overlay {
+            if appState.showingFavoriteTabPicker {
+                favoriteTabPickerOverlay
+            }
+        }
     }
 
     private var header: some View {
@@ -50,7 +55,7 @@ struct PanelRootView: View {
     private var historySection: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text(appState.selectedTab.rawValue)
+                Text(appState.selectedTab.displayName)
                     .font(.system(size: 12, weight: .semibold))
                 Spacer()
                 if !appState.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -78,10 +83,11 @@ struct PanelRootView: View {
                         if appState.activeItems.isEmpty {
                             emptyState
                         } else {
-                            if appState.selectedTab == .history {
+                            switch appState.selectedTab.kind {
+                            case .history:
                                 historyGroup(title: "Recent Copies", items: appState.historyItems)
-                            } else {
-                                historyGroup(title: "Saved Favorites", items: appState.favoriteItems)
+                            case .favorites(let name):
+                                historyGroup(title: name, items: appState.favoriteItems(for: name))
                             }
                         }
                     }
@@ -370,18 +376,7 @@ struct PanelRootView: View {
 
                 Spacer(minLength: 8)
 
-                Button {
-                    appState.selectedHistoryItemID = item.id
-                    appState.history.toggleFavorite(item)
-                    appState.ensureSelection()
-                } label: {
-                    Image(systemName: item.isFavorite ? "star.fill" : "star")
-                        .font(.system(size: 11, weight: .medium))
-                        .frame(width: 22, height: 22)
-                }
-                .buttonStyle(.plain)
-                .foregroundStyle(item.isFavorite ? Color.accentColor : .secondary)
-                .opacity(hoveredItemID == item.id || item.isFavorite ? 1 : 0.55)
+                favoriteButton(for: item)
 
                 Button {
                     appState.selectedHistoryItemID = item.id
@@ -498,16 +493,16 @@ struct PanelRootView: View {
     }
 
     private var emptyMessage: String {
-        switch appState.selectedTab {
+        switch appState.selectedTab.kind {
         case .history:
             return "Copy something, or enable copy-on-select to capture highlighted text."
-        case .favorites:
-            return "Mark important items as favorites so they stay separate from the stream."
+        case .favorites(let name):
+            return "Mark items as \(name) so they stay separate from the stream."
         }
     }
 
     private var emptyTitle: String {
-        switch appState.selectedTab {
+        switch appState.selectedTab.kind {
         case .history:
             return "No clipboard history yet"
         case .favorites:
@@ -517,7 +512,7 @@ struct PanelRootView: View {
 
     private var tabBar: some View {
         HStack(spacing: 6) {
-            ForEach(AppState.PopoverTab.allCases) { tab in
+            ForEach(appState.allTabs) { tab in
                 tabButton(for: tab)
             }
         }
@@ -530,13 +525,19 @@ struct PanelRootView: View {
 
     private func tabButton(for tab: AppState.PopoverTab) -> some View {
         let isSelected = tab == appState.selectedTab
-        let count = tab == .history ? appState.historyItems.count : appState.favoriteItems.count
+        let count: Int
+        switch tab.kind {
+        case .history:
+            count = appState.historyItems.count
+        case .favorites(let name):
+            count = appState.favoriteItems(for: name).count
+        }
 
         return Button {
             appState.setSelectedTab(tab)
         } label: {
             HStack(spacing: 6) {
-                Text(tab.rawValue)
+                Text(tab.displayName)
                 Text("\(count)")
                     .foregroundStyle(isSelected ? Color.primary.opacity(0.7) : Color.secondary)
             }
@@ -553,6 +554,101 @@ struct PanelRootView: View {
         .frame(maxWidth: .infinity)
         .buttonStyle(.plain)
         .foregroundStyle(isSelected ? .primary : .secondary)
+    }
+
+    @ViewBuilder
+    private func favoriteButton(for item: HistoryItem) -> some View {
+        if appState.configManager.favoriteTabs.count == 1 {
+            Button {
+                appState.selectedHistoryItemID = item.id
+                let tabName = appState.configManager.favoriteTabs[0].name
+                appState.toggleFavoriteTab(item, tabName: tabName)
+                appState.ensureSelection()
+            } label: {
+                Image(systemName: item.isFavorite ? "star.fill" : "star")
+                    .font(.system(size: 11, weight: .medium))
+                    .frame(width: 22, height: 22)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(item.isFavorite ? Color.accentColor : .secondary)
+            .opacity(hoveredItemID == item.id || item.isFavorite ? 1 : 0.55)
+        } else {
+            Menu {
+                ForEach(appState.configManager.favoriteTabs) { tabConfig in
+                    let isInTab = item.favoriteTabs.contains(tabConfig.name)
+                    Button {
+                        appState.selectedHistoryItemID = item.id
+                        appState.toggleFavoriteTab(item, tabName: tabConfig.name)
+                        appState.ensureSelection()
+                    } label: {
+                        if isInTab {
+                            Label(tabConfig.name, systemImage: "checkmark")
+                        } else {
+                            Text(tabConfig.name)
+                        }
+                    }
+                }
+            } label: {
+                Image(systemName: item.isFavorite ? "star.fill" : "star")
+                    .font(.system(size: 11, weight: .medium))
+                    .frame(width: 22, height: 22)
+            }
+            .menuStyle(.borderlessButton)
+            .frame(width: 22)
+            .foregroundStyle(item.isFavorite ? Color.accentColor : .secondary)
+            .opacity(hoveredItemID == item.id || item.isFavorite ? 1 : 0.55)
+        }
+    }
+
+    private var favoriteTabPickerOverlay: some View {
+        ZStack {
+            Color.black.opacity(0.15)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    appState.showingFavoriteTabPicker = false
+                }
+
+            VStack(spacing: 2) {
+                Text("Add to favorites")
+                    .font(.system(size: 12, weight: .semibold))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.bottom, 4)
+
+                ForEach(Array(appState.configManager.favoriteTabs.enumerated()), id: \.element.id) { index, tabConfig in
+                    let isInTab = appState.selectedItem?.favoriteTabs.contains(tabConfig.name) ?? false
+                    let isFocused = index == appState.favoriteTabPickerIndex
+
+                    HStack {
+                        Text(tabConfig.name)
+                            .font(.system(size: 12))
+                        Spacer()
+                        if isInTab {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 6)
+                    .background(
+                        RoundedRectangle(cornerRadius: 6, style: .continuous)
+                            .fill(isFocused ? Color.accentColor.opacity(0.18) : Color.clear)
+                    )
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        appState.favoriteTabPickerIndex = index
+                        appState.confirmPickerSelection()
+                    }
+                }
+            }
+            .padding(10)
+            .frame(width: 200)
+            .background(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(.regularMaterial)
+                    .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
+            )
+        }
     }
 
     private func rowFill(for item: HistoryItem) -> Color {
