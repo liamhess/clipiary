@@ -1,6 +1,13 @@
 import AppKit
 import SwiftUI
 
+private struct SelectedRowAnchorKey: PreferenceKey {
+    static let defaultValue: Anchor<CGRect>? = nil
+    static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
+        value = nextValue() ?? value
+    }
+}
+
 struct PanelRootView: View {
     private let cooldownOptions = [100, 200, 350, 500, 750, 1_000, 1_500, 2_000]
     private let historyLimitOptions = [50, 100, 250, 500, 1_000, 2_500, 5_000, 10_000]
@@ -31,9 +38,9 @@ struct PanelRootView: View {
             settingsExpanded = false
             shortcutsHelpPresented = false
         }
-        .overlay {
+        .overlayPreferenceValue(SelectedRowAnchorKey.self) { anchor in
             if appState.showingFavoriteTabPicker {
-                favoriteTabPickerOverlay
+                favoriteTabPickerOverlay(anchor: anchor)
             }
         }
     }
@@ -420,6 +427,9 @@ struct PanelRootView: View {
         .padding(.vertical, 8)
         .frame(maxWidth: .infinity, alignment: .leading)
         .id(item.id)
+        .anchorPreference(key: SelectedRowAnchorKey.self, value: .bounds) { anchor in
+            appState.showingFavoriteTabPicker && appState.selectedHistoryItemID == item.id ? anchor : nil
+        }
         .background(rowBackground(for: item))
         .contentShape(Rectangle())
         .onTapGesture {
@@ -611,81 +621,103 @@ struct PanelRootView: View {
         }
     }
 
-    private var favoriteTabPickerOverlay: some View {
-        ZStack {
-            Color.black.opacity(0.15)
-                .ignoresSafeArea()
-                .onTapGesture {
-                    appState.showingFavoriteTabPicker = false
+    private func favoriteTabPickerOverlay(anchor: Anchor<CGRect>?) -> some View {
+        GeometryReader { geometry in
+            let overlayOrigin: CGPoint = {
+                guard let anchor else {
+                    return CGPoint(x: geometry.size.width / 2, y: geometry.size.height / 2)
                 }
+                let rowRect = geometry[anchor]
+                return CGPoint(
+                    x: rowRect.midX,
+                    y: rowRect.maxY
+                )
+            }()
 
-            VStack(spacing: 2) {
-                Text("Add to favorites")
-                    .font(.system(size: 12, weight: .semibold))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.bottom, 4)
-
-                ForEach(Array(appState.configManager.favoriteTabs.enumerated()), id: \.element.id) { index, tabConfig in
-                    let isInTab = appState.selectedItem?.favoriteTabs.contains(tabConfig.name) ?? false
-                    let isFocused = index == appState.favoriteTabPickerIndex
-
-                    HStack(spacing: 6) {
-                        Text(tabConfig.name)
-                            .font(.system(size: 12))
-                        Spacer()
-                        if isInTab {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 6)
-                    .background(
-                        RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(isFocused ? Color.accentColor.opacity(0.18) : Color.clear)
-                    )
-                    .contentShape(Rectangle())
+            ZStack {
+                Color.black.opacity(0.15)
+                    .ignoresSafeArea()
                     .onTapGesture {
-                        appState.favoriteTabPickerIndex = index
-                        appState.confirmPickerSelection()
+                        appState.showingFavoriteTabPicker = false
                     }
-                }
 
-                Divider()
-                    .padding(.vertical, 2)
+                favoriteTabPickerContent
+                    .position(x: overlayOrigin.x, y: overlayOrigin.y)
+            }
+        }
+    }
+
+    private var favoriteTabPickerContent: some View {
+        VStack(spacing: 2) {
+            Text("Add to favorites")
+                .font(.system(size: 12, weight: .semibold))
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.bottom, 4)
+
+            ForEach(Array(appState.configManager.favoriteTabs.enumerated()), id: \.element.id) { index, tabConfig in
+                let isInTab = appState.selectedItem?.favoriteTabs.contains(tabConfig.name) ?? false
+                let isFocused = index == appState.favoriteTabPickerIndex
 
                 HStack(spacing: 6) {
-                    Image(systemName: appState.selectedItem?.isMonospace == true ? "checkmark.square" : "square")
-                        .font(.system(size: 11))
-                    Text("Console font")
-                        .font(.system(size: 11))
+                    Text(tabConfig.name)
+                        .font(.system(size: 12))
                     Spacer()
-                    Text("M")
-                        .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 2)
-                        .background(
-                            RoundedRectangle(cornerRadius: 3, style: .continuous)
-                                .fill(Color.secondary.opacity(0.12))
-                        )
+                    if isInTab {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundStyle(.secondary)
+                    }
                 }
-                .foregroundStyle(appState.selectedItem?.isMonospace == true ? .primary : .secondary)
                 .padding(.horizontal, 8)
-                .padding(.vertical, 4)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 6, style: .continuous)
+                        .fill(isFocused ? Color.accentColor.opacity(0.18) : Color.clear)
+                )
                 .contentShape(Rectangle())
                 .onTapGesture {
-                    appState.togglePickerMonospace()
+                    appState.favoriteTabPickerIndex = index
+                    appState.confirmPickerSelection()
                 }
             }
-            .padding(10)
-            .frame(width: 220)
-            .background(
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(.regularMaterial)
-                    .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
-            )
+
+            Divider()
+                .padding(.vertical, 2)
+
+            HStack(spacing: 6) {
+                Image(systemName: appState.selectedItem?.isMonospace == true ? "checkmark.square" : "square")
+                    .font(.system(size: 11))
+                Text("Console font")
+                    .font(.system(size: 11))
+                Spacer()
+                Text("M")
+                    .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 2)
+                    .background(
+                        RoundedRectangle(cornerRadius: 3, style: .continuous)
+                            .fill(Color.secondary.opacity(0.12))
+                    )
+            }
+            .foregroundStyle(appState.selectedItem?.isMonospace == true ? .primary : .secondary)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .contentShape(Rectangle())
+            .onTapGesture {
+                appState.togglePickerMonospace()
+            }
         }
+        .padding(10)
+        .frame(width: 220)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(.regularMaterial)
+                .shadow(color: .black.opacity(0.2), radius: 12, y: 4)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(Color.primary.opacity(0.15), lineWidth: 1)
+        )
     }
 
     private func rowFill(for item: HistoryItem) -> Color {
