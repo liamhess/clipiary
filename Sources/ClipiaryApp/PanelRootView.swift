@@ -600,17 +600,14 @@ struct PanelRootView: View {
             Menu {
                 ForEach(appState.configManager.favoriteTabs) { tabConfig in
                     let isInTab = item.favoriteTabs.contains(tabConfig.name)
-                    Button {
-                        appState.selectedHistoryItemID = item.id
-                        appState.toggleFavoriteTab(item, tabName: tabConfig.name)
-                        appState.ensureSelection()
-                    } label: {
-                        if isInTab {
-                            Label(tabConfig.name, systemImage: "checkmark")
-                        } else {
-                            Text(tabConfig.name)
+                    Toggle(tabConfig.name, isOn: Binding(
+                        get: { isInTab },
+                        set: { _ in
+                            appState.selectedHistoryItemID = item.id
+                            appState.toggleFavoriteTab(item, tabName: tabConfig.name)
+                            appState.ensureSelection()
                         }
-                    }
+                    ))
                 }
             } label: {
                 Image(systemName: item.isFavorite ? "star.fill" : "star")
@@ -618,6 +615,7 @@ struct PanelRootView: View {
                     .frame(width: 22, height: 22)
             }
             .menuStyle(.borderlessButton)
+            .menuIndicator(.hidden)
             .frame(width: 22)
             .foregroundStyle(item.isFavorite ? Color.accentColor : .secondary)
             .opacity(hoveredItemID == item.id || item.isFavorite ? 1 : 0.55)
