@@ -82,6 +82,8 @@ struct PanelRootView: View {
                     }
                     .padding(10)
                 }
+                .scrollIndicators(.hidden)
+                .onAppear { overrideScrollerStyle() }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                 .background(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
@@ -815,5 +817,24 @@ struct PanelRootView: View {
         .labelsHidden()
         .pickerStyle(.menu)
         .frame(width: width)
+    }
+
+    private func overrideScrollerStyle() {
+        DispatchQueue.main.async {
+            for window in NSApp.windows {
+                for scrollView in window.contentView?.findAll(ofType: NSScrollView.self) ?? [] {
+                    scrollView.scrollerStyle = .overlay
+                }
+            }
+        }
+    }
+}
+
+private extension NSView {
+    func findAll<T: NSView>(ofType type: T.Type) -> [T] {
+        var results: [T] = []
+        if let match = self as? T { results.append(match) }
+        for child in subviews { results.append(contentsOf: child.findAll(ofType: type)) }
+        return results
     }
 }
