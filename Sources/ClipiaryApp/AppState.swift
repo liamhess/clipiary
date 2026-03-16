@@ -267,8 +267,18 @@ final class AppState {
         guard let item = selectedItem else {
             return
         }
+
+        // Determine the neighbor to select after deletion so the scroll position stays stable.
+        let items = activeItems
+        let neighborID: HistoryItem.ID? = {
+            guard let idx = items.firstIndex(where: { $0.id == item.id }) else { return nil }
+            if idx + 1 < items.count { return items[idx + 1].id }
+            if idx - 1 >= 0 { return items[idx - 1].id }
+            return nil
+        }()
+
         history.delete(item)
-        ensureSelection()
+        selectedHistoryItemID = neighborID
     }
 
     var selectedItem: HistoryItem? {
