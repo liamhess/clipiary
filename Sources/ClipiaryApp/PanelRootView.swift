@@ -62,25 +62,6 @@ struct PanelRootView: View {
 
     private var historySection: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text(appState.selectedTab.displayName)
-                    .font(.system(size: 12, weight: .semibold))
-                Spacer()
-                if !appState.searchQuery.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Button("Clear Search") {
-                        appState.searchQuery = ""
-                        appState.requestSearchFocus()
-                        appState.ensureSelection()
-                    }
-                    .buttonStyle(.plain)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
-                }
-                Text("\(appState.activeItems.count)")
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundStyle(.secondary)
-            }
-
             searchField
                 .frame(height: appState.settings.alwaysShowSearch || !appState.searchQuery.isEmpty ? nil : 0)
                 .clipped()
