@@ -278,13 +278,23 @@ struct PanelRootView: View {
         HStack {
             accessibilityStatus
             Spacer()
-            Button("Clear History") {
+            Button {
                 appState.history.clearNonFavorites()
+            } label: {
+                HStack(spacing: 3) {
+                    Image(systemName: "trash")
+                    Text("Clear History")
+                }
             }
-            Button("Quit") {
+            Button {
                 NSApplication.shared.terminate(nil)
+            } label: {
+                HStack(spacing: 3) {
+                    Image(systemName: "xmark.circle")
+                    Text("Quit")
+                }
             }
-            HStack {
+            HStack(spacing: 3) {
                 Text("\(appState.history.items.count)")
                 Text("items")
             }
