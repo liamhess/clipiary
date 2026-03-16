@@ -296,11 +296,6 @@ struct PanelRootView: View {
                     Text("Quit")
                 }
             }
-            HStack(spacing: 3) {
-                Text("\(appState.history.items.count)")
-                Text("items")
-            }
-            .foregroundStyle(.secondary)
         }
         .buttonStyle(.plain)
         .font(.system(size: 11, weight: .medium))
