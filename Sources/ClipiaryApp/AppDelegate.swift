@@ -244,6 +244,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case 117:
             appState.deleteSelectedItem()
             return suppressKeyUp(for: event)
+        case 116: // Page Up
+            appState.moveSelectionByPage(direction: -1)
+            return suppressKeyUp(for: event)
+        case 121: // Page Down
+            appState.moveSelectionByPage(direction: 1)
+            return suppressKeyUp(for: event)
         default:
             return event
         }

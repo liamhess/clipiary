@@ -186,6 +186,18 @@ private final class PanelHostingView: NSHostingView<AnyView> {
             return true
         }
 
+        // Cmd+Down or Opt+Down — jump to last item
+        if !modifiers.isDisjoint(with: [.command, .option]), event.keyCode == 125 {
+            appState.moveToLast()
+            return true
+        }
+
+        // Cmd+Up or Opt+Up — jump to first item
+        if !modifiers.isDisjoint(with: [.command, .option]), event.keyCode == 126 {
+            appState.moveToFirst()
+            return true
+        }
+
         return super.performKeyEquivalent(with: event)
     }
 

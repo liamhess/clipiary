@@ -188,6 +188,25 @@ final class AppState {
         selectedHistoryItemID = items[nextIndex].id
     }
 
+    func moveSelectionByPage(direction: Int) {
+        let pageSize = 10
+        moveSelection(direction: direction * pageSize)
+    }
+
+    func moveToFirst() {
+        isPreviewVisible = false
+        let items = activeItems
+        guard !items.isEmpty else { return }
+        selectedHistoryItemID = items.first?.id
+    }
+
+    func moveToLast() {
+        isPreviewVisible = false
+        let items = activeItems
+        guard !items.isEmpty else { return }
+        selectedHistoryItemID = items.last?.id
+    }
+
     func ensureSelection() {
         let items = activeItems
         guard !items.isEmpty else {
