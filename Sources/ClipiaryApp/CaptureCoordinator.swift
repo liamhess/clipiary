@@ -1,4 +1,5 @@
 import AppKit
+import CryptoKit
 import Foundation
 
 @MainActor
@@ -44,6 +45,45 @@ final class CaptureCoordinator {
         )
     }
 
+    func consumeClipboardImage(_ pngData: Data, app: NSRunningApplication?) {
+        guard settings.isClipboardMonitoringEnabled else {
+            return
+        }
+
+        if suppressNextClipboardChange {
+            suppressNextClipboardChange = false
+            return
+        }
+
+        guard !settings.ignores(bundleID: app?.bundleIdentifier) else {
+            return
+        }
+
+        let hash = SHA256.hash(data: pngData).map { String(format: "%02x", $0) }.joined()
+
+        var description = "Image"
+        if let image = NSImage(data: pngData), let rep = image.representations.first {
+            let w = rep.pixelsWide
+            let h = rep.pixelsHigh
+            if w > 0 && h > 0 {
+                description = "Image \(w)\u{00D7}\(h)"
+            }
+        }
+
+        let fileName = "\(UUID().uuidString).png"
+        history.saveImageData(pngData, fileName: fileName)
+
+        let item = HistoryItem(
+            text: description,
+            source: .clipboard,
+            appName: app?.localizedName ?? "Unknown",
+            bundleID: app?.bundleIdentifier,
+            imageFileName: fileName,
+            imageHash: hash
+        )
+        history.add(item, limit: settings.historyLimit)
+    }
+
     func consumeCopyOnSelectSnapshot(_ snapshot: SelectionSnapshot) {
         guard settings.isCopyOnSelectEnabled else {
             return
@@ -62,8 +102,13 @@ final class CaptureCoordinator {
     func restore(_ item: HistoryItem) {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        guard pasteboard.setString(item.text, forType: .string) else {
-            return
+
+        if item.isImage, let image = history.loadImage(for: item) {
+            pasteboard.writeObjects([image])
+        } else {
+            guard pasteboard.setString(item.text, forType: .string) else {
+                return
+            }
         }
 
         suppressNextClipboardChange = true

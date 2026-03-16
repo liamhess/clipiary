@@ -371,9 +371,9 @@ struct PanelRootView: View {
                     appState.restore(item)
                 } label: {
                     HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: item.source == .copyOnSelect ? "cursorarrow.rays" : "doc.on.doc")
+                        Image(systemName: item.isImage ? "photo" : item.source == .copyOnSelect ? "cursorarrow.rays" : "doc.on.doc")
                             .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(item.source == .copyOnSelect ? Color.accentColor : .secondary)
+                            .foregroundStyle(item.isImage ? Color.orange : item.source == .copyOnSelect ? Color.accentColor : .secondary)
                             .frame(width: 14, alignment: .center)
 
                         Text(item.displayText.isEmpty ? "Untitled" : item.displayText)
@@ -462,11 +462,21 @@ struct PanelRootView: View {
     }
 
     private func itemPreview(for item: HistoryItem) -> some View {
-        ScrollView {
-            Text(item.text)
-                .font(.system(size: 13))
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(12)
+        Group {
+            if item.isImage, let nsImage = appState.history.loadImage(for: item) {
+                Image(nsImage: nsImage)
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(maxWidth: 500, maxHeight: 580)
+                    .padding(12)
+            } else {
+                ScrollView {
+                    Text(item.text)
+                        .font(.system(size: 13))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(12)
+                }
+            }
         }
         .frame(idealWidth: 500, maxHeight: 600)
     }

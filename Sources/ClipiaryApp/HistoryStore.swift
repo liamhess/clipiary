@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Observation
 
@@ -9,13 +10,16 @@ final class HistoryStore {
 
     private let fileManager: FileManager
     private let storageURL: URL
+    private let imagesDirectoryURL: URL
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
     init(fileManager: FileManager = .default) {
         self.fileManager = fileManager
         let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        storageURL = appSupport.appending(path: "Clipiary/history.json")
+        let clipiaryDir = appSupport.appending(path: "Clipiary")
+        storageURL = clipiaryDir.appending(path: "history.json")
+        imagesDirectoryURL = clipiaryDir.appending(path: "images")
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
         encoder.dateEncodingStrategy = .iso8601
         decoder.dateDecodingStrategy = .iso8601
@@ -43,13 +47,40 @@ final class HistoryStore {
         items = recencyOrderedItems(decodedItems)
     }
 
+    func saveImageData(_ data: Data, fileName: String) {
+        try? fileManager.createDirectory(at: imagesDirectoryURL, withIntermediateDirectories: true)
+        try? data.write(to: imagesDirectoryURL.appending(path: fileName), options: .atomic)
+    }
+
+    func loadImage(for item: HistoryItem) -> NSImage? {
+        guard let fileName = item.imageFileName else { return nil }
+        let url = imagesDirectoryURL.appending(path: fileName)
+        guard let data = try? Data(contentsOf: url) else { return nil }
+        return NSImage(data: data)
+    }
+
     func add(_ item: HistoryItem, limit: Int) {
-        if let duplicateIndex = items.firstIndex(where: { $0.text == item.text && $0.bundleID == item.bundleID }) {
+        let duplicateIndex: Int?
+        if item.isImage {
+            duplicateIndex = items.firstIndex(where: {
+                $0.imageHash != nil && $0.imageHash == item.imageHash && $0.bundleID == item.bundleID
+            })
+        } else {
+            duplicateIndex = items.firstIndex(where: {
+                !$0.isImage && $0.text == item.text && $0.bundleID == item.bundleID
+            })
+        }
+
+        if let duplicateIndex {
             var existing = items.remove(at: duplicateIndex)
             existing.createdAt = item.createdAt
             existing.source = item.source
             existing.appName = item.appName
             existing.bundleID = item.bundleID
+            // For duplicate images, keep existing file and delete the new one
+            if item.isImage, let newFile = item.imageFileName, newFile != existing.imageFileName {
+                deleteImageFileNamed(newFile)
+            }
             items.insert(existing, at: 0)
         } else {
             items.insert(item, at: 0)
@@ -60,11 +91,15 @@ final class HistoryStore {
     }
 
     func delete(_ item: HistoryItem) {
+        deleteImageFile(for: item)
         items.removeAll { $0.id == item.id }
         persist()
     }
 
     func clearNonFavorites() {
+        for item in items where item.favoriteTabs.isEmpty {
+            deleteImageFile(for: item)
+        }
         items.removeAll { $0.favoriteTabs.isEmpty }
         persist()
     }
@@ -137,6 +172,10 @@ final class HistoryStore {
         let favorites = items.filter { !$0.favoriteTabs.isEmpty }
         let nonFavorites = recencyOrderedItems(items.filter { $0.favoriteTabs.isEmpty })
         let retainedItems = favorites + Array(nonFavorites.prefix(max(0, limit - favorites.count)))
+        let retainedIDs = Set(retainedItems.map(\.id))
+        for item in items where !retainedIDs.contains(item.id) {
+            deleteImageFile(for: item)
+        }
         items = recencyOrderedItems(retainedItems)
     }
 
@@ -144,6 +183,15 @@ final class HistoryStore {
         source.sorted {
             return $0.createdAt > $1.createdAt
         }
+    }
+
+    private func deleteImageFile(for item: HistoryItem) {
+        guard let fileName = item.imageFileName else { return }
+        deleteImageFileNamed(fileName)
+    }
+
+    private func deleteImageFileNamed(_ fileName: String) {
+        try? fileManager.removeItem(at: imagesDirectoryURL.appending(path: fileName))
     }
 
     private func persist() {

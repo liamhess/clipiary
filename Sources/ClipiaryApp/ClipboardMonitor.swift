@@ -31,10 +31,18 @@ final class ClipboardMonitor {
 
         changeCount = pasteboard.changeCount
 
-        guard let text = pasteboard.string(forType: .string) else {
+        // Text takes priority when both text and image are present
+        if let text = pasteboard.string(forType: .string) {
+            captureCoordinator.consumeClipboardText(text, app: NSWorkspace.shared.frontmostApplication)
             return
         }
 
-        captureCoordinator.consumeClipboardText(text, app: NSWorkspace.shared.frontmostApplication)
+        // Fall through to image detection
+        if let image = NSImage(pasteboard: pasteboard),
+           let tiffData = image.tiffRepresentation,
+           let bitmap = NSBitmapImageRep(data: tiffData),
+           let pngData = bitmap.representation(using: .png, properties: [:]) {
+            captureCoordinator.consumeClipboardImage(pngData, app: NSWorkspace.shared.frontmostApplication)
+        }
     }
 }

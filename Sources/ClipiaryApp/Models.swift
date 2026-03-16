@@ -15,6 +15,8 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     var createdAt: Date
     var favoriteTabs: Set<String>
     var isMonospace: Bool
+    var imageFileName: String?
+    var imageHash: String?
 
     init(
         id: UUID = UUID(),
@@ -24,7 +26,9 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         bundleID: String?,
         createdAt: Date = .now,
         favoriteTabs: Set<String> = [],
-        isMonospace: Bool = false
+        isMonospace: Bool = false,
+        imageFileName: String? = nil,
+        imageHash: String? = nil
     ) {
         self.id = id
         self.text = text
@@ -34,6 +38,12 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         self.createdAt = createdAt
         self.favoriteTabs = favoriteTabs
         self.isMonospace = isMonospace
+        self.imageFileName = imageFileName
+        self.imageHash = imageHash
+    }
+
+    var isImage: Bool {
+        imageFileName != nil
     }
 
     var isFavorite: Bool {
@@ -53,6 +63,7 @@ extension HistoryItem: Codable {
         case favoriteTabs
         case isFavorite // legacy key for decoding only
         case monospace
+        case imageFileName, imageHash
     }
 
     init(from decoder: Decoder) throws {
@@ -64,6 +75,8 @@ extension HistoryItem: Codable {
         bundleID = try container.decodeIfPresent(String.self, forKey: .bundleID)
         createdAt = try container.decode(Date.self, forKey: .createdAt)
         isMonospace = (try? container.decode(Bool.self, forKey: .monospace)) ?? false
+        imageFileName = try container.decodeIfPresent(String.self, forKey: .imageFileName)
+        imageHash = try container.decodeIfPresent(String.self, forKey: .imageHash)
 
         if let tabs = try? container.decode(Set<String>.self, forKey: .favoriteTabs) {
             favoriteTabs = tabs
@@ -84,6 +97,8 @@ extension HistoryItem: Codable {
         try container.encode(createdAt, forKey: .createdAt)
         try container.encode(favoriteTabs, forKey: .favoriteTabs)
         try container.encode(isMonospace, forKey: .monospace)
+        try container.encodeIfPresent(imageFileName, forKey: .imageFileName)
+        try container.encodeIfPresent(imageHash, forKey: .imageHash)
     }
 }
 
