@@ -1,6 +1,24 @@
 import AppKit
 import SwiftUI
 
+@MainActor
+private let appIconCache: NSCache<NSString, NSImage> = {
+    let cache = NSCache<NSString, NSImage>()
+    cache.countLimit = 50
+    return cache
+}()
+
+@MainActor
+private func appIcon(for bundleID: String?) -> NSImage? {
+    guard let bundleID else { return nil }
+    let key = bundleID as NSString
+    if let cached = appIconCache.object(forKey: key) { return cached }
+    guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else { return nil }
+    let icon = NSWorkspace.shared.icon(forFile: url.path)
+    appIconCache.setObject(icon, forKey: key)
+    return icon
+}
+
 private struct SelectedRowAnchorKey: PreferenceKey {
     static let defaultValue: Anchor<CGRect>? = nil
     static func reduce(value: inout Anchor<CGRect>?, nextValue: () -> Anchor<CGRect>?) {
@@ -382,10 +400,16 @@ struct PanelRootView: View {
                     appState.restore(item)
                 } label: {
                     HStack(alignment: .top, spacing: 8) {
-                        Image(systemName: item.isImage ? "photo" : item.source == .copyOnSelect ? "cursorarrow.rays" : "doc.on.doc")
-                            .font(.system(size: 11, weight: .semibold))
-                            .foregroundStyle(item.isImage ? Color.orange : item.source == .copyOnSelect ? Color.accentColor : .secondary)
-                            .frame(width: 14, alignment: .center)
+                        if let icon = appIcon(for: item.bundleID) {
+                            Image(nsImage: icon)
+                                .resizable()
+                                .frame(width: 16, height: 16)
+                        } else {
+                            Image(systemName: item.isImage ? "photo" : item.source == .copyOnSelect ? "cursorarrow.rays" : "doc.on.doc")
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(item.isImage ? Color.orange : item.source == .copyOnSelect ? Color.accentColor : .secondary)
+                                .frame(width: 16, alignment: .center)
+                        }
 
                         Text(item.displayText.isEmpty ? "Untitled" : item.displayText)
                             .font(item.isMonospace
