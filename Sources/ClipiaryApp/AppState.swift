@@ -133,7 +133,7 @@ final class AppState {
         let baseItems = filteredItems()
         switch tab.kind {
         case .history:
-            return history.customOrderedItems(baseItems)
+            return baseItems.sorted { $0.createdAt > $1.createdAt }
         case .favorites(let tabName):
             return history.customOrderedItems(baseItems.filter { $0.favoriteTabs.contains(tabName) })
         }

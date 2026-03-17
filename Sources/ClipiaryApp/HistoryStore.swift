@@ -172,8 +172,14 @@ final class HistoryStore {
             return
         }
 
+        // Freeze favorite tab positions before bumping createdAt so the item
+        // (and its neighbors) keep their custom order in every favorites tab.
+        for tabName in items[index].favoriteTabs {
+            let tabItemIDs = Set(items.filter { $0.favoriteTabs.contains(tabName) }.map(\.id))
+            assignSortIndices(to: tabItemIDs)
+        }
+
         items[index].createdAt = Date()
-        items[index].sortIndex = nil
         items = recencyOrderedItems(items)
         persist()
     }
