@@ -485,7 +485,7 @@ struct PanelRootView: View {
         .popover(
             isPresented: Binding(
                 get: { appState.isPreviewVisible && appState.selectedHistoryItemID == item.id },
-                set: { if !$0 { appState.isPreviewVisible = false } }
+                set: { _ in }
             ),
             arrowEdge: .trailing
         ) {

@@ -172,7 +172,6 @@ final class AppState {
     }
 
     func moveSelection(direction: Int) {
-        isPreviewVisible = false
         let items = activeItems
         guard !items.isEmpty else {
             selectedHistoryItemID = nil
@@ -195,14 +194,12 @@ final class AppState {
     }
 
     func moveToFirst() {
-        isPreviewVisible = false
         let items = activeItems
         guard !items.isEmpty else { return }
         selectedHistoryItemID = items.first?.id
     }
 
     func moveToLast() {
-        isPreviewVisible = false
         let items = activeItems
         guard !items.isEmpty else { return }
         selectedHistoryItemID = items.last?.id

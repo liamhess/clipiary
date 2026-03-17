@@ -321,6 +321,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         appState.isRecordingShortcut = false
         appState.isRecordingQuickPasteShortcut = false
         appState.showingFavoriteTabPicker = false
+        appState.isPreviewVisible = false
         appState.searchQuery = ""
         suppressedKeyUps.removeAll()
         let targetApp = previousApp
