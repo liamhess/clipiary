@@ -400,15 +400,23 @@ struct PanelRootView: View {
                     appState.restore(item)
                 } label: {
                     HStack(alignment: .top, spacing: 8) {
-                        if let icon = appIcon(for: item.bundleID) {
-                            Image(nsImage: icon)
-                                .resizable()
-                                .frame(width: 16, height: 16)
-                        } else {
-                            Image(systemName: item.isImage ? "photo" : item.source == .copyOnSelect ? "cursorarrow.rays" : "doc.on.doc")
-                                .font(.system(size: 11, weight: .semibold))
-                                .foregroundStyle(item.isImage ? Color.orange : item.source == .copyOnSelect ? Color.accentColor : .secondary)
-                                .frame(width: 16, alignment: .center)
+                        ZStack(alignment: .bottomTrailing) {
+                            if let icon = appIcon(for: item.bundleID) {
+                                Image(nsImage: icon)
+                                    .resizable()
+                                    .frame(width: 16, height: 16)
+                            } else {
+                                Image(systemName: item.isImage ? "photo" : item.source == .copyOnSelect ? "cursorarrow.rays" : "doc.on.doc")
+                                    .font(.system(size: 11, weight: .semibold))
+                                    .foregroundStyle(item.isImage ? Color.orange : item.source == .copyOnSelect ? Color.accentColor : .secondary)
+                                    .frame(width: 16, height: 16, alignment: .center)
+                            }
+                            if item.source == .copyOnSelect {
+                                Image(systemName: "cursorarrow.rays")
+                                    .font(.system(size: 6, weight: .bold))
+                                    .foregroundStyle(Color.accentColor)
+                                    .offset(x: 4, y: 4)
+                            }
                         }
 
                         Text(item.displayText.isEmpty ? "Untitled" : item.displayText)
