@@ -26,13 +26,13 @@ final class FloatingPanel: NSPanel {
 
         self.title = "Clipiary"
         isFloatingPanel = true
-        level = .statusBar
+        level = .floating
         collectionBehavior = [.auxiliary, .stationary, .moveToActiveSpace, .fullScreenAuxiliary]
         isMovableByWindowBackground = false
         hidesOnDeactivate = false
         backgroundColor = .clear
         minSize = NSSize(width: 300, height: 400)
-        maxSize = NSSize(width: 800, height: 1200)
+        maxSize = NSSize(width: 800, height: CGFloat.greatestFiniteMagnitude)
 
         let hostingView = PanelHostingView(
             rootView: AnyView(PanelRootView().environment(appState)),
@@ -162,6 +162,7 @@ private final class PanelHostingView: NSHostingView<AnyView> {
         self.appState = appState
         self.onClose = onClose
         super.init(rootView: rootView)
+        sizingOptions = []
     }
 
     @available(*, unavailable)
