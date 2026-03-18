@@ -287,6 +287,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         case 121: // Page Down
             appState.moveSelectionByPage(direction: 1)
             return suppressKeyUp(for: event)
+        case 115: // Home
+            appState.moveToFirst()
+            return suppressKeyUp(for: event)
+        case 119: // End
+            appState.moveToLast()
+            return suppressKeyUp(for: event)
         default:
             return event
         }
