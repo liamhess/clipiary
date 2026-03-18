@@ -5,6 +5,7 @@ import SwiftUI
 final class FloatingPanel: NSPanel {
     private let statusBarButton: NSStatusBarButton?
     private let appState: AppState
+    private var isSuppressingPersistence = false
     var onClose: (() -> Void)?
 
     init(
@@ -59,32 +60,40 @@ final class FloatingPanel: NSPanel {
 
     func open() {
         let settings = appState.settings
-        let size = NSSize(width: settings.panelWidth, height: settings.panelHeight)
+        let preferredSize = NSSize(width: settings.panelWidth, height: settings.panelHeight)
 
         guard let screen = NSScreen.main else {
-            setContentSize(size)
+            setContentSize(preferredSize)
             orderFrontRegardless()
             makeKey()
             return
         }
 
         let targetOrigin: NSPoint
+        var size = preferredSize
         if let statusBarButton,
            let window = statusBarButton.window {
             let rectInWindow = statusBarButton.convert(statusBarButton.bounds, to: nil)
             let screenRect = window.convertToScreen(rectInWindow)
+            let maxHeight = screenRect.minY - screen.visibleFrame.minY
+            size.width = min(size.width, screen.visibleFrame.width)
+            size.height = min(size.height, maxHeight)
             targetOrigin = NSPoint(
                 x: min(screenRect.minX, screen.visibleFrame.maxX - size.width),
                 y: screenRect.minY - size.height
             )
         } else {
+            size.width = min(size.width, screen.visibleFrame.width)
+            size.height = min(size.height, screen.visibleFrame.height)
             targetOrigin = NSPoint(
                 x: screen.visibleFrame.midX - size.width / 2,
                 y: screen.visibleFrame.midY - size.height / 2
             )
         }
 
+        isSuppressingPersistence = true
         setFrame(NSRect(origin: targetOrigin, size: size), display: true)
+        isSuppressingPersistence = false
         orderFrontRegardless()
         makeKey()
         statusBarButton?.isHighlighted = true
@@ -147,6 +156,7 @@ final class FloatingPanel: NSPanel {
     }
 
     @objc private func windowDidResize(_ notification: Notification) {
+        guard !isSuppressingPersistence else { return }
         let settings = appState.settings
         settings.panelWidth = frame.width
         settings.panelHeight = frame.height
