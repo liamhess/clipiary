@@ -159,20 +159,6 @@ struct PanelRootView: View {
                 }
                 .buttonStyle(.plain)
                 .padding(.vertical, -8)
-
-                Button {
-                    shortcutsHelpPresented.toggle()
-                } label: {
-                    Image(systemName: "questionmark.circle")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.secondary)
-                        .frame(width: 18, height: 18)
-                }
-                .buttonStyle(.plain)
-                .help("Keyboard shortcuts")
-                .popover(isPresented: $shortcutsHelpPresented, attachmentAnchor: .rect(.bounds), arrowEdge: .top) {
-                    shortcutsHelpPopover
-                }
             }
 
             if settingsExpanded {
@@ -344,6 +330,18 @@ struct PanelRootView: View {
         HStack {
             accessibilityStatus
             Spacer()
+            Button {
+                shortcutsHelpPresented.toggle()
+            } label: {
+                HStack(spacing: 3) {
+                    Image(systemName: "questionmark.circle")
+                    Text("Keyboard Shortcuts")
+                }
+            }
+            .help("Keyboard shortcuts")
+            .popover(isPresented: $shortcutsHelpPresented, attachmentAnchor: .rect(.bounds), arrowEdge: .top) {
+                shortcutsHelpPopover
+            }
             Button {
                 appState.history.clearNonFavorites()
             } label: {
