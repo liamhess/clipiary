@@ -154,9 +154,11 @@ struct PanelRootView: View {
                             .foregroundStyle(.secondary)
                     }
                     .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.vertical, 8)
                     .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
+                .padding(.vertical, -8)
 
                 Button {
                     shortcutsHelpPresented.toggle()
