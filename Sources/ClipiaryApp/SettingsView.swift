@@ -198,7 +198,7 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color(nsColor: .controlBackgroundColor).opacity(0.5))
+                    .fill(Color.white.opacity(0.08))
             )
         }
         .frame(maxWidth: .infinity)
