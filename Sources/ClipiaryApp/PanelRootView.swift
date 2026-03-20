@@ -748,7 +748,7 @@ private struct HistoryRowView: View {
                     appState.selectedHistoryItemID = item.id
                     appState.restore(item)
                 } label: {
-                    HStack(alignment: .top, spacing: 8) {
+                    HStack(alignment: .center, spacing: 8) {
                         ZStack(alignment: .bottomTrailing) {
                             if showAppIcons, let icon = appIcon(for: item.bundleID) {
                                 Image(nsImage: icon)
@@ -768,13 +768,24 @@ private struct HistoryRowView: View {
                             }
                         }
 
-                        Text(item.displayText.isEmpty ? "Untitled" : item.displayText)
-                            .font(item.isMonospace
-                                ? .system(size: 12, design: .monospaced)
-                                : .system(size: 13))
-                            .foregroundStyle(.primary)
-                            .lineLimit(2)
-                            .multilineTextAlignment(.leading)
+                        if item.isImage {
+                            HStack(spacing: 5) {
+                                Image(systemName: "photo")
+                                    .font(.system(size: 10, weight: .semibold))
+                                    .foregroundStyle(.orange)
+                                Text(item.text)
+                                    .font(.system(size: 11, weight: .medium))
+                                    .foregroundStyle(.secondary)
+                            }
+                        } else {
+                            Text(item.displayText.isEmpty ? "Untitled" : item.displayText)
+                                .font(item.isMonospace
+                                    ? .system(size: 12, design: .monospaced)
+                                    : .system(size: 13))
+                                .foregroundStyle(.primary)
+                                .lineLimit(2)
+                                .multilineTextAlignment(.leading)
+                        }
                     }
                 }
                 .buttonStyle(.plain)
