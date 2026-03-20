@@ -173,7 +173,7 @@ struct PanelRootView: View {
                     }
 
                     settingsToggleRow(
-                        title: "Monitor normal copy events",
+                        title: "Monitor clipboard",
                         isOn: Binding(
                             get: { appState.settings.isClipboardMonitoringEnabled },
                             set: { appState.settings.isClipboardMonitoringEnabled = $0 }
@@ -213,7 +213,7 @@ struct PanelRootView: View {
                     )
 
                     settingMetric(
-                        title: "Paste count bar",
+                        title: "Show paste count bar",
                         value: nil
                     ) {
                         Picker("", selection: Binding(
@@ -230,7 +230,7 @@ struct PanelRootView: View {
                     }
 
                     settingsToggleRow(
-                        title: "Copy on select",
+                        title: "Copy on select (globally, best effort)",
                         isOn: Binding(
                             get: { appState.settings.isCopyOnSelectEnabled },
                             set: { appState.settings.isCopyOnSelectEnabled = $0 }
