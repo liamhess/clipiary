@@ -13,11 +13,11 @@ struct SettingsView: View {
             VStack(spacing: 16) {
                 HStack(alignment: .top, spacing: 12) {
                     generalSection
-                    appearanceSection
+                    copyOnSelectSection
                 }
 
                 HStack(alignment: .top, spacing: 12) {
-                    copyOnSelectSection
+                    appearanceSection
                     shortcutsSection
                 }
             }
