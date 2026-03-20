@@ -41,11 +41,17 @@ struct PanelRootView: View {
     @State private var shortcutsHelpPresented = false
 
     var body: some View {
-        VStack(spacing: 12) {
-            header
-            historySection
-            settingsSection
-            footer
+        GeometryReader { geometry in
+            VStack(spacing: 12) {
+                header
+                historySection
+                    .layoutPriority(settingsExpanded ? 0 : 1)
+                settingsSection
+                    .frame(maxHeight: settingsExpanded ? geometry.size.height * 0.6 : nil)
+                    .layoutPriority(settingsExpanded ? 1 : 0)
+                footer
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .padding(12)
         .frame(minWidth: 300, maxWidth: .infinity, minHeight: 400, maxHeight: .infinity)
@@ -161,7 +167,8 @@ struct PanelRootView: View {
             }
 
             if settingsExpanded {
-                VStack(alignment: .leading, spacing: 10) {
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 10) {
                     if !appState.permissionManager.isTrusted {
                         Button("Grant Accessibility Access") {
                             appState.refreshCopyOnSelectPermissions()
@@ -314,6 +321,7 @@ struct PanelRootView: View {
                     }
                 }
                 .transition(.opacity)
+                }
             }
         }
         .padding(10)
