@@ -23,6 +23,8 @@ struct SettingsView: View {
             }
             .padding(16)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.regularMaterial)
     }
 
     // MARK: - Sections
@@ -198,7 +200,11 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(Color.white.opacity(0.08))
+                    .fill(Color.black.opacity(0.15))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
             )
         }
         .frame(maxWidth: .infinity)
@@ -302,6 +308,7 @@ final class SettingsWindowController {
         window.minSize = NSSize(width: 460, height: 340)
         window.maxSize = NSSize(width: 700, height: 800)
         window.isReleasedWhenClosed = false
+        window.appearance = NSAppearance(named: .darkAqua)
         window.center()
         window.level = NSWindow.Level(rawValue: NSWindow.Level.floating.rawValue + 1)
 
