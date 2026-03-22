@@ -195,9 +195,10 @@ struct SettingsView: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 content()
+                Spacer(minLength: 0)
             }
             .padding(10)
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(Color.black.opacity(0.15))
@@ -207,7 +208,7 @@ struct SettingsView: View {
                     .stroke(Color.white.opacity(0.08), lineWidth: 1)
             )
         }
-        .frame(maxWidth: .infinity)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 
     private func settingMetric<Control: View>(title: String, @ViewBuilder control: () -> Control) -> some View {
