@@ -147,6 +147,14 @@ final class FloatingPanel: NSPanel {
             SettingsWindowController.shared.open()
             return
         }
+        // Escape: close preview first, then close panel
+        if event.type == .keyDown, event.keyCode == 53,
+           event.modifierFlags.intersection(.deviceIndependentFlagsMask).isDisjoint(with: [.command, .option, .control]) {
+            if appState.isPreviewVisible {
+                appState.isPreviewVisible = false
+                return
+            }
+        }
         super.sendEvent(event)
     }
 
