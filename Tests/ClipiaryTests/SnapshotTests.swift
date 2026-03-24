@@ -24,6 +24,7 @@ import Testing
             singleFavoriteTab: true,
             singleFavoriteTabName: "Favorites",
             showingFavoriteTabPicker: false,
+            itemLineLimit: 2,
             appState: appState
         )
         .environment(appState)
@@ -49,6 +50,7 @@ import Testing
             singleFavoriteTab: true,
             singleFavoriteTabName: "Favorites",
             showingFavoriteTabPicker: false,
+            itemLineLimit: 2,
             appState: appState
         )
         .environment(appState)
@@ -75,6 +77,7 @@ import Testing
             singleFavoriteTab: true,
             singleFavoriteTabName: "Favorites",
             showingFavoriteTabPicker: false,
+            itemLineLimit: 2,
             appState: appState
         )
         .environment(appState)
@@ -101,6 +104,7 @@ import Testing
             singleFavoriteTab: true,
             singleFavoriteTabName: "Favorites",
             showingFavoriteTabPicker: false,
+            itemLineLimit: 2,
             appState: appState
         )
         .environment(appState)
@@ -126,6 +130,7 @@ import Testing
             singleFavoriteTab: true,
             singleFavoriteTabName: "Favorites",
             showingFavoriteTabPicker: false,
+            itemLineLimit: 2,
             appState: appState
         )
         .environment(appState)
@@ -152,6 +157,7 @@ import Testing
             singleFavoriteTab: true,
             singleFavoriteTabName: "Favorites",
             showingFavoriteTabPicker: false,
+            itemLineLimit: 2,
             appState: appState
         )
         .environment(appState)

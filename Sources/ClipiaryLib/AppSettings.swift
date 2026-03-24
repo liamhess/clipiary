@@ -24,6 +24,7 @@ final class AppSettings {
         static let copyOnSelectBufferLimit = "copyOnSelectBufferLimit"
         static let showAppIcons = "showAppIcons"
         static let pasteCountBarScheme = "pasteCountBarScheme"
+        static let itemLineLimit = "itemLineLimit"
     }
 
     private let defaults: UserDefaults
@@ -100,6 +101,10 @@ final class AppSettings {
         didSet { defaults.set(pasteCountBarScheme, forKey: Keys.pasteCountBarScheme) }
     }
 
+    var itemLineLimit: Int {
+        didSet { defaults.set(itemLineLimit, forKey: Keys.itemLineLimit) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -121,6 +126,7 @@ final class AppSettings {
             Keys.copyOnSelectBufferLimit: 3,
             Keys.showAppIcons: true,
             Keys.pasteCountBarScheme: "ocean",
+            Keys.itemLineLimit: 2,
         ])
 
         isClipboardMonitoringEnabled = defaults.bool(forKey: Keys.clipboardMonitoringEnabled)
@@ -141,6 +147,7 @@ final class AppSettings {
         copyOnSelectBufferLimit = defaults.integer(forKey: Keys.copyOnSelectBufferLimit)
         showAppIcons = defaults.bool(forKey: Keys.showAppIcons)
         pasteCountBarScheme = defaults.string(forKey: Keys.pasteCountBarScheme) ?? "ocean"
+        itemLineLimit = defaults.integer(forKey: Keys.itemLineLimit)
     }
 
     var globalShortcut: GlobalShortcut {

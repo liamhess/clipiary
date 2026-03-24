@@ -44,6 +44,7 @@ struct HistoryRowView: View {
     let singleFavoriteTab: Bool
     let singleFavoriteTabName: String?
     let showingFavoriteTabPicker: Bool
+    let itemLineLimit: Int
     let appState: AppState
 
     @State private var isHovered = false
@@ -90,7 +91,7 @@ struct HistoryRowView: View {
                                     ? .system(size: 12, design: .monospaced)
                                     : .system(size: 13))
                                 .foregroundStyle(.primary)
-                                .lineLimit(2)
+                                .lineLimit(itemLineLimit)
                                 .multilineTextAlignment(.leading)
                         }
                     }

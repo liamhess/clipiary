@@ -5,6 +5,7 @@ struct SettingsView: View {
     private let cooldownOptions = [100, 200, 350, 500, 750, 1_000, 1_500, 2_000]
     private let selectionBufferOptions = [1, 2, 3, 5, 10]
     private let historyLimitOptions = [50, 100, 250, 500, 1_000, 2_500, 5_000, 10_000]
+    private let itemLineLimitOptions = [1, 2, 3, 4]
 
     @Environment(AppState.self) private var appState
 
@@ -85,6 +86,17 @@ struct SettingsView: View {
                     set: { appState.settings.alwaysShowSearch = $0 }
                 )
             )
+
+            settingMetric(title: "Item line limit") {
+                optionPicker(
+                    selection: Binding(
+                        get: { appState.settings.itemLineLimit },
+                        set: { appState.settings.itemLineLimit = $0 }
+                    ),
+                    options: itemLineLimitOptions,
+                    label: { "\($0)" }
+                )
+            }
 
             settingMetric(title: "Paste count bar") {
                 Picker("", selection: Binding(

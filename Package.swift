@@ -31,7 +31,8 @@ let package = Package(
                 "ClipiaryLib",
                 .product(name: "SnapshotTesting", package: "swift-snapshot-testing"),
             ],
-            path: "Tests/ClipiaryTests"
+            path: "Tests/ClipiaryTests",
+            exclude: ["__Snapshots__"]
         ),
     ]
 )

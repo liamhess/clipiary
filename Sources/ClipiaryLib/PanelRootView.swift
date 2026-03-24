@@ -223,6 +223,7 @@ struct PanelRootView: View {
         let showAppIcons = appState.settings.showAppIcons
         let showItemDetails = appState.settings.showItemDetails
         let pasteCountBarScheme = appState.settings.pasteCountBarScheme
+        let itemLineLimit = appState.settings.itemLineLimit
         let singleFavoriteTab = appState.configManager.favoriteTabs.count == 1
         let singleFavoriteTabName = singleFavoriteTab ? appState.configManager.favoriteTabs.first?.name : nil
         let selectedID = appState.selectedHistoryItemID
@@ -245,6 +246,7 @@ struct PanelRootView: View {
                         singleFavoriteTab: singleFavoriteTab,
                         singleFavoriteTabName: singleFavoriteTabName,
                         showingFavoriteTabPicker: showingPicker && selectedID == item.id,
+                        itemLineLimit: itemLineLimit,
                         appState: appState
                     )
                     .opacity(draggingItemID == item.id ? 0.4 : 1.0)
