@@ -6,6 +6,7 @@ from pathlib import Path
 
 from .build import build_app
 from .cask import generate_cask
+from .changelog import extract_version_notes
 from .common import Runner, ToolError, dist_dir, remove_path, resolve_path, write_json, write_text
 from .env import get_env
 
@@ -125,13 +126,7 @@ def build_release(
     write_text(sha256_path, sha256 + "\n", dry_run=runner.dry_run)
     generate_cask(env, version, sha256, cask_path, dry_run=runner.dry_run)
 
-    release_notes = (
-        f"Version: {version}\n"
-        f"Build: {build_number}\n"
-        f"Archive: {archive_path}\n"
-        f"SHA256: {sha256}\n"
-        f"Cask: {cask_path}\n"
-    )
+    release_notes = extract_version_notes(root, version)
     write_text(release_notes_path, release_notes, dry_run=runner.dry_run)
 
     metadata = ReleaseMetadata(

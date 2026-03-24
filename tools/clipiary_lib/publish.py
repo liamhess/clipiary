@@ -6,6 +6,7 @@ import re
 import tempfile
 from pathlib import Path
 
+from .changelog import stamp_release
 from .common import Runner, ToolError, write_text
 from .env import get_env
 from .release import ReleaseMetadata
@@ -275,8 +276,11 @@ def start_release(root: Path, runner: Runner, bump: str) -> dict[str, str]:
     if existing_local.returncode == 0:
         raise ToolError(f"Tag already exists locally: {next_tag}")
 
-    runner.run(["git", "commit", "--allow-empty", "-m", release_message], cwd=root)
-    runner.run(["git", "tag", "-a", next_tag, "-m", f"Clipiary {next_tag[1:]}"], cwd=root)
+    version = next_tag[1:]
+    stamp_release(root, version, dry_run=runner.dry_run)
+    runner.run(["git", "add", "CHANGELOG.md"], cwd=root)
+    runner.run(["git", "commit", "-m", release_message], cwd=root)
+    runner.run(["git", "tag", "-a", next_tag, "-m", f"Clipiary {version}"], cwd=root)
     runner.run(["git", "push", "origin", "HEAD:main"], cwd=root)
     runner.run(["git", "push", "origin", next_tag], cwd=root)
     release_commit = runner.read(["git", "rev-parse", "HEAD"], cwd=root)

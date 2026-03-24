@@ -41,7 +41,11 @@ python3 tools/clipiary.py start-release minor
 python3 tools/clipiary.py start-release major
 ```
 
-`start-release` creates an empty `release: prepare vX.Y.Z` commit, pushes it to `origin/main`, and then pushes the matching tag.
+`start-release` stamps `CHANGELOG.md`, commits, pushes to `origin/main`, and pushes the matching tag.
+
+## Changelog
+
+When adding a new user-facing feature or fixing a user-facing bug, add an entry to `CHANGELOG.md` under `## [Unreleased]`. Use `### Added` for new features, `### Fixed` for bug fixes, `### Changed` for behavior changes, `### Removed` for removals. Internal changes (tests, refactoring, CI, tooling) do not need entries.
 
 Run tests (unit + snapshot):
 ```sh

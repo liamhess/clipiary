@@ -77,7 +77,18 @@ python3 tools/clipiary.py start-release minor
 python3 tools/clipiary.py start-release major
 ```
 
-That command creates an empty `release: prepare vX.Y.Z` commit, pushes it to `origin/main`, then pushes the matching tag.
+`start-release` stamps `CHANGELOG.md` (renames `[Unreleased]` to `[X.Y.Z] - date`, adds a fresh `[Unreleased]` section), commits the result as `release: prepare vX.Y.Z`, pushes to `origin/main`, and pushes the matching tag. The changelog section for the released version is used as the GitHub release body.
+
+### Changelog
+
+User-facing changes go in `CHANGELOG.md` under `## [Unreleased]`, grouped by:
+
+- **Added** — new features
+- **Fixed** — bug fixes
+- **Changed** — changes to existing behavior
+- **Removed** — removed features
+
+Internal changes (tests, refactoring, CI) do not need changelog entries. Keep entries concise — one line per change, written from the user's perspective.
 
 ### CI release flow
 
