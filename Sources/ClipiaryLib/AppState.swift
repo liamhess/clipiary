@@ -36,10 +36,10 @@ final class AppState {
 
     static let shared = AppState()
 
-    let settings = AppSettings()
-    let history = HistoryStore()
-    let permissionManager = AccessibilityPermissionManager()
-    let configManager = ConfigManager()
+    let settings: AppSettings
+    let history: HistoryStore
+    let permissionManager: AccessibilityPermissionManager
+    let configManager: ConfigManager
     var selectedTab: PopoverTab = .history
     var searchQuery = ""
     private var selectedItemIDByTab: [String: HistoryItem.ID] = [:]
@@ -61,6 +61,34 @@ final class AppState {
     @ObservationIgnored private let copyOnSelectEngine: CopyOnSelectEngine
 
     private init() {
+        let settings = AppSettings()
+        let history = HistoryStore()
+        let permissionManager = AccessibilityPermissionManager()
+        let configManager = ConfigManager()
+        self.settings = settings
+        self.history = history
+        self.permissionManager = permissionManager
+        self.configManager = configManager
+        let captureCoordinator = CaptureCoordinator(history: history, settings: settings)
+        self.captureCoordinator = captureCoordinator
+        self.clipboardMonitor = ClipboardMonitor(settings: settings, captureCoordinator: captureCoordinator)
+        self.copyOnSelectEngine = CopyOnSelectEngine(
+            settings: settings,
+            permissionManager: permissionManager,
+            captureCoordinator: captureCoordinator
+        )
+    }
+
+    init(
+        settings: AppSettings,
+        history: HistoryStore,
+        configManager: ConfigManager,
+        permissionManager: AccessibilityPermissionManager
+    ) {
+        self.settings = settings
+        self.history = history
+        self.configManager = configManager
+        self.permissionManager = permissionManager
         let captureCoordinator = CaptureCoordinator(history: history, settings: settings)
         self.captureCoordinator = captureCoordinator
         self.clipboardMonitor = ClipboardMonitor(settings: settings, captureCoordinator: captureCoordinator)

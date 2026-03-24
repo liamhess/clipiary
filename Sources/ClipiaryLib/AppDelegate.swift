@@ -3,7 +3,7 @@ import Observation
 import SwiftUI
 
 @MainActor
-final class AppDelegate: NSObject, NSApplicationDelegate {
+public final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusSyncTimer: Timer?
     private var localKeyMonitor: Any?
     private var suppressedKeyUps = Set<UInt16>()
@@ -25,11 +25,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private let appState = AppState.shared
 
+    override public init() {
+        super.init()
+    }
+
     private var isPanelVisible: Bool {
         panel?.isVisible ?? false
     }
 
-    func applicationWillFinishLaunching(_ notification: Notification) {
+    public func applicationWillFinishLaunching(_ notification: Notification) {
         NSApplication.shared.setActivationPolicy(.accessory)
         UserDefaults.standard.set(200, forKey: "NSInitialToolTipDelay")
         appState.start()
@@ -47,12 +51,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+    public func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         togglePopover()
         return true
     }
 
-    func applicationDidResignActive(_ notification: Notification) {
+    public func applicationDidResignActive(_ notification: Notification) {
         if isPanelVisible {
             panel?.close()
         }

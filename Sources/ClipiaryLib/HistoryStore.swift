@@ -14,10 +14,15 @@ final class HistoryStore {
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
-    init(fileManager: FileManager = .default) {
+    init(fileManager: FileManager = .default, storageDirectory: URL? = nil) {
         self.fileManager = fileManager
-        let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        let clipiaryDir = appSupport.appending(path: "Clipiary")
+        let clipiaryDir: URL
+        if let storageDirectory {
+            clipiaryDir = storageDirectory
+        } else {
+            let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            clipiaryDir = appSupport.appending(path: "Clipiary")
+        }
         storageURL = clipiaryDir.appending(path: "history.json")
         imagesDirectoryURL = clipiaryDir.appending(path: "images")
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]

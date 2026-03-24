@@ -1,3 +1,4 @@
+import ClipiaryLib
 import SwiftUI
 
 @main

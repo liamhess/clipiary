@@ -45,10 +45,14 @@ final class ConfigManager {
     private let fileManager: FileManager
     private let configURL: URL
 
-    init(fileManager: FileManager = .default) {
+    init(fileManager: FileManager = .default, storageDirectory: URL? = nil) {
         self.fileManager = fileManager
-        let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        configURL = appSupport.appending(path: "Clipiary/config.json")
+        if let storageDirectory {
+            configURL = storageDirectory.appending(path: "config.json")
+        } else {
+            let appSupport = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
+            configURL = appSupport.appending(path: "Clipiary/config.json")
+        }
     }
 
     func load() {
