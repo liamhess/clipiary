@@ -388,6 +388,28 @@ private struct TerminalBundleIDsConfigButton: View {
 }
 
 @MainActor
+private final class SettingsPanel: NSPanel {
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        guard event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+              let characters = event.charactersIgnoringModifiers else {
+            return super.performKeyEquivalent(with: event)
+        }
+        let action: Selector? = switch characters {
+        case "v": #selector(NSText.paste(_:))
+        case "c": #selector(NSText.copy(_:))
+        case "x": #selector(NSText.cut(_:))
+        case "a": #selector(NSText.selectAll(_:))
+        case "z": #selector(UndoManager.undo)
+        default: nil
+        }
+        if let action {
+            return NSApp.sendAction(action, to: nil, from: self)
+        }
+        return super.performKeyEquivalent(with: event)
+    }
+}
+
+@MainActor
 final class SettingsWindowController {
     static let shared = SettingsWindowController()
 
@@ -409,7 +431,7 @@ final class SettingsWindowController {
         let hostingView = NSHostingView(rootView: settingsView)
         hostingView.frame = NSRect(x: 0, y: 0, width: 540, height: 480)
 
-        let window = NSPanel(
+        let window = SettingsPanel(
             contentRect: NSRect(x: 0, y: 0, width: 540, height: 480),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
