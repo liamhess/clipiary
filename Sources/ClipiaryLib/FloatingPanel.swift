@@ -155,6 +155,8 @@ final class FloatingPanel: NSPanel {
                 appState.isPreviewVisible = false
                 return
             }
+            close()
+            return
         }
         super.sendEvent(event)
     }

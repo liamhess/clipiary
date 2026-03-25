@@ -111,6 +111,21 @@ struct SettingsView: View {
                 .labelsHidden()
                 .pickerStyle(.menu)
             }
+
+            settingsToggleRow(
+                title: "Auto monospace from terminals",
+                help: "Automatically use a monospace font for items copied from terminal emulator apps.",
+                isOn: Binding(
+                    get: { appState.settings.autoMonospaceFromTerminals },
+                    set: { appState.settings.autoMonospaceFromTerminals = $0 }
+                ),
+                extra: appState.settings.autoMonospaceFromTerminals ? AnyView(
+                    TerminalBundleIDsConfigButton(terminalBundleIDs: Binding(
+                        get: { appState.settings.terminalBundleIDs },
+                        set: { appState.settings.terminalBundleIDs = $0 }
+                    ))
+                ) : nil
+            )
         }
     }
 
@@ -242,13 +257,17 @@ struct SettingsView: View {
         .padding(.vertical, 5)
     }
 
-    private func settingsToggleRow(title: String, help: String? = nil, isOn: Binding<Bool>) -> some View {
+    private func settingsToggleRow(title: String, help: String? = nil, isOn: Binding<Bool>, extra: AnyView? = nil) -> some View {
         HStack(spacing: 0) {
             Toggle(isOn: isOn) {
                 Text(title)
                     .font(.system(size: 12))
             }
             .toggleStyle(.checkbox)
+            if let extra {
+                extra
+                    .padding(.leading, 6)
+            }
             if let help {
                 helpIcon(help)
                     .padding(.leading, 6)
@@ -332,6 +351,42 @@ private struct HelpIconView: View {
     }
 }
 
+private struct TerminalBundleIDsConfigButton: View {
+    @Binding var terminalBundleIDs: String
+    @State private var isShowingConfig = false
+
+    var body: some View {
+        Button {
+            isShowingConfig.toggle()
+        } label: {
+            Image(systemName: "gearshape")
+                .font(.system(size: 11))
+                .foregroundStyle(.tertiary)
+        }
+        .buttonStyle(.plain)
+        .popover(isPresented: $isShowingConfig, arrowEdge: .trailing) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Terminal bundle IDs")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                TextField("com.apple.Terminal, ...", text: $terminalBundleIDs)
+                    .font(.system(size: 11, design: .monospaced))
+                    .textFieldStyle(.roundedBorder)
+                Text("Comma-separated list of app bundle identifiers.")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(10)
+            .frame(width: 300)
+        }
+        .onChange(of: isShowingConfig) { _, showing in
+            if !showing {
+                NSApp.keyWindow?.makeFirstResponder(nil)
+            }
+        }
+    }
+}
+
 @MainActor
 final class SettingsWindowController {
     static let shared = SettingsWindowController()
@@ -352,10 +407,10 @@ final class SettingsWindowController {
             .environment(AppState.shared)
 
         let hostingView = NSHostingView(rootView: settingsView)
-        hostingView.frame = NSRect(x: 0, y: 0, width: 540, height: 440)
+        hostingView.frame = NSRect(x: 0, y: 0, width: 540, height: 480)
 
         let window = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 540, height: 440),
+            contentRect: NSRect(x: 0, y: 0, width: 540, height: 480),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false

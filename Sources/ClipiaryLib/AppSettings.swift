@@ -25,7 +25,11 @@ final class AppSettings {
         static let showAppIcons = "showAppIcons"
         static let pasteCountBarScheme = "pasteCountBarScheme"
         static let itemLineLimit = "itemLineLimit"
+        static let autoMonospaceFromTerminals = "autoMonospaceFromTerminals"
+        static let terminalBundleIDs = "terminalBundleIDs"
     }
+
+    static let defaultTerminalBundleIDsString = "com.apple.Terminal, com.googlecode.iterm2, com.mitchellh.ghostty"
 
     private let defaults: UserDefaults
 
@@ -105,6 +109,14 @@ final class AppSettings {
         didSet { defaults.set(itemLineLimit, forKey: Keys.itemLineLimit) }
     }
 
+    var autoMonospaceFromTerminals: Bool {
+        didSet { defaults.set(autoMonospaceFromTerminals, forKey: Keys.autoMonospaceFromTerminals) }
+    }
+
+    var terminalBundleIDs: String {
+        didSet { defaults.set(terminalBundleIDs, forKey: Keys.terminalBundleIDs) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -127,6 +139,8 @@ final class AppSettings {
             Keys.showAppIcons: true,
             Keys.pasteCountBarScheme: "ocean",
             Keys.itemLineLimit: 2,
+            Keys.autoMonospaceFromTerminals: true,
+            Keys.terminalBundleIDs: Self.defaultTerminalBundleIDsString,
         ])
 
         isClipboardMonitoringEnabled = defaults.bool(forKey: Keys.clipboardMonitoringEnabled)
@@ -148,6 +162,8 @@ final class AppSettings {
         showAppIcons = defaults.bool(forKey: Keys.showAppIcons)
         pasteCountBarScheme = defaults.string(forKey: Keys.pasteCountBarScheme) ?? "ocean"
         itemLineLimit = defaults.integer(forKey: Keys.itemLineLimit)
+        autoMonospaceFromTerminals = defaults.bool(forKey: Keys.autoMonospaceFromTerminals)
+        terminalBundleIDs = defaults.string(forKey: Keys.terminalBundleIDs) ?? Self.defaultTerminalBundleIDsString
     }
 
     var globalShortcut: GlobalShortcut {
@@ -191,4 +207,10 @@ final class AppSettings {
         }
     }
 
+    func isTerminalApp(bundleID: String?) -> Bool {
+        guard autoMonospaceFromTerminals, let bundleID else { return false }
+        return terminalBundleIDs
+            .split(separator: ",")
+            .contains { $0.trimmingCharacters(in: .whitespaces) == bundleID }
+    }
 }

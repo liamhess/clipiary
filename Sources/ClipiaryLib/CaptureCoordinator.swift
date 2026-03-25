@@ -40,7 +40,8 @@ final class CaptureCoordinator {
                 text: text,
                 source: .clipboard,
                 appName: app?.localizedName ?? "Unknown",
-                bundleID: app?.bundleIdentifier
+                bundleID: app?.bundleIdentifier,
+                isMonospace: settings.isTerminalApp(bundleID: app?.bundleIdentifier)
             ),
             limit: settings.historyLimit
         )
@@ -147,7 +148,8 @@ final class CaptureCoordinator {
             text: text,
             source: .copyOnSelect,
             appName: snapshot.appName,
-            bundleID: snapshot.bundleID
+            bundleID: snapshot.bundleID,
+            isMonospace: settings.isTerminalApp(bundleID: snapshot.bundleID)
         )
         history.add(item, limit: settings.historyLimit)
         history.evictUnpastedCopyOnSelect(limit: settings.copyOnSelectBufferLimit)

@@ -183,6 +183,38 @@ func makeItem(
         let settings = AppSettings(defaults: defaults)
         #expect(settings.ignores(bundleID: nil) == false)
     }
+
+    @Test func autoMonospaceFromTerminalsDefaultsToTrue() {
+        let defaults = UserDefaults(suiteName: "test-\(UUID().uuidString)")!
+        let settings = AppSettings(defaults: defaults)
+        #expect(settings.autoMonospaceFromTerminals == true)
+        #expect(settings.terminalBundleIDs == AppSettings.defaultTerminalBundleIDsString)
+    }
+
+    @Test func isTerminalAppMatchesDefaults() {
+        let defaults = UserDefaults(suiteName: "test-\(UUID().uuidString)")!
+        let settings = AppSettings(defaults: defaults)
+        #expect(settings.isTerminalApp(bundleID: "com.apple.Terminal") == true)
+        #expect(settings.isTerminalApp(bundleID: "com.googlecode.iterm2") == true)
+        #expect(settings.isTerminalApp(bundleID: "com.mitchellh.ghostty") == true)
+        #expect(settings.isTerminalApp(bundleID: "com.example.other") == false)
+        #expect(settings.isTerminalApp(bundleID: nil) == false)
+    }
+
+    @Test func isTerminalAppReturnsFalseWhenDisabled() {
+        let defaults = UserDefaults(suiteName: "test-\(UUID().uuidString)")!
+        let settings = AppSettings(defaults: defaults)
+        settings.autoMonospaceFromTerminals = false
+        #expect(settings.isTerminalApp(bundleID: "com.apple.Terminal") == false)
+    }
+
+    @Test func isTerminalAppMatchesCustomEntry() {
+        let defaults = UserDefaults(suiteName: "test-\(UUID().uuidString)")!
+        let settings = AppSettings(defaults: defaults)
+        settings.terminalBundleIDs += ", com.example.term"
+        #expect(settings.isTerminalApp(bundleID: "com.example.term") == true)
+        #expect(settings.isTerminalApp(bundleID: "com.apple.Terminal") == true)
+    }
 }
 
 // MARK: - HistoryStore Tests
