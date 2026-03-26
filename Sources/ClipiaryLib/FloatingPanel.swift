@@ -106,6 +106,10 @@ final class FloatingPanel: NSPanel {
         if SettingsWindowController.shared.isVisible {
             return
         }
+        // Don't close if the Sparkle updater is showing a window.
+        if UpdaterManager.shared.isShowingUpdateWindow {
+            return
+        }
         // Don't close if the mouse is near the panel frame —
         // the user is resizing or dragging, not clicking away.
         // Inset by -6 to cover corner resize handles that sit at the frame edge.

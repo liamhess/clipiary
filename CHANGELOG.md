@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Fixed
+- Don't close clipiary on update actions
 
 ## [0.7.5] - 2026-03-26
 

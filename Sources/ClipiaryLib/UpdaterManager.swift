@@ -1,3 +1,4 @@
+import AppKit
 import Sparkle
 
 @MainActor
@@ -24,6 +25,11 @@ public final class UpdaterManager {
 
     var canCheckForUpdates: Bool {
         controller?.updater.canCheckForUpdates ?? false
+    }
+
+    var isShowingUpdateWindow: Bool {
+        guard controller != nil else { return false }
+        return NSApp.windows.contains { $0.isVisible && type(of: $0).description().contains("Sparkle") }
     }
 
     func checkForUpdates() {
