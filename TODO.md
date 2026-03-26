@@ -1,2 +1,1 @@
-- add password manager concealing
-- think about rich-text handling
+- think about rich-text handling (currently only plain text and images are supported, no rich text)
