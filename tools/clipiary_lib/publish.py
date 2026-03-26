@@ -225,13 +225,11 @@ def publish_release(root: Path, env: dict[str, str], runner: Runner, metadata: R
         runner.run(["git", "commit", "-m", f"clipiary {metadata.version}"], cwd=tap_dir, env=git_env)
         runner.run(["git", "push", "origin", "HEAD"], cwd=tap_dir, env=git_env)
 
-    _publish_appcast(root, env, runner, metadata)
+    _stage_appcast(root, runner, metadata)
 
 
-def _publish_appcast(
-    root: Path, env: dict[str, str], runner: Runner, metadata: ReleaseMetadata
-) -> None:
-    """Commit appcast.xml to the repo root on the main branch."""
+def _stage_appcast(root: Path, runner: Runner, metadata: ReleaseMetadata) -> None:
+    """Copy appcast.xml into the repo root and stage it."""
     if metadata.appcast_path is None or (not runner.dry_run and not metadata.appcast_path.exists()):
         return
 
@@ -243,16 +241,10 @@ def _publish_appcast(
         shutil.copy2(metadata.appcast_path, target)
 
     runner.run(["git", "add", "appcast.xml"], cwd=root)
-    diff = runner.run(
-        ["git", "diff", "--cached", "--quiet", "--", "appcast.xml"],
-        cwd=root,
-        read_only=True,
-        capture_output=True,
-        check=False,
-    )
-    if diff.returncode == 0:
-        print("Appcast already up to date.")
-        return
+
+
+def post_release_commit(root: Path, runner: Runner, version: str) -> None:
+    """Create a single commit with all post-release file updates and push to main."""
     runner.run(
         ["git", "config", "user.name", "github-actions[bot]"],
         cwd=root,
@@ -261,8 +253,18 @@ def _publish_appcast(
         ["git", "config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"],
         cwd=root,
     )
+    diff = runner.run(
+        ["git", "diff", "--cached", "--quiet"],
+        cwd=root,
+        read_only=True,
+        capture_output=True,
+        check=False,
+    )
+    if diff.returncode == 0:
+        print("Nothing to commit.")
+        return
     runner.run(
-        ["git", "commit", "-m", f"update appcast for {metadata.version}"],
+        ["git", "commit", "-m", f"post-release updates for {version}"],
         cwd=root,
     )
     runner.run(["git", "push", "origin", "HEAD:main"], cwd=root)
@@ -306,7 +308,6 @@ def remote_slug(root: Path, runner: Runner) -> str | None:
 def start_release(root: Path, runner: Runner, bump: str) -> dict[str, str]:
     current_tag = latest_release_tag(root, runner)
     next_tag = bump_version(current_tag, bump)
-    release_message = f"release: prepare {next_tag}"
 
     existing_local = runner.run(
         ["git", "rev-parse", "-q", "--verify", f"refs/tags/{next_tag}"],
@@ -319,11 +320,7 @@ def start_release(root: Path, runner: Runner, bump: str) -> dict[str, str]:
         raise ToolError(f"Tag already exists locally: {next_tag}")
 
     version = next_tag[1:]
-    stamp_release(root, version, dry_run=runner.dry_run)
-    runner.run(["git", "add", "CHANGELOG.md"], cwd=root)
-    runner.run(["git", "commit", "-m", release_message], cwd=root)
     runner.run(["git", "tag", "-a", next_tag, "-m", f"Clipiary {version}"], cwd=root)
-    runner.run(["git", "push", "origin", "HEAD:main"], cwd=root)
     runner.run(["git", "push", "origin", next_tag], cwd=root)
     release_commit = runner.read(["git", "rev-parse", "HEAD"], cwd=root)
 

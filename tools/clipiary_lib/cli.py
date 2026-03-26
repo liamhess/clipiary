@@ -10,7 +10,7 @@ from .common import Runner, ToolError, print_json, repo_root, resolve_path
 from .dev import dev_loop
 from .env import load_env
 from .icon import build_icon
-from .publish import import_signing_certificate, publish_release, start_release, verify_tagged_commit_on_main
+from .publish import import_signing_certificate, post_release_commit, publish_release, start_release, verify_tagged_commit_on_main
 from .release import build_release
 
 
@@ -130,8 +130,12 @@ def main(argv: list[str] | None = None) -> int:
             return 0
 
         if args.command == "ci-release":
+            from .changelog import stamp_release
+
             import_signing_certificate(root, env, runner)
             verify_tagged_commit_on_main(root, runner, env.get("GITHUB_SHA"))
+            stamp_release(root, args.version, dry_run=runner.dry_run)
+            runner.run(["git", "add", "CHANGELOG.md"], cwd=root)
             metadata = build_release(
                 root,
                 env,
@@ -140,6 +144,7 @@ def main(argv: list[str] | None = None) -> int:
                 metadata_out=resolve_path(root, args.metadata_out),
             )
             publish_release(root, env, runner, metadata)
+            post_release_commit(root, runner, args.version)
             if args.json:
                 print_json(metadata)
             return 0

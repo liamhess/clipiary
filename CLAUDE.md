@@ -41,7 +41,7 @@ python3 tools/clipiary.py start-release minor
 python3 tools/clipiary.py start-release major
 ```
 
-`start-release` stamps `CHANGELOG.md`, commits, pushes to `origin/main`, and pushes the matching tag.
+`start-release` creates and pushes a version tag. CI then builds, stamps `CHANGELOG.md`, generates the appcast, and pushes a single post-release commit to `origin/main`.
 
 ## Changelog
 
