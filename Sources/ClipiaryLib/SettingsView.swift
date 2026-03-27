@@ -59,6 +59,21 @@ struct SettingsView: View {
                     label: { "\($0)" }
                 )
             }
+
+            settingMetric(
+                title: "Ignored apps",
+                help: "Clipboard entries from these apps will not be captured. Applies to both clipboard monitoring and copy-on-select."
+            ) {
+                IgnoredBundleIDsConfigButton(ignoredBundleIDs: Binding(
+                    get: { appState.settings.ignoredBundleIDs.joined(separator: ", ") },
+                    set: {
+                        appState.settings.ignoredBundleIDs = $0
+                            .split(separator: ",")
+                            .map { $0.trimmingCharacters(in: .whitespaces) }
+                            .filter { !$0.isEmpty }
+                    }
+                ))
+            }
         }
     }
 
@@ -373,6 +388,42 @@ private struct TerminalBundleIDsConfigButton: View {
                     .font(.system(size: 11, design: .monospaced))
                     .textFieldStyle(.roundedBorder)
                 Text("Comma-separated list of app bundle identifiers.")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(10)
+            .frame(width: 300)
+        }
+        .onChange(of: isShowingConfig) { _, showing in
+            if !showing {
+                NSApp.keyWindow?.makeFirstResponder(nil)
+            }
+        }
+    }
+}
+
+private struct IgnoredBundleIDsConfigButton: View {
+    @Binding var ignoredBundleIDs: String
+    @State private var isShowingConfig = false
+
+    var body: some View {
+        Button {
+            isShowingConfig.toggle()
+        } label: {
+            Image(systemName: "gearshape")
+                .font(.system(size: 11))
+                .foregroundStyle(.tertiary)
+        }
+        .buttonStyle(.plain)
+        .popover(isPresented: $isShowingConfig, arrowEdge: .trailing) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Ignored app bundle IDs")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                TextField("com.example.app, ...", text: $ignoredBundleIDs)
+                    .font(.system(size: 11, design: .monospaced))
+                    .textFieldStyle(.roundedBorder)
+                Text("Comma-separated list of app bundle identifiers to ignore.")
                     .font(.system(size: 10))
                     .foregroundStyle(.tertiary)
             }

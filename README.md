@@ -7,7 +7,7 @@ Clipiary is a vibe coded macOS clipboard manager with powerful features and an o
 
 ## Features
 
-- **Clipboard history** — automatically captures text and images you copy, with configurable history limit (up to 10,000 items)
+- **Clipboard history** — automatically captures text and images you copy, with configurable history limit
 - **Copy-on-select** — optional global mode that captures text you highlight in any app (via Accessibility), without pressing Cmd+C
 - **Quick paste previous** — global shortcut to instantly paste the second-most-recent item without opening Clipiary
 - **Per-item global shortcuts** — assign a dedicated hotkey to any item for one-keystroke pasting
@@ -20,6 +20,7 @@ Clipiary is a vibe coded macOS clipboard manager with powerful features and an o
 - **Paste count bar** — a colored frequency gauge on each item showing how often you paste it, with 8 color schemes
 - **Auto monospace** — items copied from terminals or IDEs (Terminal, iTerm2, Ghostty, VSCode, Goland) automatically use a console font, with a configurable app list
 - **Password manager awareness** — skips concealed, auto-generated, and transient clipboard items (e.g. OTP codes, passwords) from password managers
+- **Per-app ignore list** — exclude specific apps from clipboard and copy-on-select capture by bundle ID
 - **Move to top on paste** — optionally moves pasted items to the top of your history
 - **Configurable appearance** — toggle app icons, item details (source app, capture time), and item line limit
 - **In-app updates** — update Clipiary from within the app via the Sparkle framework
