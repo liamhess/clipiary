@@ -2,6 +2,7 @@
 
 ## [Unreleased]
 ### Added
+- Update button now shows when an update is available
 - Text settings now contain a preview of the configured text
 - Configurable ignored-apps list (via their bundle IDs)
 - Skip also clipboard items marked as `org.nspasteboard.TransientType` (e.g. OTP codes or passwords used by password manager's browser extensions)

@@ -2,4 +2,3 @@
 - themes? (at least dark/light config)
 - update icon to reflect when a new update is available
 - move to top on paste to exclude direct shortcut pasted items?
-- config items with text to reflect text
