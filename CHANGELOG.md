@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- Skip also clipboard items marked as `org.nspasteboard.TransientType` (e.g. OTP codes or passwords used by password manager's browser extensions)
 
 ## [0.8.0] - 2026-03-26
 ### Added
