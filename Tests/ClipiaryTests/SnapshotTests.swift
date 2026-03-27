@@ -173,8 +173,8 @@ import Testing
         let appState = makeTestAppState()
         let view = SettingsView()
             .environment(appState)
-            .frame(width: 540, height: 480)
+            .frame(width: 540, height: 490)
 
-        assertSnapshot(of: NSHostingView(rootView: view), as: .image(size: .init(width: 540, height: 480)))
+        assertSnapshot(of: NSHostingView(rootView: view), as: .image(size: .init(width: 540, height: 490)))
     }
 }

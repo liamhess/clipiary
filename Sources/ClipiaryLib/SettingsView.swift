@@ -74,6 +74,22 @@ struct SettingsView: View {
                     }
                 ))
             }
+
+            Group {
+                if appState.settings.ignoredBundleIDs.isEmpty {
+                    Text("none")
+                        .font(.system(size: 10).italic())
+                        .foregroundStyle(.tertiary)
+                } else {
+                    Text(appState.settings.ignoredBundleIDs.joined(separator: ", "))
+                        .font(.system(size: 10))
+                        .foregroundStyle(.tertiary)
+                }
+            }
+            .lineLimit(1)
+            .truncationMode(.tail)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 8)
         }
     }
 
@@ -141,6 +157,15 @@ struct SettingsView: View {
                     ))
                 ) : nil
             )
+
+            if appState.settings.autoMonospaceFromTerminals {
+                Text(appState.settings.terminalBundleIDs)
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .padding(.horizontal, 8)
+            }
         }
     }
 
@@ -480,10 +505,10 @@ final class SettingsWindowController {
             .environment(AppState.shared)
 
         let hostingView = NSHostingView(rootView: settingsView)
-        hostingView.frame = NSRect(x: 0, y: 0, width: 540, height: 480)
+        hostingView.frame = NSRect(x: 0, y: 0, width: 540, height: 490)
 
         let window = SettingsPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 540, height: 480),
+            contentRect: NSRect(x: 0, y: 0, width: 540, height: 490),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false
