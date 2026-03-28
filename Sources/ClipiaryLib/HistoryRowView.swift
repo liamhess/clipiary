@@ -102,7 +102,7 @@ struct HistoryRowView: View {
 
                 Spacer(minLength: 8)
 
-                HStack(spacing: 8) {
+                HStack(spacing: 6) {
                     ForEach(favoriteTabNames, id: \.self) { name in
                         Text(name)
                             .font(.system(size: 9, weight: .semibold))
@@ -140,7 +140,6 @@ struct HistoryRowView: View {
                     } label: {
                         Image(systemName: "xmark")
                             .font(.system(size: 10, weight: .bold))
-                            .frame(width: 22, height: 22)
                     }
                     .buttonStyle(.plain)
                     .foregroundStyle(.secondary)
@@ -236,7 +235,6 @@ struct HistoryRowView: View {
             } label: {
                 Image(systemName: item.isFavorite ? "star.fill" : "star")
                     .font(.system(size: 11, weight: .medium))
-                    .frame(width: 22, height: 22)
             }
             .buttonStyle(.plain)
             .foregroundStyle(item.isFavorite ? theme.resolvedAccent : .secondary)
@@ -248,7 +246,6 @@ struct HistoryRowView: View {
             } label: {
                 Image(systemName: item.isFavorite ? "star.fill" : "star")
                     .font(.system(size: 11, weight: .medium))
-                    .frame(width: 22, height: 22)
             }
             .buttonStyle(.plain)
             .foregroundStyle(item.isFavorite ? theme.resolvedAccent : .secondary)
