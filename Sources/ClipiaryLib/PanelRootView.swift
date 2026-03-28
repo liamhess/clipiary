@@ -258,6 +258,7 @@ struct PanelRootView: View {
         let singleFavoriteTabName = singleFavoriteTab ? appState.configManager.favoriteTabs.first?.name : nil
         let selectedID = appState.selectedHistoryItemID
         let showingPicker = appState.showingFavoriteTabPicker
+        let showFavoriteTabBadges = appState.settings.showFavoriteTabBadges && appState.selectedTab.kind == .history
         let indexedItems = items.enumerated().map { ($0.offset, $0.element) }
 
         return LazyVStack(spacing: theme.spacing.rowSpacing) {
@@ -276,6 +277,7 @@ struct PanelRootView: View {
                         singleFavoriteTab: singleFavoriteTab,
                         singleFavoriteTabName: singleFavoriteTabName,
                         showingFavoriteTabPicker: showingPicker && selectedID == item.id,
+                        favoriteTabNames: showFavoriteTabBadges ? item.favoriteTabs.sorted() : [],
                         itemLineLimit: itemLineLimit,
                         appState: appState
                     )

@@ -28,6 +28,7 @@ final class AppSettings {
         static let autoMonospaceFromTerminals = "autoMonospaceFromTerminals"
         static let terminalBundleIDs = "terminalBundleIDs"
         static let selectedThemeID = "selectedThemeID"
+        static let showFavoriteTabBadges = "showFavoriteTabBadges"
     }
 
     static let defaultTerminalBundleIDsString = "com.apple.Terminal, com.googlecode.iterm2, com.mitchellh.ghostty, com.microsoft.VSCode, com.jetbrains.goland"
@@ -122,6 +123,10 @@ final class AppSettings {
         didSet { defaults.set(selectedThemeID, forKey: Keys.selectedThemeID) }
     }
 
+    var showFavoriteTabBadges: Bool {
+        didSet { defaults.set(showFavoriteTabBadges, forKey: Keys.showFavoriteTabBadges) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -147,6 +152,7 @@ final class AppSettings {
             Keys.autoMonospaceFromTerminals: true,
             Keys.terminalBundleIDs: Self.defaultTerminalBundleIDsString,
             Keys.selectedThemeID: "default",
+            Keys.showFavoriteTabBadges: true,
         ])
 
         isClipboardMonitoringEnabled = defaults.bool(forKey: Keys.clipboardMonitoringEnabled)
@@ -171,6 +177,7 @@ final class AppSettings {
         autoMonospaceFromTerminals = defaults.bool(forKey: Keys.autoMonospaceFromTerminals)
         terminalBundleIDs = defaults.string(forKey: Keys.terminalBundleIDs) ?? Self.defaultTerminalBundleIDsString
         selectedThemeID = defaults.string(forKey: Keys.selectedThemeID) ?? "default"
+        showFavoriteTabBadges = defaults.bool(forKey: Keys.showFavoriteTabBadges)
     }
 
     var globalShortcut: GlobalShortcut {

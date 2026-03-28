@@ -132,6 +132,14 @@ struct SettingsView: View {
             )
 
             settingsToggleRow(
+                title: "Show favorite tab badges",
+                isOn: Binding(
+                    get: { appState.settings.showFavoriteTabBadges },
+                    set: { appState.settings.showFavoriteTabBadges = $0 }
+                )
+            )
+
+            settingsToggleRow(
                 title: "Always show search field",
                 isOn: Binding(
                     get: { appState.settings.alwaysShowSearch },
@@ -535,10 +543,10 @@ final class SettingsWindowController {
             .environment(AppState.shared)
 
         let hostingView = NSHostingView(rootView: settingsView)
-        hostingView.frame = NSRect(x: 0, y: 0, width: 540, height: 520)
+        hostingView.frame = NSRect(x: 0, y: 0, width: 540, height: 550)
 
         let window = SettingsPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 540, height: 520),
+            contentRect: NSRect(x: 0, y: 0, width: 540, height: 550),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false

@@ -44,6 +44,7 @@ struct HistoryRowView: View {
     let singleFavoriteTab: Bool
     let singleFavoriteTabName: String?
     let showingFavoriteTabPicker: Bool
+    let favoriteTabNames: [String]
     let itemLineLimit: Int
     let appState: AppState
 
@@ -102,6 +103,18 @@ struct HistoryRowView: View {
                 Spacer(minLength: 8)
 
                 HStack(spacing: 8) {
+                    ForEach(favoriteTabNames, id: \.self) { name in
+                        Text(name)
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(
+                                RoundedRectangle(cornerRadius: theme.cornerRadii.keyBadge, style: .continuous)
+                                    .fill(theme.resolvedPillBackground)
+                            )
+                    }
+
                     if let shortcut = item.globalShortcut {
                         Text(shortcut.displayString)
                             .font(.system(size: 9, weight: .semibold, design: .monospaced))

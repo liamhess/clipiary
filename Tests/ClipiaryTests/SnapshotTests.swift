@@ -24,6 +24,7 @@ import Testing
             singleFavoriteTab: true,
             singleFavoriteTabName: "Favorites",
             showingFavoriteTabPicker: false,
+            favoriteTabNames: [],
             itemLineLimit: 2,
             appState: appState
         )
@@ -51,6 +52,7 @@ import Testing
             singleFavoriteTab: true,
             singleFavoriteTabName: "Favorites",
             showingFavoriteTabPicker: false,
+            favoriteTabNames: [],
             itemLineLimit: 2,
             appState: appState
         )
@@ -79,6 +81,7 @@ import Testing
             singleFavoriteTab: true,
             singleFavoriteTabName: "Favorites",
             showingFavoriteTabPicker: false,
+            favoriteTabNames: ["Favorites"],
             itemLineLimit: 2,
             appState: appState
         )
@@ -107,6 +110,7 @@ import Testing
             singleFavoriteTab: true,
             singleFavoriteTabName: "Favorites",
             showingFavoriteTabPicker: false,
+            favoriteTabNames: [],
             itemLineLimit: 2,
             appState: appState
         )
@@ -134,6 +138,7 @@ import Testing
             singleFavoriteTab: true,
             singleFavoriteTabName: "Favorites",
             showingFavoriteTabPicker: false,
+            favoriteTabNames: [],
             itemLineLimit: 2,
             appState: appState
         )
@@ -162,6 +167,36 @@ import Testing
             singleFavoriteTab: true,
             singleFavoriteTabName: "Favorites",
             showingFavoriteTabPicker: false,
+            favoriteTabNames: [],
+            itemLineLimit: 2,
+            appState: appState
+        )
+        .environment(appState)
+        .environment(\.theme, .default)
+        .frame(width: 350)
+
+        assertSnapshot(of: NSHostingView(rootView: view), as: .image(size: .init(width: 350, height: 50)))
+    }
+
+    @Test func favoriteRowWithMultipleTabs() {
+        let appState = makeTestAppState()
+        let item = makeItem(
+            text: "Multi-tab favorite",
+            appName: "Notes",
+            createdAt: Date(timeIntervalSince1970: 1700000000),
+            favoriteTabs: ["Favorites", "Snippets"]
+        )
+        let view = HistoryRowView(
+            item: item,
+            maxPasteCount: 10,
+            isSelected: false,
+            showAppIcons: false,
+            showItemDetails: false,
+            pasteCountBarScheme: "none",
+            singleFavoriteTab: false,
+            singleFavoriteTabName: nil,
+            showingFavoriteTabPicker: false,
+            favoriteTabNames: ["Favorites", "Snippets"],
             itemLineLimit: 2,
             appState: appState
         )
