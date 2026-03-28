@@ -169,18 +169,35 @@ struct PanelRootView: View {
 
     private var accessibilityStatus: some View {
         HStack(spacing: 6) {
+            let isTrusted = appState.permissionManager.isTrusted
+            let copyOnSelect = appState.settings.isCopyOnSelectEnabled
+            let monitoring = appState.settings.isClipboardMonitoringEnabled
+            let allDisabled = !monitoring && !copyOnSelect
+            let copyOnSelectNeedsPermission = copyOnSelect && !isTrusted
+
             Circle()
-                .fill(appState.permissionManager.isTrusted ? theme.resolvedStatusReady : theme.resolvedStatusWarning)
+                .fill(allDisabled || copyOnSelectNeedsPermission ? theme.resolvedStatusWarning : !isTrusted ? theme.resolvedStatusWarning : theme.resolvedStatusReady)
                 .frame(width: 6, height: 6)
-            if appState.permissionManager.isTrusted {
-                Text(appState.settings.isCopyOnSelectEnabled ? "Copy-on-select ready" : "Clipboard only")
+            if allDisabled {
+                Text("Clipboard Monitoring Disabled")
                     .font(.system(size: 11, weight: .medium))
-            } else {
+            } else if copyOnSelectNeedsPermission {
                 Button("Accessibility Required") {
                     appState.refreshCopyOnSelectPermissions()
                 }
                 .buttonStyle(.plain)
                 .font(.system(size: 11, weight: .medium))
+                .help("Accessibility permissions needed for copy-on-select and direct paste of history elements")
+            } else if !isTrusted {
+                Button("Accessibility Required") {
+                    appState.refreshCopyOnSelectPermissions()
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 11, weight: .medium))
+                .help("Accessibility permissions needed for direct paste of history elements")
+            } else {
+                Text(copyOnSelect ? "Copy-on-select ready" : "Clipboard Monitoring")
+                    .font(.system(size: 11, weight: .medium))
             }
         }
         .foregroundStyle(.secondary)

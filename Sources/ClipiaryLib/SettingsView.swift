@@ -200,7 +200,7 @@ struct SettingsView: View {
                 )
             )
 
-            if !appState.permissionManager.isTrusted {
+            if appState.settings.isCopyOnSelectEnabled && !appState.permissionManager.isTrusted {
                 Button {
                     appState.refreshCopyOnSelectPermissions()
                 } label: {
@@ -535,10 +535,10 @@ final class SettingsWindowController {
             .environment(AppState.shared)
 
         let hostingView = NSHostingView(rootView: settingsView)
-        hostingView.frame = NSRect(x: 0, y: 0, width: 540, height: 490)
+        hostingView.frame = NSRect(x: 0, y: 0, width: 540, height: 520)
 
         let window = SettingsPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 540, height: 490),
+            contentRect: NSRect(x: 0, y: 0, width: 540, height: 520),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false
