@@ -83,6 +83,9 @@ Flat hex colors (`#RRGGBB` or `#RRGGBBAA`) for small UI elements and foreground 
 | `statusWarning` | `#FF9500` | Status dot color when accessibility is missing. |
 | `gaugeUnfilled` | system secondary | Color of unfilled paste-count gauge segments. |
 | `gaugeUnfilledOpacity` | `0.15` | Opacity for unfilled gauge segments. |
+| `searchHighlight` | accent | Text color of matched search substrings. `null` = uses the resolved accent color. |
+| `searchHighlightBackground` | none | Background color of matched search substrings. `null` = no background. |
+| `searchHighlightBackgroundOpacity` | `0.15` | Opacity for search highlight backgrounds. |
 
 ## `borders`
 

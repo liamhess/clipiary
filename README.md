@@ -13,7 +13,7 @@ Clipiary is a vibe coded macOS clipboard manager with powerful features and an o
 - **Per-item global shortcuts** — assign a dedicated hotkey to any item for one-keystroke pasting
 - **Favorites & custom tabs** — organize items into multiple named favorites tabs; manage tabs via right-click or a config file
 - **Snippet descriptions** — add searchable descriptions to favorite items
-- **Search** — filter clipboard history with a search field (always visible or auto-hide)
+- **Search** — filter clipboard history with a search field (always visible or auto-hide) and highlight matches
 - **Item preview** — press **Space** to preview the full text or image of the selected item in a popover
 - **Image support** — captures images copied to the clipboard with dimensions display and preview
 - **Drag-and-drop reordering** — reorder items in favorites tabs by dragging
@@ -33,7 +33,9 @@ https://github.com/user-attachments/assets/b31bc9ed-20f9-4b12-a1cf-d55aba12d529
 
 ## Installation
 
-Clipiary can be installed through my own homebrew tap:
+Grab the latest release from https://github.com/liamhess/clipiary/releases, unzip and move e.g. to your `/Applications` folder.
+
+Alternatively, Clipiary can be installed through my own homebrew tap:
 
 ```sh
 brew tap liamhess/tap

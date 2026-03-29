@@ -166,6 +166,9 @@ struct Theme: Codable, Sendable, Equatable {
         var statusWarning: String?
         var gaugeUnfilled: String?
         var gaugeUnfilledOpacity: Double?
+        var searchHighlight: String?
+        var searchHighlightBackground: String?
+        var searchHighlightBackgroundOpacity: Double?
 
         static let `default` = Colors(
             accent: "#007AFF",
@@ -182,7 +185,10 @@ struct Theme: Codable, Sendable, Equatable {
             statusReady: "#34C759",
             statusWarning: "#FF9500",
             gaugeUnfilled: nil,
-            gaugeUnfilledOpacity: 0.15
+            gaugeUnfilledOpacity: 0.15,
+            searchHighlight: nil,
+            searchHighlightBackground: nil,
+            searchHighlightBackgroundOpacity: 0.15
         )
 
         init(
@@ -192,7 +198,8 @@ struct Theme: Codable, Sendable, Equatable {
             cardStroke: String? = nil, cardStrokeOpacity: Double? = nil,
             textPrimary: String? = nil, textSecondary: String? = nil, textTertiary: String? = nil,
             imageIndicator: String? = nil, statusReady: String? = nil, statusWarning: String? = nil,
-            gaugeUnfilled: String? = nil, gaugeUnfilledOpacity: Double? = nil
+            gaugeUnfilled: String? = nil, gaugeUnfilledOpacity: Double? = nil,
+            searchHighlight: String? = nil, searchHighlightBackground: String? = nil, searchHighlightBackgroundOpacity: Double? = nil
         ) {
             self.accent = accent
             self.pillBackground = pillBackground
@@ -209,6 +216,9 @@ struct Theme: Codable, Sendable, Equatable {
             self.statusWarning = statusWarning
             self.gaugeUnfilled = gaugeUnfilled
             self.gaugeUnfilledOpacity = gaugeUnfilledOpacity
+            self.searchHighlight = searchHighlight
+            self.searchHighlightBackground = searchHighlightBackground
+            self.searchHighlightBackgroundOpacity = searchHighlightBackgroundOpacity
         }
 
         init(from decoder: Decoder) throws {
@@ -229,6 +239,9 @@ struct Theme: Codable, Sendable, Equatable {
             statusWarning = try container.decodeIfPresent(String.self, forKey: .statusWarning) ?? d.statusWarning
             gaugeUnfilled = try container.decodeIfPresent(String.self, forKey: .gaugeUnfilled) ?? d.gaugeUnfilled
             gaugeUnfilledOpacity = try container.decodeIfPresent(Double.self, forKey: .gaugeUnfilledOpacity) ?? d.gaugeUnfilledOpacity
+            searchHighlight = try container.decodeIfPresent(String.self, forKey: .searchHighlight) ?? d.searchHighlight
+            searchHighlightBackground = try container.decodeIfPresent(String.self, forKey: .searchHighlightBackground) ?? d.searchHighlightBackground
+            searchHighlightBackgroundOpacity = try container.decodeIfPresent(Double.self, forKey: .searchHighlightBackgroundOpacity) ?? d.searchHighlightBackgroundOpacity
         }
     }
 
@@ -774,6 +787,15 @@ extension Theme {
     var resolvedGaugeUnfilled: Color {
         let base = Color(hex: colors.gaugeUnfilled) ?? .secondary
         return base.opacity(colors.gaugeUnfilledOpacity ?? 0.15)
+    }
+
+    var resolvedSearchHighlight: Color {
+        Color(hex: colors.searchHighlight) ?? resolvedAccent
+    }
+
+    var resolvedSearchHighlightBackground: Color? {
+        guard let hex = colors.searchHighlightBackground, Color(hex: hex) != nil else { return nil }
+        return Color(hex: hex)!.opacity(colors.searchHighlightBackgroundOpacity ?? 0.15)
     }
 }
 

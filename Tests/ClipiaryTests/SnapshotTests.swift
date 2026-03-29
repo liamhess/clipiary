@@ -206,6 +206,37 @@ import Testing
 
         assertSnapshot(of: NSHostingView(rootView: view), as: .image(size: .init(width: 350, height: 50)))
     }
+
+    @Test func searchHighlightedRow() {
+        let appState = makeTestAppState()
+        appState.searchQuery = "hello"
+        let item = makeItem(
+            text: "Say Hello World",
+            appName: "Safari",
+            bundleID: "com.apple.Safari",
+            createdAt: Date(timeIntervalSince1970: 1700000000),
+            snippetDescription: "greeting hello"
+        )
+        let view = HistoryRowView(
+            item: item,
+            maxPasteCount: 10,
+            isSelected: false,
+            showAppIcons: false,
+            showItemDetails: true,
+            pasteCountBarScheme: "none",
+            singleFavoriteTab: true,
+            singleFavoriteTabName: "Favorites",
+            showingFavoriteTabPicker: false,
+            favoriteTabNames: [],
+            itemLineLimit: 2,
+            appState: appState
+        )
+        .environment(appState)
+        .environment(\.theme, .default)
+        .frame(width: 350)
+
+        assertSnapshot(of: NSHostingView(rootView: view), as: .image(size: .init(width: 350, height: 90)))
+    }
 }
 
 @MainActor

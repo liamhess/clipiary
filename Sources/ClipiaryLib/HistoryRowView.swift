@@ -51,6 +51,13 @@ struct HistoryRowView: View {
     @Environment(\.theme) private var theme
     @State private var isHovered = false
 
+    private var searchTerms: [String] {
+        appState.searchQuery
+            .split(separator: " ", omittingEmptySubsequences: true)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .top, spacing: 8) {
@@ -88,7 +95,12 @@ struct HistoryRowView: View {
                                     .foregroundStyle(.secondary)
                             }
                         } else {
-                            Text(item.displayText.isEmpty ? "Untitled" : item.displayText)
+                            highlightedText(
+                                item.displayText.isEmpty ? "Untitled" : item.displayText,
+                                terms: item.displayText.isEmpty ? [] : searchTerms,
+                                foreground: theme.resolvedSearchHighlight,
+                                background: theme.resolvedSearchHighlightBackground
+                            )
                                 .font(item.isMonospace
                                     ? .system(size: 12, design: .monospaced)
                                     : .system(size: 13))
@@ -148,7 +160,7 @@ struct HistoryRowView: View {
             }
 
             if let description = item.snippetDescription, !description.isEmpty {
-                Text(description)
+                highlightedText(description, terms: searchTerms, foreground: theme.resolvedSearchHighlight, background: theme.resolvedSearchHighlightBackground)
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -157,7 +169,7 @@ struct HistoryRowView: View {
 
             if showItemDetails {
                 HStack(spacing: 6) {
-                    Text(item.appName)
+                    highlightedText(item.appName, terms: searchTerms, foreground: theme.resolvedSearchHighlight, background: theme.resolvedSearchHighlightBackground)
                     Text(item.source == .copyOnSelect ? "Selection" : "Clipboard")
                     Text(item.createdAt.formatted(date: .omitted, time: .shortened))
                 }
@@ -275,4 +287,22 @@ struct HistoryRowView: View {
             .opacity(isHovered || item.isFavorite ? 1 : 0.55)
         }
     }
+}
+
+private func highlightedText(_ string: String, terms: [String], foreground: Color, background: Color?) -> Text {
+    guard !terms.isEmpty else { return Text(string) }
+    var attr = AttributedString(string)
+    for term in terms {
+        var start = string.startIndex
+        while let range = string.range(of: term, options: [.caseInsensitive], range: start..<string.endIndex) {
+            if let attrStart = AttributedString.Index(range.lowerBound, within: attr),
+               let attrEnd = AttributedString.Index(range.upperBound, within: attr) {
+                attr[attrStart..<attrEnd].foregroundColor = foreground
+                if let background { attr[attrStart..<attrEnd].backgroundColor = background }
+                attr[attrStart..<attrEnd].inlinePresentationIntent = .stronglyEmphasized
+            }
+            start = range.upperBound
+        }
+    }
+    return Text(attr)
 }
