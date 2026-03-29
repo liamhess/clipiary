@@ -25,10 +25,13 @@ Every section and field is optional. Omitted fields fall back to the default the
 | `useMaterial` | bool | `true` | Use macOS vibrancy material for the panel background. When `false`, the panel uses the solid `fills.panel` value instead. |
 | `useSystemAccent` | bool | `true` | Use the system accent color (from System Settings). When `false`, uses `colors.accent`. |
 | `appearance` | string | `"dark"` | Color scheme: `"dark"`, `"light"`, or `"system"`. Controls how SwiftUI semantic colors (`.primary`, `.secondary`) resolve. |
+| `animatedPanel` | bool | `false` | Overlay a slowly orbiting gradient spotlight on the panel background. Works with both `useMaterial: true` and `false`. |
+| `animatedPanelColor` | string | accent | Hex color of the animated spotlight. Omit to use the resolved accent color. |
+| `animatedPanelPeriod` | number | `8.0` | Seconds per full orbit. Lower = faster. |
 
 ## `fills`
 
-Fills are the backgrounds of major UI areas. Each fill is an object that can represent either a **solid color** or a **linear gradient**.
+Fills are the backgrounds of major UI areas. Each fill is an object that can represent a **solid color**, a **linear gradient**, or a **mesh gradient**.
 
 ### Solid fill
 
@@ -48,6 +51,31 @@ Fills are the backgrounds of major UI areas. Each fill is an object that can rep
 ```
 
 `from` / `to` accept: `"top"`, `"bottom"`, `"leading"`, `"trailing"`, `"topLeading"`, `"topTrailing"`, `"bottomLeading"`, `"bottomTrailing"`, `"center"`.
+
+### Mesh gradient fill (macOS 15+)
+
+A multi-point gradient that blends colors across a 2D grid, producing organic color fields.
+
+```json
+{
+  "mesh": ["#120030", "#0A1A40", "#003030",
+           "#1E0048", "#0C1E48", "#004040",
+           "#0A0818", "#081428", "#041818"],
+  "meshColumns": 3,
+  "meshRows": 3,
+  "opacity": 1.0
+}
+```
+
+| Field | Type | Description |
+|---|---|---|
+| `mesh` | [string] | `meshColumns × meshRows` hex colors, in row-major order (left→right, top→bottom). |
+| `meshColumns` | number | Grid width (columns). |
+| `meshRows` | number | Grid height (rows). |
+| `meshPoints` | [[number, number]] | Optional control-point overrides in 0–1 range, one `[x, y]` pair per grid cell. Omit for a regular grid. |
+| `opacity` | number | Overall opacity. |
+
+On macOS 14, mesh gradient fills fall back to a diagonal linear gradient between the top-left and bottom-right corner colors.
 
 ### Fill slots
 
@@ -182,6 +210,38 @@ Layout spacing values (in points).
   }
 }
 ```
+
+## Example: animated panel
+
+A slowly orbiting colored spotlight over a dark mesh gradient background. The spotlight completes one full orbit every 5 seconds.
+
+```json
+{
+  "id": "my-animated",
+  "name": "My Animated",
+  "options": {
+    "useMaterial": false,
+    "useSystemAccent": false,
+    "animatedPanel": true,
+    "animatedPanelColor": "#FF71CE",
+    "animatedPanelPeriod": 5.0
+  },
+  "fills": {
+    "panel": {
+      "mesh": ["#1A1028", "#0A1A40", "#001428",
+               "#220E38", "#0C1E48", "#002A38",
+               "#140820", "#081428", "#041018"],
+      "meshColumns": 3,
+      "meshRows": 3
+    }
+  },
+  "colors": {
+    "accent": "#FF71CE"
+  }
+}
+```
+
+`animatedPanel` works with `useMaterial: true` as well — the spotlight then sweeps over the frosted-glass vibrancy layer.
 
 Everything not specified falls back to the default values listed above.
 

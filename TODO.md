@@ -20,11 +20,3 @@
 
 ### Material variants
 - Currently only `regularMaterial` is used; expose `.ultraThinMaterial`, `.thinMaterial`, `.thickMaterial`, `.ultraThickMaterial` as theme options for the panel or tab bar
-
-### Geometry-driven effects (macOS 14+)
-- `.visualEffect { content, proxy in ... }` — per-frame geometry access without breaking layout; enables parallax, scroll-based transforms, or position-dependent tinting
-
-
-### Animated fills
-- `TimelineView` + `LinearGradient` with animated offsets — scrolling/shimmering gradient backgrounds; pure GPU compositing, no system overhead
-

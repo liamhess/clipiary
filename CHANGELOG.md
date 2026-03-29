@@ -5,6 +5,7 @@
 - Search match highlighting in history rows
 - Themes engine revamped to now support linear gradients, per-element border styles (width, color, dash), and glow effects (colored shadows on selected rows, panel edges)
 - MeshGradient support in theme fills (macOS 15+); new built-in "Nebula" theme showcases it; falls back to a diagonal linear gradient on macOS 14
+- Animation support in theme fills
 
 ## [0.9.0] - 2026-03-28
 ### Added

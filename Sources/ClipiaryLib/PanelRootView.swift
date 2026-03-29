@@ -401,26 +401,63 @@ struct PanelRootView: View {
 
     @ViewBuilder
     private var panelBackground: some View {
+        let cornerRadius = theme.cornerRadii.panel
         if theme.options.useMaterial {
-            RoundedRectangle(cornerRadius: theme.cornerRadii.panel, style: .continuous)
-                .fill(.regularMaterial)
-                .overlay {
-                    let border = theme.resolvedPanelBorder
-                    if border.isVisible {
-                        RoundedRectangle(cornerRadius: theme.cornerRadii.panel, style: .continuous)
-                            .stroke(border.color, style: border.strokeStyle)
+            ZStack {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(.regularMaterial)
+                if theme.options.animatedPanel {
+                    TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
+                        let period = theme.options.animatedPanelPeriod ?? 8.0
+                        let color = Color(hex: theme.options.animatedPanelColor) ?? theme.resolvedAccent
+                        let t = timeline.date.timeIntervalSinceReferenceDate / period
+                        let angle = t * .pi * 2
+                        let start = UnitPoint(x: 0.5 + 0.5 * cos(angle), y: 0.5 - 0.5 * sin(angle))
+                        let end = UnitPoint(x: 0.5 - 0.5 * cos(angle), y: 0.5 + 0.5 * sin(angle))
+                        LinearGradient(
+                            colors: [color.opacity(0.0), color.opacity(0.22), color.opacity(0.0)],
+                            startPoint: start,
+                            endPoint: end
+                        )
                     }
                 }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .overlay {
+                let border = theme.resolvedPanelBorder
+                if border.isVisible {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .stroke(border.color, style: border.strokeStyle)
+                }
+            }
         } else {
-            RoundedRectangle(cornerRadius: theme.cornerRadii.panel, style: .continuous)
-                .fill(theme.resolvedPanelFill)
-                .overlay {
-                    let border = theme.resolvedPanelBorder
-                    if border.isVisible {
-                        RoundedRectangle(cornerRadius: theme.cornerRadii.panel, style: .continuous)
-                            .stroke(border.color, style: border.strokeStyle)
+            ZStack {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(theme.resolvedPanelFill)
+                if theme.options.animatedPanel {
+                    TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
+                        let period = theme.options.animatedPanelPeriod ?? 8.0
+                        let color = Color(hex: theme.options.animatedPanelColor) ?? theme.resolvedAccent
+                        let t = timeline.date.timeIntervalSinceReferenceDate / period
+                        let angle = t * .pi * 2
+                        let start = UnitPoint(x: 0.5 + 0.5 * cos(angle), y: 0.5 - 0.5 * sin(angle))
+                        let end = UnitPoint(x: 0.5 - 0.5 * cos(angle), y: 0.5 + 0.5 * sin(angle))
+                        LinearGradient(
+                            colors: [color.opacity(0.0), color.opacity(0.22), color.opacity(0.0)],
+                            startPoint: start,
+                            endPoint: end
+                        )
                     }
                 }
+            }
+            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            .overlay {
+                let border = theme.resolvedPanelBorder
+                if border.isVisible {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .stroke(border.color, style: border.strokeStyle)
+                }
+            }
         }
     }
 

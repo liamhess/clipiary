@@ -115,19 +115,29 @@ struct Theme: Codable, Sendable, Equatable {
         var useMaterial: Bool
         var useSystemAccent: Bool
         var appearance: String
+        var animatedPanel: Bool
+        var animatedPanelColor: String?
+        var animatedPanelPeriod: Double?
 
         static let `default` = Options(
             useMaterial: true,
             useSystemAccent: true,
-            appearance: "dark"
+            appearance: "dark",
+            animatedPanel: false
         )
 
         init(useMaterial: Bool = Self.default.useMaterial,
              useSystemAccent: Bool = Self.default.useSystemAccent,
-             appearance: String = Self.default.appearance) {
+             appearance: String = Self.default.appearance,
+             animatedPanel: Bool = false,
+             animatedPanelColor: String? = nil,
+             animatedPanelPeriod: Double? = nil) {
             self.useMaterial = useMaterial
             self.useSystemAccent = useSystemAccent
             self.appearance = appearance
+            self.animatedPanel = animatedPanel
+            self.animatedPanelColor = animatedPanelColor
+            self.animatedPanelPeriod = animatedPanelPeriod
         }
 
         init(from decoder: Decoder) throws {
@@ -136,6 +146,9 @@ struct Theme: Codable, Sendable, Equatable {
             useMaterial = try container.decodeIfPresent(Bool.self, forKey: .useMaterial) ?? d.useMaterial
             useSystemAccent = try container.decodeIfPresent(Bool.self, forKey: .useSystemAccent) ?? d.useSystemAccent
             appearance = try container.decodeIfPresent(String.self, forKey: .appearance) ?? d.appearance
+            animatedPanel = try container.decodeIfPresent(Bool.self, forKey: .animatedPanel) ?? d.animatedPanel
+            animatedPanelColor = try container.decodeIfPresent(String.self, forKey: .animatedPanelColor)
+            animatedPanelPeriod = try container.decodeIfPresent(Double.self, forKey: .animatedPanelPeriod)
         }
     }
 
@@ -562,7 +575,7 @@ struct Theme: Codable, Sendable, Equatable {
     static let vapor = Theme(
         id: "vapor",
         name: "Vapor",
-        options: Options(useMaterial: false, useSystemAccent: false),
+        options: Options(useMaterial: false, useSystemAccent: false, animatedPanel: true),
         fills: Fills(
             panel: .linearGradient(["#1A1028", "#220E38"], from: "top", to: "bottom"),
             tabBar: .solid("#140C22", opacity: 0.6),
