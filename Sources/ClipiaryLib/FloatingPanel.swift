@@ -164,6 +164,14 @@ final class FloatingPanel: NSPanel {
             SettingsWindowController.shared.open()
             return
         }
+        // Ctrl+R reloads themes
+        if event.type == .keyDown,
+           event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .control,
+           event.keyCode == 15 {
+            appState.themeManager.load()
+            appState.themeManager.selectTheme(id: appState.settings.selectedThemeID)
+            return
+        }
         // Escape: close preview first, then close panel
         if event.type == .keyDown, event.keyCode == 53,
            event.modifierFlags.intersection(.deviceIndependentFlagsMask).isDisjoint(with: [.command, .option, .control]) {

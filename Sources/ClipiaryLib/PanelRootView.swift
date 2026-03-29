@@ -23,6 +23,10 @@ struct PanelRootView: View {
         .padding(theme.spacing.panelPadding)
         .frame(minWidth: 300, maxWidth: .infinity, minHeight: 400, maxHeight: .infinity)
         .background(panelBackground)
+        .shadow(
+            color: theme.resolvedPanelGlow?.color ?? .clear,
+            radius: theme.resolvedPanelGlow?.radius ?? 0
+        )
         .onChange(of: appState.searchFocusRequestID) {
             searchFocused = true
         }
@@ -94,6 +98,13 @@ struct PanelRootView: View {
                     RoundedRectangle(cornerRadius: theme.cornerRadii.contentArea, style: .continuous)
                         .fill(panelFill)
                 )
+                .overlay {
+                    let border = theme.resolvedContentAreaBorder
+                    if border.isVisible {
+                        RoundedRectangle(cornerRadius: theme.cornerRadii.contentArea, style: .continuous)
+                            .stroke(border.color, style: border.strokeStyle)
+                    }
+                }
                 .onChange(of: appState.selectedHistoryItemID) {
                     guard let selectedID = appState.selectedHistoryItemID else {
                         return
@@ -246,6 +257,13 @@ struct PanelRootView: View {
             RoundedRectangle(cornerRadius: theme.cornerRadii.searchField, style: .continuous)
                 .fill(panelFill)
         )
+        .overlay {
+            let border = theme.resolvedSearchFieldBorder
+            if border.isVisible {
+                RoundedRectangle(cornerRadius: theme.cornerRadii.searchField, style: .continuous)
+                    .stroke(border.color, style: border.strokeStyle)
+            }
+        }
     }
 
     private func historyGroup(title: String, items: [HistoryItem]) -> some View {
@@ -386,13 +404,27 @@ struct PanelRootView: View {
         if theme.options.useMaterial {
             RoundedRectangle(cornerRadius: theme.cornerRadii.panel, style: .continuous)
                 .fill(.regularMaterial)
+                .overlay {
+                    let border = theme.resolvedPanelBorder
+                    if border.isVisible {
+                        RoundedRectangle(cornerRadius: theme.cornerRadii.panel, style: .continuous)
+                            .stroke(border.color, style: border.strokeStyle)
+                    }
+                }
         } else {
             RoundedRectangle(cornerRadius: theme.cornerRadii.panel, style: .continuous)
                 .fill(theme.resolvedPanelFill)
+                .overlay {
+                    let border = theme.resolvedPanelBorder
+                    if border.isVisible {
+                        RoundedRectangle(cornerRadius: theme.cornerRadii.panel, style: .continuous)
+                            .stroke(border.color, style: border.strokeStyle)
+                    }
+                }
         }
     }
 
-    private var panelFill: Color {
+    private var panelFill: AnyShapeStyle {
         theme.resolvedPanelFill
     }
 
@@ -423,8 +455,15 @@ struct PanelRootView: View {
         .padding(4)
         .background(
             RoundedRectangle(cornerRadius: theme.cornerRadii.tabBar, style: .continuous)
-                .fill(theme.resolvedTabBarBackground)
+                .fill(theme.resolvedTabBarFill)
         )
+        .overlay {
+            let border = theme.resolvedTabBarBorder
+            if border.isVisible {
+                RoundedRectangle(cornerRadius: theme.cornerRadii.tabBar, style: .continuous)
+                    .stroke(border.color, style: border.strokeStyle)
+            }
+        }
     }
 
     private func tabButton(for tab: AppState.PopoverTab) -> some View {
@@ -451,7 +490,7 @@ struct PanelRootView: View {
             .frame(maxWidth: .infinity)
             .background(
                 RoundedRectangle(cornerRadius: theme.cornerRadii.tabButton, style: .continuous)
-                    .fill(isSelected ? panelFill : Color.clear)
+                    .fill(isSelected ? panelFill : AnyShapeStyle(Color.clear))
             )
             .contentShape(Rectangle())
         }
@@ -512,7 +551,7 @@ struct PanelRootView: View {
             }()
 
             ZStack {
-                theme.resolvedOverlayBackdrop
+                Rectangle().fill(theme.resolvedOverlayFill)
                     .ignoresSafeArea()
                     .onTapGesture {
                         appState.showingFavoriteTabPicker = false
@@ -549,7 +588,7 @@ struct PanelRootView: View {
                 .padding(.vertical, 6)
                 .background(
                     RoundedRectangle(cornerRadius: theme.cornerRadii.pickerRow, style: .continuous)
-                        .fill(isFocused ? theme.resolvedRowSelected : Color.clear)
+                        .fill(isFocused ? theme.resolvedRowSelectedFill : AnyShapeStyle(Color.clear))
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {

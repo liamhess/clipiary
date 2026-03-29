@@ -1,0 +1,224 @@
+# Clipiary Themes
+
+Themes are JSON files in `~/Library/Application Support/Clipiary/themes/`. Clipiary ships with built-in themes and watches the directory for changes. To create your own, copy any built-in `.json` file, give it a new filename, change the `id` and `name`, and start editing. Press **Ctrl+R** in the panel to reload without restarting.
+
+Every section and field is optional. Omitted fields fall back to the default theme values.
+
+## Top-level
+
+| Field | Type | Description |
+|---|---|---|
+| `id` | string | **Required.** Unique identifier (used internally and for the filename). |
+| `name` | string | **Required.** Display name shown in the theme picker. |
+| `options` | object | Global behavior flags. |
+| `fills` | object | Background fills (solid colors or gradients). |
+| `colors` | object | Flat colors for accents, text, indicators, small UI elements. |
+| `borders` | object | Per-element border styling. |
+| `effects` | object | Glow / shadow effects. |
+| `cornerRadii` | object | Corner radius for each UI element. |
+| `spacing` | object | Padding and spacing values. |
+
+## `options`
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `useMaterial` | bool | `true` | Use macOS vibrancy material for the panel background. When `false`, the panel uses the solid `fills.panel` value instead. |
+| `useSystemAccent` | bool | `true` | Use the system accent color (from System Settings). When `false`, uses `colors.accent`. |
+| `appearance` | string | `"dark"` | Color scheme: `"dark"`, `"light"`, or `"system"`. Controls how SwiftUI semantic colors (`.primary`, `.secondary`) resolve. |
+
+## `fills`
+
+Fills are the backgrounds of major UI areas. Each fill is an object that can represent either a **solid color** or a **linear gradient**.
+
+### Solid fill
+
+```json
+{ "color": "#1E1E1E", "opacity": 0.85 }
+```
+
+### Linear gradient fill
+
+```json
+{
+  "gradient": ["#0D0D12", "#1A0A1A"],
+  "from": "top",
+  "to": "bottom",
+  "opacity": 1.0
+}
+```
+
+`from` / `to` accept: `"top"`, `"bottom"`, `"leading"`, `"trailing"`, `"topLeading"`, `"topTrailing"`, `"bottomLeading"`, `"bottomTrailing"`, `"center"`.
+
+### Fill slots
+
+| Field | Default | Where it appears |
+|---|---|---|
+| `panel` | `#1E1E1E` @ 0.85 | Main panel background (when material is off), content scroll area, search field, active tab button. |
+| `tabBar` | `#000000` @ 0.05 | Tab bar strip behind the History/Favorites tabs. |
+| `rowSelected` | accent @ 0.18 | Background of the currently selected clipboard row. |
+| `rowHovered` | accent @ 0.09 | Background of a row on mouse hover. |
+| `card` | `#000000` @ 0.15 | Settings card backgrounds. |
+| `overlay` | `#000000` @ 0.15 | Semi-transparent backdrop behind the favorites picker overlay. |
+
+When a fill has no `color` and no `gradient` (just `opacity`), it uses the theme's resolved accent color as the base. This is the default for `rowSelected` and `rowHovered`.
+
+## `colors`
+
+Flat hex colors (`#RRGGBB` or `#RRGGBBAA`) for small UI elements and foreground styling. Set to `null` to use the system default.
+
+| Field | Default | Description |
+|---|---|---|
+| `accent` | `#007AFF` | Primary interactive color (favorites star, copy-on-select badge, drop indicator). Ignored when `useSystemAccent` is `true`. |
+| `pillBackground` | system secondary | Background of keyboard hint badges and shortcut pills. |
+| `pillBackgroundOpacity` | `0.12` | Opacity for pill backgrounds. |
+| `shortcutKeyBackground` | `#000000` | Background of shortcut key capsules in the help popover. |
+| `shortcutKeyBackgroundOpacity` | `0.06` | Opacity for shortcut key backgrounds. |
+| `cardStroke` | `#FFFFFF` | Default stroke color for settings cards (used when no `borders.card` is set). |
+| `cardStrokeOpacity` | `0.08` | Opacity for card strokes. |
+| `textPrimary` | system | Primary text color. `null` = system `.primary`. |
+| `textSecondary` | system | Secondary text color. `null` = system `.secondary`. |
+| `textTertiary` | system | Tertiary text color. `null` = system `.tertiary`. |
+| `imageIndicator` | `#FF9500` | Color of the image/photo icon on image clipboard entries. |
+| `statusReady` | `#34C759` | Status dot color when accessibility is granted. |
+| `statusWarning` | `#FF9500` | Status dot color when accessibility is missing. |
+| `gaugeUnfilled` | system secondary | Color of unfilled paste-count gauge segments. |
+| `gaugeUnfilledOpacity` | `0.15` | Opacity for unfilled gauge segments. |
+
+## `borders`
+
+Per-element border definitions. Each is an object or `null` (no border). By default, only the settings card has a visible border.
+
+### Border object
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `color` | string | varies | Hex color. Falls back to element-specific default. |
+| `width` | number | `0` | Stroke width in points. `0` = no border. |
+| `opacity` | number | `1.0` | Opacity applied to the border color. |
+| `dash` | [number] | `null` | Dash pattern, e.g. `[5, 3]` for dashed. `null` = solid. |
+
+### Border slots
+
+| Field | Default width | Where it appears |
+|---|---|---|
+| `panel` | 0 | Outer border of the entire panel window. |
+| `contentArea` | 0 | Border around the scrollable content area. |
+| `selectedRow` | 0 | Border on the currently selected row. |
+| `card` | 1 | Border on settings cards (falls back to `cardStroke` color). |
+| `searchField` | 0 | Border around the search field. |
+| `tabBar` | 0 | Border around the tab bar. |
+
+## `effects`
+
+Glow effects rendered as colored shadows. Each is an object or `null` (no effect). All are `null` by default.
+
+### Glow object
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `color` | string | none | Hex color for the glow. |
+| `radius` | number | `8` | Blur radius of the shadow. |
+| `opacity` | number | `0.5` | Opacity of the glow color. |
+
+### Effect slots
+
+| Field | Where it appears |
+|---|---|
+| `selectedRowGlow` | Shadow around the selected row. |
+| `hoveredRowGlow` | Shadow around a hovered row. |
+| `panelGlow` | Outer shadow around the entire panel. |
+
+## `cornerRadii`
+
+Corner radius (in points) for each UI element.
+
+| Field | Default | Element |
+|---|---|---|
+| `panel` | `14` | Main panel window. |
+| `contentArea` | `12` | Scrollable history/favorites area. |
+| `card` | `10` | Settings cards. |
+| `tabBar` | `10` | Tab bar background. |
+| `row` | `8` | Clipboard history rows. |
+| `searchField` | `8` | Search input field. |
+| `tabButton` | `8` | Individual tab buttons. |
+| `pickerRow` | `6` | Favorites picker rows. |
+| `shortcutRecordField` | `6` | Shortcut recording field in settings. |
+| `keyBadge` | `3` | Keyboard shortcut hint badges. |
+| `gauge` | `1` | Paste-count gauge bar segments. |
+
+## `spacing`
+
+Layout spacing values (in points).
+
+| Field | Default | Description |
+|---|---|---|
+| `panelPadding` | `12` | Outer padding inside the panel. |
+| `sectionSpacing` | `12` | Vertical space between header, content area, and footer. |
+| `rowHorizontalPadding` | `8` | Horizontal padding inside each row. |
+| `rowVerticalPadding` | `8` | Vertical padding inside each row. |
+| `contentAreaPadding` | `10` | Padding inside the scroll area. |
+| `rowSpacing` | `2` | Vertical gap between rows. |
+
+## Example: minimal custom theme
+
+```json
+{
+  "id": "my-theme",
+  "name": "My Theme",
+  "options": {
+    "useMaterial": false,
+    "useSystemAccent": false,
+    "appearance": "dark"
+  },
+  "fills": {
+    "panel": { "color": "#1A1A2E", "opacity": 1.0 },
+    "rowSelected": { "color": "#E94560", "opacity": 0.2 }
+  },
+  "colors": {
+    "accent": "#E94560"
+  }
+}
+```
+
+Everything not specified falls back to the default values listed above.
+
+## Example: gradient + glow theme
+
+```json
+{
+  "id": "aurora",
+  "name": "Aurora",
+  "options": {
+    "useMaterial": false,
+    "useSystemAccent": false
+  },
+  "fills": {
+    "panel": {
+      "gradient": ["#0B0C10", "#1F2833"],
+      "from": "top",
+      "to": "bottom"
+    },
+    "rowSelected": {
+      "gradient": ["#66FCF1", "#45A29E"],
+      "from": "leading",
+      "to": "trailing",
+      "opacity": 0.2
+    }
+  },
+  "colors": {
+    "accent": "#66FCF1"
+  },
+  "borders": {
+    "panel": { "color": "#66FCF1", "width": 1, "opacity": 0.2 },
+    "selectedRow": { "color": "#66FCF1", "width": 1, "opacity": 0.4 }
+  },
+  "effects": {
+    "selectedRowGlow": { "color": "#66FCF1", "radius": 8, "opacity": 0.3 },
+    "panelGlow": { "color": "#45A29E", "radius": 12, "opacity": 0.1 }
+  },
+  "cornerRadii": {
+    "panel": 10,
+    "row": 4
+  }
+}
+```

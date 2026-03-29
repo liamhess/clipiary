@@ -403,7 +403,10 @@ func makeItem(
         #expect(theme.id == "minimal")
         #expect(theme.name == "Minimal")
         #expect(theme.options == Theme.Options.default)
+        #expect(theme.fills == Theme.Fills.default)
         #expect(theme.colors == Theme.Colors.default)
+        #expect(theme.borders == Theme.Borders.default)
+        #expect(theme.effects == Theme.Effects.default)
         #expect(theme.cornerRadii == Theme.CornerRadii.default)
         #expect(theme.spacing == Theme.Spacing.default)
     }
@@ -414,8 +417,66 @@ func makeItem(
         """
         let theme = try JSONDecoder().decode(Theme.self, from: Data(json.utf8))
         #expect(theme.colors.accent == "#FF0000")
-        #expect(theme.colors.panelFill == Theme.Colors.default.panelFill)
-        #expect(theme.colors.rowSelectedOpacity == Theme.Colors.default.rowSelectedOpacity)
+        #expect(theme.colors.cardStroke == Theme.Colors.default.cardStroke)
+    }
+
+    @Test func solidFillDecodesFromJSON() throws {
+        let json = """
+        { "id": "t", "name": "T", "fills": { "panel": { "color": "#FF0000", "opacity": 0.5 } } }
+        """
+        let theme = try JSONDecoder().decode(Theme.self, from: Data(json.utf8))
+        #expect(theme.fills.panel.color == "#FF0000")
+        #expect(theme.fills.panel.opacity == 0.5)
+        #expect(theme.fills.panel.gradient == nil)
+    }
+
+    @Test func gradientFillDecodesFromJSON() throws {
+        let json = """
+        { "id": "t", "name": "T", "fills": { "panel": { "gradient": ["#FF0000", "#0000FF"], "from": "top", "to": "bottom" } } }
+        """
+        let theme = try JSONDecoder().decode(Theme.self, from: Data(json.utf8))
+        #expect(theme.fills.panel.gradient == ["#FF0000", "#0000FF"])
+        #expect(theme.fills.panel.from == "top")
+        #expect(theme.fills.panel.to == "bottom")
+        #expect(theme.fills.panel.color == nil)
+    }
+
+    @Test func bordersDecodeFromJSON() throws {
+        let json = """
+        { "id": "t", "name": "T", "borders": { "panel": { "color": "#FF0000", "width": 2, "opacity": 0.5 } } }
+        """
+        let theme = try JSONDecoder().decode(Theme.self, from: Data(json.utf8))
+        #expect(theme.borders.panel?.color == "#FF0000")
+        #expect(theme.borders.panel?.width == 2)
+        #expect(theme.borders.panel?.opacity == 0.5)
+        #expect(theme.borders.selectedRow == nil)
+    }
+
+    @Test func effectsDecodeFromJSON() throws {
+        let json = """
+        { "id": "t", "name": "T", "effects": { "selectedRowGlow": { "color": "#FF0000", "radius": 10, "opacity": 0.3 } } }
+        """
+        let theme = try JSONDecoder().decode(Theme.self, from: Data(json.utf8))
+        #expect(theme.effects.selectedRowGlow?.color == "#FF0000")
+        #expect(theme.effects.selectedRowGlow?.radius == 10)
+        #expect(theme.effects.panelGlow == nil)
+    }
+
+    @Test func resolvedGlowReturnsNilWhenNotSet() {
+        let theme = Theme.default
+        #expect(theme.resolvedSelectedRowGlow == nil)
+        #expect(theme.resolvedPanelGlow == nil)
+    }
+
+    @Test func resolvedBorderIsNotVisibleByDefault() {
+        let theme = Theme.default
+        #expect(!theme.resolvedPanelBorder.isVisible)
+        #expect(!theme.resolvedSelectedRowBorder.isVisible)
+    }
+
+    @Test func resolvedCardBorderIsVisibleByDefault() {
+        let theme = Theme.default
+        #expect(theme.resolvedCardBorder.isVisible)
     }
 
     @Test func hexColorParsing() {

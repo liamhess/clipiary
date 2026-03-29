@@ -61,30 +61,8 @@ By default there is a single "Favorites" tab. You can configure multiple named f
 ~/Library/Application Support/Clipiary/config.json
 ```
 
-Example (see [docs/config.example.json](docs/config.example.json) for a full template):
+See [docs/config.example.json](docs/config.example.json) for a full template.
 
-```json
-{
-  "favorites" : [
-    {
-      "name" : "Snippets",
-      "entries" : [
-        { "text" : "alias l='ls -al --color=auto'", "monospace" : true },
-        { "text" : "<details><summary>blabla<\/summary><p>\n\n```\n```\n\n<\/p><\/details>", "monospace" : true }
-      ],
-    },
-    {
-      "name" : "Templates"
-      "entries" : [
-        { "text" : "Best Regards,\nFoo" },
-        ...
-      ],
-    }
-  ]
-}
-```
-
-Each tab can optionally include `entries` that are pre-populated on first launch and pinned (they cannot be unfavorited). When multiple tabs are configured, **Cmd+D** opens a picker where you can toggle an item's membership with **Space** or **arrow keys + Enter**, and dismiss with **Esc**.
 
 ## Development
 

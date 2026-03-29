@@ -1,11 +1,79 @@
 import Foundation
 import SwiftUI
 
+// MARK: - Primitive Theme Types
+
+struct ThemeFill: Codable, Sendable, Equatable {
+    var color: String?
+    var gradient: [String]?
+    var from: String?
+    var to: String?
+    var opacity: Double?
+
+    static func solid(_ hex: String, opacity: Double? = nil) -> ThemeFill {
+        ThemeFill(color: hex, opacity: opacity)
+    }
+
+    static func linearGradient(_ colors: [String], from: String = "top", to: String = "bottom", opacity: Double? = nil) -> ThemeFill {
+        ThemeFill(gradient: colors, from: from, to: to, opacity: opacity)
+    }
+
+    func resolved(fallback: Color, defaultOpacity: Double = 1.0) -> AnyShapeStyle {
+        let op = opacity ?? defaultOpacity
+        if let gradient, gradient.count >= 2 {
+            let colors = gradient.compactMap { Color(hex: $0) }
+            guard colors.count >= 2 else { return AnyShapeStyle(fallback.opacity(op)) }
+            return AnyShapeStyle(
+                LinearGradient(
+                    colors: colors,
+                    startPoint: unitPoint(from ?? "top"),
+                    endPoint: unitPoint(to ?? "bottom")
+                ).opacity(op)
+            )
+        }
+        let base = Color(hex: color) ?? fallback
+        return AnyShapeStyle(base.opacity(op))
+    }
+
+    private func unitPoint(_ name: String) -> UnitPoint {
+        switch name {
+        case "top": .top
+        case "bottom": .bottom
+        case "leading": .leading
+        case "trailing": .trailing
+        case "topLeading": .topLeading
+        case "topTrailing": .topTrailing
+        case "bottomLeading": .bottomLeading
+        case "bottomTrailing": .bottomTrailing
+        case "center": .center
+        default: .top
+        }
+    }
+}
+
+struct ThemeBorder: Codable, Sendable, Equatable {
+    var color: String?
+    var width: CGFloat?
+    var opacity: Double?
+    var dash: [CGFloat]?
+}
+
+struct ThemeGlow: Codable, Sendable, Equatable {
+    var color: String?
+    var radius: CGFloat?
+    var opacity: Double?
+}
+
+// MARK: - Theme
+
 struct Theme: Codable, Sendable, Equatable {
     var id: String
     var name: String
     var options: Options
+    var fills: Fills
     var colors: Colors
+    var borders: Borders
+    var effects: Effects
     var cornerRadii: CornerRadii
     var spacing: Spacing
 
@@ -37,24 +105,57 @@ struct Theme: Codable, Sendable, Equatable {
         }
     }
 
+    struct Fills: Codable, Sendable, Equatable {
+        var panel: ThemeFill
+        var tabBar: ThemeFill
+        var rowSelected: ThemeFill
+        var rowHovered: ThemeFill
+        var card: ThemeFill
+        var overlay: ThemeFill
+
+        static let `default` = Fills(
+            panel: .solid("#1E1E1E", opacity: 0.85),
+            tabBar: .solid("#000000", opacity: 0.05),
+            rowSelected: ThemeFill(opacity: 0.18),
+            rowHovered: ThemeFill(opacity: 0.09),
+            card: .solid("#000000", opacity: 0.15),
+            overlay: .solid("#000000", opacity: 0.15)
+        )
+
+        init(
+            panel: ThemeFill = Self.default.panel,
+            tabBar: ThemeFill = Self.default.tabBar,
+            rowSelected: ThemeFill = Self.default.rowSelected,
+            rowHovered: ThemeFill = Self.default.rowHovered,
+            card: ThemeFill = Self.default.card,
+            overlay: ThemeFill = Self.default.overlay
+        ) {
+            self.panel = panel
+            self.tabBar = tabBar
+            self.rowSelected = rowSelected
+            self.rowHovered = rowHovered
+            self.card = card
+            self.overlay = overlay
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            let d = Self.default
+            panel = try container.decodeIfPresent(ThemeFill.self, forKey: .panel) ?? d.panel
+            tabBar = try container.decodeIfPresent(ThemeFill.self, forKey: .tabBar) ?? d.tabBar
+            rowSelected = try container.decodeIfPresent(ThemeFill.self, forKey: .rowSelected) ?? d.rowSelected
+            rowHovered = try container.decodeIfPresent(ThemeFill.self, forKey: .rowHovered) ?? d.rowHovered
+            card = try container.decodeIfPresent(ThemeFill.self, forKey: .card) ?? d.card
+            overlay = try container.decodeIfPresent(ThemeFill.self, forKey: .overlay) ?? d.overlay
+        }
+    }
+
     struct Colors: Codable, Sendable, Equatable {
         var accent: String?
-        var panelFill: String?
-        var panelFillOpacity: Double?
-        var tabBarBackground: String?
-        var tabBarBackgroundOpacity: Double?
-        var rowSelected: String?
-        var rowSelectedOpacity: Double?
-        var rowHovered: String?
-        var rowHoveredOpacity: Double?
-        var overlayBackdrop: String?
-        var overlayBackdropOpacity: Double?
         var pillBackground: String?
         var pillBackgroundOpacity: Double?
         var shortcutKeyBackground: String?
         var shortcutKeyBackgroundOpacity: Double?
-        var cardBackground: String?
-        var cardBackgroundOpacity: Double?
         var cardStroke: String?
         var cardStrokeOpacity: Double?
         var textPrimary: String?
@@ -68,22 +169,10 @@ struct Theme: Codable, Sendable, Equatable {
 
         static let `default` = Colors(
             accent: "#007AFF",
-            panelFill: "#1E1E1E",
-            panelFillOpacity: 0.85,
-            tabBarBackground: "#000000",
-            tabBarBackgroundOpacity: 0.05,
-            rowSelected: nil,
-            rowSelectedOpacity: 0.18,
-            rowHovered: nil,
-            rowHoveredOpacity: 0.09,
-            overlayBackdrop: "#000000",
-            overlayBackdropOpacity: 0.15,
             pillBackground: nil,
             pillBackgroundOpacity: 0.12,
             shortcutKeyBackground: "#000000",
             shortcutKeyBackgroundOpacity: 0.06,
-            cardBackground: "#000000",
-            cardBackgroundOpacity: 0.15,
             cardStroke: "#FFFFFF",
             cardStrokeOpacity: 0.08,
             textPrimary: nil,
@@ -96,26 +185,40 @@ struct Theme: Codable, Sendable, Equatable {
             gaugeUnfilledOpacity: 0.15
         )
 
+        init(
+            accent: String? = nil,
+            pillBackground: String? = nil, pillBackgroundOpacity: Double? = nil,
+            shortcutKeyBackground: String? = nil, shortcutKeyBackgroundOpacity: Double? = nil,
+            cardStroke: String? = nil, cardStrokeOpacity: Double? = nil,
+            textPrimary: String? = nil, textSecondary: String? = nil, textTertiary: String? = nil,
+            imageIndicator: String? = nil, statusReady: String? = nil, statusWarning: String? = nil,
+            gaugeUnfilled: String? = nil, gaugeUnfilledOpacity: Double? = nil
+        ) {
+            self.accent = accent
+            self.pillBackground = pillBackground
+            self.pillBackgroundOpacity = pillBackgroundOpacity
+            self.shortcutKeyBackground = shortcutKeyBackground
+            self.shortcutKeyBackgroundOpacity = shortcutKeyBackgroundOpacity
+            self.cardStroke = cardStroke
+            self.cardStrokeOpacity = cardStrokeOpacity
+            self.textPrimary = textPrimary
+            self.textSecondary = textSecondary
+            self.textTertiary = textTertiary
+            self.imageIndicator = imageIndicator
+            self.statusReady = statusReady
+            self.statusWarning = statusWarning
+            self.gaugeUnfilled = gaugeUnfilled
+            self.gaugeUnfilledOpacity = gaugeUnfilledOpacity
+        }
+
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             let d = Self.default
             accent = try container.decodeIfPresent(String.self, forKey: .accent) ?? d.accent
-            panelFill = try container.decodeIfPresent(String.self, forKey: .panelFill) ?? d.panelFill
-            panelFillOpacity = try container.decodeIfPresent(Double.self, forKey: .panelFillOpacity) ?? d.panelFillOpacity
-            tabBarBackground = try container.decodeIfPresent(String.self, forKey: .tabBarBackground) ?? d.tabBarBackground
-            tabBarBackgroundOpacity = try container.decodeIfPresent(Double.self, forKey: .tabBarBackgroundOpacity) ?? d.tabBarBackgroundOpacity
-            rowSelected = try container.decodeIfPresent(String.self, forKey: .rowSelected) ?? d.rowSelected
-            rowSelectedOpacity = try container.decodeIfPresent(Double.self, forKey: .rowSelectedOpacity) ?? d.rowSelectedOpacity
-            rowHovered = try container.decodeIfPresent(String.self, forKey: .rowHovered) ?? d.rowHovered
-            rowHoveredOpacity = try container.decodeIfPresent(Double.self, forKey: .rowHoveredOpacity) ?? d.rowHoveredOpacity
-            overlayBackdrop = try container.decodeIfPresent(String.self, forKey: .overlayBackdrop) ?? d.overlayBackdrop
-            overlayBackdropOpacity = try container.decodeIfPresent(Double.self, forKey: .overlayBackdropOpacity) ?? d.overlayBackdropOpacity
             pillBackground = try container.decodeIfPresent(String.self, forKey: .pillBackground) ?? d.pillBackground
             pillBackgroundOpacity = try container.decodeIfPresent(Double.self, forKey: .pillBackgroundOpacity) ?? d.pillBackgroundOpacity
             shortcutKeyBackground = try container.decodeIfPresent(String.self, forKey: .shortcutKeyBackground) ?? d.shortcutKeyBackground
             shortcutKeyBackgroundOpacity = try container.decodeIfPresent(Double.self, forKey: .shortcutKeyBackgroundOpacity) ?? d.shortcutKeyBackgroundOpacity
-            cardBackground = try container.decodeIfPresent(String.self, forKey: .cardBackground) ?? d.cardBackground
-            cardBackgroundOpacity = try container.decodeIfPresent(Double.self, forKey: .cardBackgroundOpacity) ?? d.cardBackgroundOpacity
             cardStroke = try container.decodeIfPresent(String.self, forKey: .cardStroke) ?? d.cardStroke
             cardStrokeOpacity = try container.decodeIfPresent(Double.self, forKey: .cardStrokeOpacity) ?? d.cardStrokeOpacity
             textPrimary = try container.decodeIfPresent(String.self, forKey: .textPrimary) ?? d.textPrimary
@@ -127,48 +230,60 @@ struct Theme: Codable, Sendable, Equatable {
             gaugeUnfilled = try container.decodeIfPresent(String.self, forKey: .gaugeUnfilled) ?? d.gaugeUnfilled
             gaugeUnfilledOpacity = try container.decodeIfPresent(Double.self, forKey: .gaugeUnfilledOpacity) ?? d.gaugeUnfilledOpacity
         }
+    }
+
+    struct Borders: Codable, Sendable, Equatable {
+        var panel: ThemeBorder?
+        var contentArea: ThemeBorder?
+        var selectedRow: ThemeBorder?
+        var card: ThemeBorder?
+        var searchField: ThemeBorder?
+        var tabBar: ThemeBorder?
+
+        static let `default` = Borders()
 
         init(
-            accent: String? = nil, panelFill: String? = nil, panelFillOpacity: Double? = nil,
-            tabBarBackground: String? = nil, tabBarBackgroundOpacity: Double? = nil,
-            rowSelected: String? = nil, rowSelectedOpacity: Double? = nil,
-            rowHovered: String? = nil, rowHoveredOpacity: Double? = nil,
-            overlayBackdrop: String? = nil, overlayBackdropOpacity: Double? = nil,
-            pillBackground: String? = nil, pillBackgroundOpacity: Double? = nil,
-            shortcutKeyBackground: String? = nil, shortcutKeyBackgroundOpacity: Double? = nil,
-            cardBackground: String? = nil, cardBackgroundOpacity: Double? = nil,
-            cardStroke: String? = nil, cardStrokeOpacity: Double? = nil,
-            textPrimary: String? = nil, textSecondary: String? = nil, textTertiary: String? = nil,
-            imageIndicator: String? = nil, statusReady: String? = nil, statusWarning: String? = nil,
-            gaugeUnfilled: String? = nil, gaugeUnfilledOpacity: Double? = nil
+            panel: ThemeBorder? = nil, contentArea: ThemeBorder? = nil,
+            selectedRow: ThemeBorder? = nil, card: ThemeBorder? = nil,
+            searchField: ThemeBorder? = nil, tabBar: ThemeBorder? = nil
         ) {
-            self.accent = accent
-            self.panelFill = panelFill
-            self.panelFillOpacity = panelFillOpacity
-            self.tabBarBackground = tabBarBackground
-            self.tabBarBackgroundOpacity = tabBarBackgroundOpacity
-            self.rowSelected = rowSelected
-            self.rowSelectedOpacity = rowSelectedOpacity
-            self.rowHovered = rowHovered
-            self.rowHoveredOpacity = rowHoveredOpacity
-            self.overlayBackdrop = overlayBackdrop
-            self.overlayBackdropOpacity = overlayBackdropOpacity
-            self.pillBackground = pillBackground
-            self.pillBackgroundOpacity = pillBackgroundOpacity
-            self.shortcutKeyBackground = shortcutKeyBackground
-            self.shortcutKeyBackgroundOpacity = shortcutKeyBackgroundOpacity
-            self.cardBackground = cardBackground
-            self.cardBackgroundOpacity = cardBackgroundOpacity
-            self.cardStroke = cardStroke
-            self.cardStrokeOpacity = cardStrokeOpacity
-            self.textPrimary = textPrimary
-            self.textSecondary = textSecondary
-            self.textTertiary = textTertiary
-            self.imageIndicator = imageIndicator
-            self.statusReady = statusReady
-            self.statusWarning = statusWarning
-            self.gaugeUnfilled = gaugeUnfilled
-            self.gaugeUnfilledOpacity = gaugeUnfilledOpacity
+            self.panel = panel
+            self.contentArea = contentArea
+            self.selectedRow = selectedRow
+            self.card = card
+            self.searchField = searchField
+            self.tabBar = tabBar
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            panel = try container.decodeIfPresent(ThemeBorder.self, forKey: .panel)
+            contentArea = try container.decodeIfPresent(ThemeBorder.self, forKey: .contentArea)
+            selectedRow = try container.decodeIfPresent(ThemeBorder.self, forKey: .selectedRow)
+            card = try container.decodeIfPresent(ThemeBorder.self, forKey: .card)
+            searchField = try container.decodeIfPresent(ThemeBorder.self, forKey: .searchField)
+            tabBar = try container.decodeIfPresent(ThemeBorder.self, forKey: .tabBar)
+        }
+    }
+
+    struct Effects: Codable, Sendable, Equatable {
+        var selectedRowGlow: ThemeGlow?
+        var hoveredRowGlow: ThemeGlow?
+        var panelGlow: ThemeGlow?
+
+        static let `default` = Effects()
+
+        init(selectedRowGlow: ThemeGlow? = nil, hoveredRowGlow: ThemeGlow? = nil, panelGlow: ThemeGlow? = nil) {
+            self.selectedRowGlow = selectedRowGlow
+            self.hoveredRowGlow = hoveredRowGlow
+            self.panelGlow = panelGlow
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            selectedRowGlow = try container.decodeIfPresent(ThemeGlow.self, forKey: .selectedRowGlow)
+            hoveredRowGlow = try container.decodeIfPresent(ThemeGlow.self, forKey: .hoveredRowGlow)
+            panelGlow = try container.decodeIfPresent(ThemeGlow.self, forKey: .panelGlow)
         }
     }
 
@@ -192,29 +307,18 @@ struct Theme: Codable, Sendable, Equatable {
         )
 
         init(
-            panel: CGFloat = Self.default.panel,
-            contentArea: CGFloat = Self.default.contentArea,
-            card: CGFloat = Self.default.card,
-            tabBar: CGFloat = Self.default.tabBar,
-            row: CGFloat = Self.default.row,
-            searchField: CGFloat = Self.default.searchField,
-            tabButton: CGFloat = Self.default.tabButton,
-            pickerRow: CGFloat = Self.default.pickerRow,
+            panel: CGFloat = Self.default.panel, contentArea: CGFloat = Self.default.contentArea,
+            card: CGFloat = Self.default.card, tabBar: CGFloat = Self.default.tabBar,
+            row: CGFloat = Self.default.row, searchField: CGFloat = Self.default.searchField,
+            tabButton: CGFloat = Self.default.tabButton, pickerRow: CGFloat = Self.default.pickerRow,
             shortcutRecordField: CGFloat = Self.default.shortcutRecordField,
-            keyBadge: CGFloat = Self.default.keyBadge,
-            gauge: CGFloat = Self.default.gauge
+            keyBadge: CGFloat = Self.default.keyBadge, gauge: CGFloat = Self.default.gauge
         ) {
-            self.panel = panel
-            self.contentArea = contentArea
-            self.card = card
-            self.tabBar = tabBar
-            self.row = row
-            self.searchField = searchField
-            self.tabButton = tabButton
-            self.pickerRow = pickerRow
+            self.panel = panel; self.contentArea = contentArea; self.card = card
+            self.tabBar = tabBar; self.row = row; self.searchField = searchField
+            self.tabButton = tabButton; self.pickerRow = pickerRow
             self.shortcutRecordField = shortcutRecordField
-            self.keyBadge = keyBadge
-            self.gauge = gauge
+            self.keyBadge = keyBadge; self.gauge = gauge
         }
 
         init(from decoder: Decoder) throws {
@@ -256,12 +360,9 @@ struct Theme: Codable, Sendable, Equatable {
             contentAreaPadding: CGFloat = Self.default.contentAreaPadding,
             rowSpacing: CGFloat = Self.default.rowSpacing
         ) {
-            self.panelPadding = panelPadding
-            self.sectionSpacing = sectionSpacing
-            self.rowHorizontalPadding = rowHorizontalPadding
-            self.rowVerticalPadding = rowVerticalPadding
-            self.contentAreaPadding = contentAreaPadding
-            self.rowSpacing = rowSpacing
+            self.panelPadding = panelPadding; self.sectionSpacing = sectionSpacing
+            self.rowHorizontalPadding = rowHorizontalPadding; self.rowVerticalPadding = rowVerticalPadding
+            self.contentAreaPadding = contentAreaPadding; self.rowSpacing = rowSpacing
         }
 
         init(from decoder: Decoder) throws {
@@ -276,46 +377,36 @@ struct Theme: Codable, Sendable, Equatable {
         }
     }
 
+    // MARK: - Default + Built-in Themes
+
     static let `default` = Theme(
         id: "default",
         name: "Default",
         options: .default,
+        fills: .default,
         colors: .default,
+        borders: .default,
+        effects: .default,
         cornerRadii: .default,
         spacing: .default
     )
-
-    // MARK: - Built-in Themes
 
     static let moonlight = Theme(
         id: "moonlight",
         name: "Moonlight",
         options: Options(useMaterial: false, useSystemAccent: false),
+        fills: Fills(
+            panel: .solid("#2D2B3D"), tabBar: .solid("#232136", opacity: 0.6),
+            rowSelected: .solid("#B4A7D6", opacity: 0.18), rowHovered: .solid("#B4A7D6", opacity: 0.08),
+            card: .solid("#232136", opacity: 0.6), overlay: .solid("#1A1829", opacity: 0.5)
+        ),
         colors: Colors(
             accent: "#B4A7D6",
-            panelFill: "#2D2B3D",
-            panelFillOpacity: 1.0,
-            tabBarBackground: "#232136",
-            tabBarBackgroundOpacity: 0.6,
-            rowSelected: "#B4A7D6",
-            rowSelectedOpacity: 0.18,
-            rowHovered: "#B4A7D6",
-            rowHoveredOpacity: 0.08,
-            overlayBackdrop: "#1A1829",
-            overlayBackdropOpacity: 0.5,
-            pillBackground: "#9590AD",
-            pillBackgroundOpacity: 0.15,
-            shortcutKeyBackground: "#232136",
-            shortcutKeyBackgroundOpacity: 0.5,
-            cardBackground: "#232136",
-            cardBackgroundOpacity: 0.6,
-            cardStroke: "#B4A7D6",
-            cardStrokeOpacity: 0.08,
-            imageIndicator: "#E0AF68",
-            statusReady: "#9ECE6A",
-            statusWarning: "#E0AF68",
-            gaugeUnfilled: "#9590AD",
-            gaugeUnfilledOpacity: 0.12
+            pillBackground: "#9590AD", pillBackgroundOpacity: 0.15,
+            shortcutKeyBackground: "#232136", shortcutKeyBackgroundOpacity: 0.5,
+            cardStroke: "#B4A7D6", cardStrokeOpacity: 0.08,
+            imageIndicator: "#E0AF68", statusReady: "#9ECE6A", statusWarning: "#E0AF68",
+            gaugeUnfilled: "#9590AD", gaugeUnfilledOpacity: 0.12
         )
     )
 
@@ -323,31 +414,18 @@ struct Theme: Codable, Sendable, Equatable {
         id: "rose",
         name: "Rose",
         options: Options(useMaterial: false, useSystemAccent: false),
+        fills: Fills(
+            panel: .solid("#2A2025"), tabBar: .solid("#231C20", opacity: 0.6),
+            rowSelected: .solid("#E8A0BF", opacity: 0.16), rowHovered: .solid("#E8A0BF", opacity: 0.07),
+            card: .solid("#231C20", opacity: 0.6), overlay: .solid("#1A1418", opacity: 0.5)
+        ),
         colors: Colors(
             accent: "#E8A0BF",
-            panelFill: "#2A2025",
-            panelFillOpacity: 1.0,
-            tabBarBackground: "#231C20",
-            tabBarBackgroundOpacity: 0.6,
-            rowSelected: "#E8A0BF",
-            rowSelectedOpacity: 0.16,
-            rowHovered: "#E8A0BF",
-            rowHoveredOpacity: 0.07,
-            overlayBackdrop: "#1A1418",
-            overlayBackdropOpacity: 0.5,
-            pillBackground: "#C4909A",
-            pillBackgroundOpacity: 0.14,
-            shortcutKeyBackground: "#3A2A30",
-            shortcutKeyBackgroundOpacity: 0.5,
-            cardBackground: "#231C20",
-            cardBackgroundOpacity: 0.6,
-            cardStroke: "#E8A0BF",
-            cardStrokeOpacity: 0.08,
-            imageIndicator: "#F0C987",
-            statusReady: "#A8D8A8",
-            statusWarning: "#F0C987",
-            gaugeUnfilled: "#8A7580",
-            gaugeUnfilledOpacity: 0.15
+            pillBackground: "#C4909A", pillBackgroundOpacity: 0.14,
+            shortcutKeyBackground: "#3A2A30", shortcutKeyBackgroundOpacity: 0.5,
+            cardStroke: "#E8A0BF", cardStrokeOpacity: 0.08,
+            imageIndicator: "#F0C987", statusReady: "#A8D8A8", statusWarning: "#F0C987",
+            gaugeUnfilled: "#8A7580", gaugeUnfilledOpacity: 0.15
         )
     )
 
@@ -355,31 +433,18 @@ struct Theme: Codable, Sendable, Equatable {
         id: "nord",
         name: "Nord",
         options: Options(useMaterial: false, useSystemAccent: false),
+        fills: Fills(
+            panel: .solid("#2E3440"), tabBar: .solid("#272C36", opacity: 0.6),
+            rowSelected: .solid("#88C0D0", opacity: 0.16), rowHovered: .solid("#88C0D0", opacity: 0.07),
+            card: .solid("#272C36", opacity: 0.6), overlay: .solid("#1D2128", opacity: 0.55)
+        ),
         colors: Colors(
             accent: "#88C0D0",
-            panelFill: "#2E3440",
-            panelFillOpacity: 1.0,
-            tabBarBackground: "#272C36",
-            tabBarBackgroundOpacity: 0.6,
-            rowSelected: "#88C0D0",
-            rowSelectedOpacity: 0.16,
-            rowHovered: "#88C0D0",
-            rowHoveredOpacity: 0.07,
-            overlayBackdrop: "#1D2128",
-            overlayBackdropOpacity: 0.55,
-            pillBackground: "#7B88A0",
-            pillBackgroundOpacity: 0.14,
-            shortcutKeyBackground: "#272C36",
-            shortcutKeyBackgroundOpacity: 0.5,
-            cardBackground: "#272C36",
-            cardBackgroundOpacity: 0.6,
-            cardStroke: "#88C0D0",
-            cardStrokeOpacity: 0.06,
-            imageIndicator: "#EBCB8B",
-            statusReady: "#A3BE8C",
-            statusWarning: "#EBCB8B",
-            gaugeUnfilled: "#616E88",
-            gaugeUnfilledOpacity: 0.2
+            pillBackground: "#7B88A0", pillBackgroundOpacity: 0.14,
+            shortcutKeyBackground: "#272C36", shortcutKeyBackgroundOpacity: 0.5,
+            cardStroke: "#88C0D0", cardStrokeOpacity: 0.06,
+            imageIndicator: "#EBCB8B", statusReady: "#A3BE8C", statusWarning: "#EBCB8B",
+            gaugeUnfilled: "#616E88", gaugeUnfilledOpacity: 0.2
         ),
         cornerRadii: CornerRadii(
             panel: 12, contentArea: 10, card: 8, tabBar: 8,
@@ -392,31 +457,18 @@ struct Theme: Codable, Sendable, Equatable {
         id: "emerald",
         name: "Emerald",
         options: Options(useMaterial: false, useSystemAccent: false),
+        fills: Fills(
+            panel: .solid("#1A2420"), tabBar: .solid("#15201C", opacity: 0.6),
+            rowSelected: .solid("#50C878", opacity: 0.15), rowHovered: .solid("#50C878", opacity: 0.07),
+            card: .solid("#15201C", opacity: 0.6), overlay: .solid("#0E1612", opacity: 0.55)
+        ),
         colors: Colors(
             accent: "#50C878",
-            panelFill: "#1A2420",
-            panelFillOpacity: 1.0,
-            tabBarBackground: "#15201C",
-            tabBarBackgroundOpacity: 0.6,
-            rowSelected: "#50C878",
-            rowSelectedOpacity: 0.15,
-            rowHovered: "#50C878",
-            rowHoveredOpacity: 0.07,
-            overlayBackdrop: "#0E1612",
-            overlayBackdropOpacity: 0.55,
-            pillBackground: "#6B8F7A",
-            pillBackgroundOpacity: 0.16,
-            shortcutKeyBackground: "#15201C",
-            shortcutKeyBackgroundOpacity: 0.5,
-            cardBackground: "#15201C",
-            cardBackgroundOpacity: 0.6,
-            cardStroke: "#50C878",
-            cardStrokeOpacity: 0.06,
-            imageIndicator: "#E0AF68",
-            statusReady: "#50C878",
-            statusWarning: "#E0AF68",
-            gaugeUnfilled: "#5A7A68",
-            gaugeUnfilledOpacity: 0.18
+            pillBackground: "#6B8F7A", pillBackgroundOpacity: 0.16,
+            shortcutKeyBackground: "#15201C", shortcutKeyBackgroundOpacity: 0.5,
+            cardStroke: "#50C878", cardStrokeOpacity: 0.06,
+            imageIndicator: "#E0AF68", statusReady: "#50C878", statusWarning: "#E0AF68",
+            gaugeUnfilled: "#5A7A68", gaugeUnfilledOpacity: 0.18
         )
     )
 
@@ -424,31 +476,29 @@ struct Theme: Codable, Sendable, Equatable {
         id: "neon-noir",
         name: "Neon Noir",
         options: Options(useMaterial: false, useSystemAccent: false),
+        fills: Fills(
+            panel: .linearGradient(["#0D0D12", "#080810"], from: "top", to: "bottom"),
+            tabBar: .solid("#08080C", opacity: 0.7),
+            rowSelected: .solid("#FF2D6F", opacity: 0.18),
+            rowHovered: .solid("#FF2D6F", opacity: 0.08),
+            card: .solid("#08080C", opacity: 0.7),
+            overlay: .solid("#000000", opacity: 0.65)
+        ),
         colors: Colors(
             accent: "#FF2D6F",
-            panelFill: "#0D0D12",
-            panelFillOpacity: 1.0,
-            tabBarBackground: "#08080C",
-            tabBarBackgroundOpacity: 0.7,
-            rowSelected: "#FF2D6F",
-            rowSelectedOpacity: 0.18,
-            rowHovered: "#FF2D6F",
-            rowHoveredOpacity: 0.08,
-            overlayBackdrop: "#000000",
-            overlayBackdropOpacity: 0.65,
-            pillBackground: "#FF2D6F",
-            pillBackgroundOpacity: 0.12,
-            shortcutKeyBackground: "#FF2D6F",
-            shortcutKeyBackgroundOpacity: 0.08,
-            cardBackground: "#08080C",
-            cardBackgroundOpacity: 0.7,
-            cardStroke: "#FF2D6F",
-            cardStrokeOpacity: 0.12,
-            imageIndicator: "#00E5FF",
-            statusReady: "#00E676",
-            statusWarning: "#FFD600",
-            gaugeUnfilled: "#FF2D6F",
-            gaugeUnfilledOpacity: 0.1
+            pillBackground: "#FF2D6F", pillBackgroundOpacity: 0.12,
+            shortcutKeyBackground: "#FF2D6F", shortcutKeyBackgroundOpacity: 0.08,
+            cardStroke: "#FF2D6F", cardStrokeOpacity: 0.12,
+            imageIndicator: "#00E5FF", statusReady: "#00E676", statusWarning: "#FFD600",
+            gaugeUnfilled: "#FF2D6F", gaugeUnfilledOpacity: 0.1
+        ),
+        borders: Borders(
+            panel: ThemeBorder(color: "#FF2D6F", width: 1, opacity: 0.25),
+            selectedRow: ThemeBorder(color: "#FF2D6F", width: 1, opacity: 0.5)
+        ),
+        effects: Effects(
+            selectedRowGlow: ThemeGlow(color: "#FF2D6F", radius: 8, opacity: 0.4),
+            hoveredRowGlow: ThemeGlow(color: "#FF2D6F", radius: 4, opacity: 0.15)
         ),
         cornerRadii: CornerRadii(
             panel: 10, contentArea: 8, card: 6, tabBar: 6,
@@ -466,31 +516,25 @@ struct Theme: Codable, Sendable, Equatable {
         id: "vapor",
         name: "Vapor",
         options: Options(useMaterial: false, useSystemAccent: false),
+        fills: Fills(
+            panel: .linearGradient(["#1A1028", "#220E38"], from: "top", to: "bottom"),
+            tabBar: .solid("#140C22", opacity: 0.6),
+            rowSelected: .linearGradient(["#FF71CE", "#B967FF"], from: "leading", to: "trailing", opacity: 0.15),
+            rowHovered: .solid("#B967FF", opacity: 0.1),
+            card: .solid("#140C22", opacity: 0.6),
+            overlay: .solid("#0D0818", opacity: 0.6)
+        ),
         colors: Colors(
             accent: "#FF71CE",
-            panelFill: "#1A1028",
-            panelFillOpacity: 1.0,
-            tabBarBackground: "#140C22",
-            tabBarBackgroundOpacity: 0.6,
-            rowSelected: "#FF71CE",
-            rowSelectedOpacity: 0.15,
-            rowHovered: "#B967FF",
-            rowHoveredOpacity: 0.1,
-            overlayBackdrop: "#0D0818",
-            overlayBackdropOpacity: 0.6,
-            pillBackground: "#B967FF",
-            pillBackgroundOpacity: 0.14,
-            shortcutKeyBackground: "#B967FF",
-            shortcutKeyBackgroundOpacity: 0.08,
-            cardBackground: "#140C22",
-            cardBackgroundOpacity: 0.6,
-            cardStroke: "#B967FF",
-            cardStrokeOpacity: 0.1,
-            imageIndicator: "#05FFA1",
-            statusReady: "#05FFA1",
-            statusWarning: "#FFFB96",
-            gaugeUnfilled: "#B967FF",
-            gaugeUnfilledOpacity: 0.12
+            pillBackground: "#B967FF", pillBackgroundOpacity: 0.14,
+            shortcutKeyBackground: "#B967FF", shortcutKeyBackgroundOpacity: 0.08,
+            cardStroke: "#B967FF", cardStrokeOpacity: 0.1,
+            imageIndicator: "#05FFA1", statusReady: "#05FFA1", statusWarning: "#FFFB96",
+            gaugeUnfilled: "#B967FF", gaugeUnfilledOpacity: 0.12
+        ),
+        effects: Effects(
+            selectedRowGlow: ThemeGlow(color: "#FF71CE", radius: 6, opacity: 0.3),
+            panelGlow: ThemeGlow(color: "#B967FF", radius: 12, opacity: 0.15)
         ),
         cornerRadii: CornerRadii(
             panel: 16, contentArea: 14, card: 12, tabBar: 12,
@@ -503,51 +547,113 @@ struct Theme: Codable, Sendable, Equatable {
         id: "macos-light",
         name: "macOS Light",
         options: Options(useMaterial: true, useSystemAccent: true, appearance: "light"),
+        fills: Fills(
+            panel: .solid("#FFFFFF", opacity: 0.92),
+            tabBar: .solid("#000000", opacity: 0.04),
+            rowSelected: ThemeFill(opacity: 0.12),
+            rowHovered: ThemeFill(opacity: 0.06),
+            card: .solid("#000000", opacity: 0.04),
+            overlay: .solid("#000000", opacity: 0.12)
+        ),
         colors: Colors(
-            panelFill: "#FFFFFF",
-            panelFillOpacity: 0.92,
-            tabBarBackground: "#000000",
-            tabBarBackgroundOpacity: 0.04,
-            rowSelected: nil,
-            rowSelectedOpacity: 0.12,
-            rowHovered: nil,
-            rowHoveredOpacity: 0.06,
-            overlayBackdrop: "#000000",
-            overlayBackdropOpacity: 0.12,
-            pillBackground: nil,
             pillBackgroundOpacity: 0.08,
-            shortcutKeyBackground: "#000000",
-            shortcutKeyBackgroundOpacity: 0.04,
-            cardBackground: "#000000",
-            cardBackgroundOpacity: 0.04,
-            cardStroke: "#000000",
-            cardStrokeOpacity: 0.06,
-            imageIndicator: "#FF9500",
-            statusReady: "#34C759",
-            statusWarning: "#FF9500",
-            gaugeUnfilled: nil,
+            shortcutKeyBackground: "#000000", shortcutKeyBackgroundOpacity: 0.04,
+            cardStroke: "#000000", cardStrokeOpacity: 0.06,
             gaugeUnfilledOpacity: 0.1
         )
     )
 
+    static let sciFi = Theme(
+        id: "sci-fi",
+        name: "Sci-Fi",
+        options: Options(useMaterial: false, useSystemAccent: false),
+        fills: Fills(
+            panel: .linearGradient(["#2F2F2F", "#12100A"], from: "top", to: "bottom", opacity: 0.9),
+            tabBar: .solid("#0A0800", opacity: 0.1),
+            rowSelected: .solid("#FF6A00", opacity: 0.14),
+            rowHovered: .solid("#FF6A00", opacity: 0.06),
+            card: .solid("#AAAAAA", opacity: 0.1),
+            overlay: .solid("#000000", opacity: 0.6)
+        ),
+        colors: Colors(
+            accent: "#FF6A00",
+            pillBackground: "#FF6A00", pillBackgroundOpacity: 0.1,
+            shortcutKeyBackground: "#FF6A00", shortcutKeyBackgroundOpacity: 0.06,
+            cardStroke: "#FF6A00", cardStrokeOpacity: 0.1,
+            imageIndicator: "#4DEEEA",
+            statusReady: "#00FF00", statusWarning: "#FF6A00",
+            gaugeUnfilled: "#FF6A00", gaugeUnfilledOpacity: 0.08
+        ),
+        borders: Borders(
+            panel: ThemeBorder(color: "#000000", width: 1, opacity: 0.5),
+            contentArea: ThemeBorder(color: "#FF6A00", width: 1, opacity: 0.08),
+            selectedRow: ThemeBorder(color: "#FF6A00", width: 1, opacity: 0.4),
+            card: ThemeBorder(color: "#000000", width: 1, opacity: 0.12)
+        ),
+        effects: Effects(
+            selectedRowGlow: ThemeGlow(color: "#FF6A00", radius: 6, opacity: 0.3),
+            hoveredRowGlow: ThemeGlow(color: "#FF6A00", radius: 3, opacity: 0.1),
+            panelGlow: ThemeGlow(color: "#FF6A00", radius: 10, opacity: 0.08)
+        ),
+        cornerRadii: CornerRadii(
+            panel: 8, contentArea: 6, card: 4, tabBar: 6,
+            row: 3, searchField: 3, tabButton: 4,
+            pickerRow: 2, shortcutRecordField: 2, keyBadge: 2, gauge: 1
+        ),
+        spacing: Spacing(
+            panelPadding: 10, sectionSpacing: 10,
+            rowHorizontalPadding: 8, rowVerticalPadding: 6,
+            contentAreaPadding: 8, rowSpacing: 1
+        )
+    )
+
+    static let space = Theme(
+        id: "space",
+        name: "Space",
+        options: Options(useMaterial: true, useSystemAccent: true),
+        fills: Fills(
+            panel: .solid("#1E1E1E", opacity: 0.85),
+            tabBar: .solid("#000000", opacity: 0.05),
+            rowSelected: ThemeFill(opacity: 0.18),
+            rowHovered: ThemeFill(opacity: 0.09),
+            card: .solid("#000000", opacity: 0.15),
+            overlay: .solid("#000000", opacity: 0.15)
+        ),
+        borders: Borders(
+            selectedRow: ThemeBorder(color: "#FFFFFF", width: 1, opacity: 0.4, dash: [6, 1])
+        ),
+        effects: Effects(
+            selectedRowGlow: ThemeGlow(color: "#FF6A00", radius: 6, opacity: 0.8),
+            hoveredRowGlow: ThemeGlow(color: "#FF0000", radius: 5, opacity: 1.0)
+        ),
+        spacing: Spacing(
+            panelPadding: 10, sectionSpacing: 10,
+            rowHorizontalPadding: 8, rowVerticalPadding: 6,
+            contentAreaPadding: 8, rowSpacing: 1
+        )
+    )
+
     static let builtInThemes: [Theme] = [
-        .default, .macOSLight, .moonlight, .rose, .nord, .emerald, .neonNoir, .vapor,
+        .default, .macOSLight, .moonlight, .rose, .nord, .emerald, .neonNoir, .sciFi, .space, .vapor,
     ]
+
+    // MARK: - Initializers
 
     init(
         id: String = Self.default.id,
         name: String = Self.default.name,
         options: Options = .default,
+        fills: Fills = .default,
         colors: Colors = .default,
+        borders: Borders = .default,
+        effects: Effects = .default,
         cornerRadii: CornerRadii = .default,
         spacing: Spacing = .default
     ) {
-        self.id = id
-        self.name = name
-        self.options = options
-        self.colors = colors
-        self.cornerRadii = cornerRadii
-        self.spacing = spacing
+        self.id = id; self.name = name; self.options = options
+        self.fills = fills; self.colors = colors
+        self.borders = borders; self.effects = effects
+        self.cornerRadii = cornerRadii; self.spacing = spacing
     }
 
     init(from decoder: Decoder) throws {
@@ -555,7 +661,10 @@ struct Theme: Codable, Sendable, Equatable {
         id = try container.decode(String.self, forKey: .id)
         name = try container.decode(String.self, forKey: .name)
         options = try container.decodeIfPresent(Options.self, forKey: .options) ?? .default
+        fills = try container.decodeIfPresent(Fills.self, forKey: .fills) ?? .default
         colors = try container.decodeIfPresent(Colors.self, forKey: .colors) ?? .default
+        borders = try container.decodeIfPresent(Borders.self, forKey: .borders) ?? .default
+        effects = try container.decodeIfPresent(Effects.self, forKey: .effects) ?? .default
         cornerRadii = try container.decodeIfPresent(CornerRadii.self, forKey: .cornerRadii) ?? .default
         spacing = try container.decodeIfPresent(Spacing.self, forKey: .spacing) ?? .default
     }
@@ -604,37 +713,40 @@ extension Theme {
     }
 }
 
+// MARK: - Resolved Fill Accessors
+
+extension Theme {
+    var resolvedPanelFill: AnyShapeStyle {
+        fills.panel.resolved(fallback: Color(nsColor: .controlBackgroundColor), defaultOpacity: 0.85)
+    }
+
+    var resolvedTabBarFill: AnyShapeStyle {
+        fills.tabBar.resolved(fallback: .black, defaultOpacity: 0.05)
+    }
+
+    var resolvedRowSelectedFill: AnyShapeStyle {
+        fills.rowSelected.resolved(fallback: resolvedAccent, defaultOpacity: 0.18)
+    }
+
+    var resolvedRowHoveredFill: AnyShapeStyle {
+        fills.rowHovered.resolved(fallback: resolvedAccent, defaultOpacity: 0.09)
+    }
+
+    var resolvedCardFill: AnyShapeStyle {
+        fills.card.resolved(fallback: .black, defaultOpacity: 0.15)
+    }
+
+    var resolvedOverlayFill: AnyShapeStyle {
+        fills.overlay.resolved(fallback: .black, defaultOpacity: 0.15)
+    }
+}
+
 // MARK: - Resolved Color Accessors
 
 extension Theme {
     var resolvedAccent: Color {
         if options.useSystemAccent { return .accentColor }
         return Color(hex: colors.accent) ?? .accentColor
-    }
-
-    var resolvedPanelFill: Color {
-        let base = Color(hex: colors.panelFill) ?? Color(nsColor: .controlBackgroundColor)
-        return base.opacity(colors.panelFillOpacity ?? 0.85)
-    }
-
-    var resolvedTabBarBackground: Color {
-        let base = Color(hex: colors.tabBarBackground) ?? .black
-        return base.opacity(colors.tabBarBackgroundOpacity ?? 0.05)
-    }
-
-    var resolvedRowSelected: Color {
-        let base = Color(hex: colors.rowSelected) ?? resolvedAccent
-        return base.opacity(colors.rowSelectedOpacity ?? 0.18)
-    }
-
-    var resolvedRowHovered: Color {
-        let base = Color(hex: colors.rowHovered) ?? resolvedAccent
-        return base.opacity(colors.rowHoveredOpacity ?? 0.09)
-    }
-
-    var resolvedOverlayBackdrop: Color {
-        let base = Color(hex: colors.overlayBackdrop) ?? .black
-        return base.opacity(colors.overlayBackdropOpacity ?? 0.15)
     }
 
     var resolvedPillBackground: Color {
@@ -647,42 +759,67 @@ extension Theme {
         return base.opacity(colors.shortcutKeyBackgroundOpacity ?? 0.06)
     }
 
-    var resolvedCardBackground: Color {
-        let base = Color(hex: colors.cardBackground) ?? .black
-        return base.opacity(colors.cardBackgroundOpacity ?? 0.15)
-    }
-
     var resolvedCardStroke: Color {
         let base = Color(hex: colors.cardStroke) ?? .white
         return base.opacity(colors.cardStrokeOpacity ?? 0.08)
     }
 
-    var resolvedTextPrimary: Color {
-        Color(hex: colors.textPrimary) ?? .primary
-    }
-
-    var resolvedTextSecondary: Color {
-        Color(hex: colors.textSecondary) ?? .secondary
-    }
-
-    var resolvedTextTertiary: Color {
-        Color(hex: colors.textTertiary) ?? Color(nsColor: .tertiaryLabelColor)
-    }
-
-    var resolvedImageIndicator: Color {
-        Color(hex: colors.imageIndicator) ?? .orange
-    }
-
-    var resolvedStatusReady: Color {
-        Color(hex: colors.statusReady) ?? Color(nsColor: .systemGreen)
-    }
-
-    var resolvedStatusWarning: Color {
-        Color(hex: colors.statusWarning) ?? Color(nsColor: .systemOrange)
-    }
+    var resolvedTextPrimary: Color { Color(hex: colors.textPrimary) ?? .primary }
+    var resolvedTextSecondary: Color { Color(hex: colors.textSecondary) ?? .secondary }
+    var resolvedTextTertiary: Color { Color(hex: colors.textTertiary) ?? Color(nsColor: .tertiaryLabelColor) }
+    var resolvedImageIndicator: Color { Color(hex: colors.imageIndicator) ?? .orange }
+    var resolvedStatusReady: Color { Color(hex: colors.statusReady) ?? Color(nsColor: .systemGreen) }
+    var resolvedStatusWarning: Color { Color(hex: colors.statusWarning) ?? Color(nsColor: .systemOrange) }
 
     var resolvedGaugeUnfilled: Color {
         let base = Color(hex: colors.gaugeUnfilled) ?? .secondary
         return base.opacity(colors.gaugeUnfilledOpacity ?? 0.15)
     }
+}
+
+// MARK: - Resolved Border Accessors
+
+extension Theme {
+    struct ResolvedBorder {
+        let color: Color
+        let width: CGFloat
+        let dash: [CGFloat]
+
+        var strokeStyle: StrokeStyle { StrokeStyle(lineWidth: width, dash: dash) }
+        var isVisible: Bool { width > 0 }
+    }
+
+    func resolvedBorder(_ border: ThemeBorder?, fallbackColor: Color = .clear, fallbackWidth: CGFloat = 0) -> ResolvedBorder {
+        guard let border else { return ResolvedBorder(color: fallbackColor, width: fallbackWidth, dash: []) }
+        let color = (Color(hex: border.color) ?? fallbackColor).opacity(border.opacity ?? 1.0)
+        return ResolvedBorder(color: color, width: border.width ?? fallbackWidth, dash: border.dash ?? [])
+    }
+
+    var resolvedPanelBorder: ResolvedBorder { resolvedBorder(borders.panel) }
+    var resolvedContentAreaBorder: ResolvedBorder { resolvedBorder(borders.contentArea) }
+    var resolvedSelectedRowBorder: ResolvedBorder { resolvedBorder(borders.selectedRow) }
+    var resolvedCardBorder: ResolvedBorder { resolvedBorder(borders.card, fallbackColor: resolvedCardStroke, fallbackWidth: 1) }
+    var resolvedSearchFieldBorder: ResolvedBorder { resolvedBorder(borders.searchField) }
+    var resolvedTabBarBorder: ResolvedBorder { resolvedBorder(borders.tabBar) }
+}
+
+// MARK: - Resolved Glow Accessors
+
+extension Theme {
+    struct ResolvedGlow {
+        let color: Color
+        let radius: CGFloat
+    }
+
+    func resolvedGlow(_ glow: ThemeGlow?) -> ResolvedGlow? {
+        guard let glow, let color = Color(hex: glow.color) else { return nil }
+        return ResolvedGlow(
+            color: color.opacity(glow.opacity ?? 0.5),
+            radius: glow.radius ?? 8
+        )
+    }
+
+    var resolvedSelectedRowGlow: ResolvedGlow? { resolvedGlow(effects.selectedRowGlow) }
+    var resolvedHoveredRowGlow: ResolvedGlow? { resolvedGlow(effects.hoveredRowGlow) }
+    var resolvedPanelGlow: ResolvedGlow? { resolvedGlow(effects.panelGlow) }
 }

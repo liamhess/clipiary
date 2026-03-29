@@ -102,7 +102,7 @@ struct SettingsView: View {
 
     private var appearanceSection: some View {
         settingsCard("Appearance") {
-            settingMetric(title: "Theme", help: "Themes are JSON files in ~/Library/Application Support/Clipiary/themes/. Copy and edit default.json to create your own.") {
+            settingMetric(title: "Theme", help: "Themes are JSON files in ~/Library/Application Support/Clipiary/themes/. Copy and edit default.json to create your own. Ctrl+R in main window to reload selected theme.") {
                 Picker("", selection: Binding(
                     get: { appState.settings.selectedThemeID },
                     set: { appState.settings.selectedThemeID = $0 }
@@ -299,12 +299,15 @@ struct SettingsView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .background(
                 RoundedRectangle(cornerRadius: theme.cornerRadii.card, style: .continuous)
-                    .fill(theme.resolvedCardBackground)
+                    .fill(theme.resolvedCardFill)
             )
-            .overlay(
-                RoundedRectangle(cornerRadius: theme.cornerRadii.card, style: .continuous)
-                    .stroke(theme.resolvedCardStroke, lineWidth: 1)
-            )
+            .overlay {
+                let border = theme.resolvedCardBorder
+                if border.isVisible {
+                    RoundedRectangle(cornerRadius: theme.cornerRadii.card, style: .continuous)
+                        .stroke(border.color, style: border.strokeStyle)
+                }
+            }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }

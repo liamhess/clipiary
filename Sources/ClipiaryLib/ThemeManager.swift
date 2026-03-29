@@ -31,7 +31,6 @@ final class ThemeManager {
         try? fileManager.createDirectory(at: themesDirectoryURL, withIntermediateDirectories: true)
         for theme in Theme.builtInThemes {
             let url = themesDirectoryURL.appending(path: "\(theme.id).json")
-            guard !fileManager.fileExists(atPath: url.path) else { continue }
             guard let data = try? encoder.encode(theme) else { continue }
             try? data.write(to: url, options: .atomic)
         }

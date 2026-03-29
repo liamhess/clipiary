@@ -185,6 +185,17 @@ struct HistoryRowView: View {
             RoundedRectangle(cornerRadius: theme.cornerRadii.row, style: .continuous)
                 .fill(rowFill)
         )
+        .overlay {
+            let border = theme.resolvedSelectedRowBorder
+            if isSelected, border.isVisible {
+                RoundedRectangle(cornerRadius: theme.cornerRadii.row, style: .continuous)
+                    .stroke(border.color, style: border.strokeStyle)
+            }
+        }
+        .shadow(
+            color: rowGlowColor,
+            radius: rowGlowRadius
+        )
         .contentShape(Rectangle())
         .onTapGesture {
             appState.selectedHistoryItemID = item.id
@@ -194,14 +205,26 @@ struct HistoryRowView: View {
         }
     }
 
-    private var rowFill: Color {
+    private var rowFill: AnyShapeStyle {
         if isSelected {
-            return theme.resolvedRowSelected
+            return theme.resolvedRowSelectedFill
         }
         if isHovered {
-            return theme.resolvedRowHovered
+            return theme.resolvedRowHoveredFill
         }
+        return AnyShapeStyle(Color.clear)
+    }
+
+    private var rowGlowColor: Color {
+        if isSelected, let glow = theme.resolvedSelectedRowGlow { return glow.color }
+        if isHovered, let glow = theme.resolvedHoveredRowGlow { return glow.color }
         return .clear
+    }
+
+    private var rowGlowRadius: CGFloat {
+        if isSelected, let glow = theme.resolvedSelectedRowGlow { return glow.radius }
+        if isHovered, let glow = theme.resolvedHoveredRowGlow { return glow.radius }
+        return 0
     }
 
     private var pasteFrequencyGauge: some View {

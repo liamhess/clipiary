@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- Themes now support linear gradients, per-element border styles (width, color, dash), and glow effects (colored shadows on selected rows, panel edges)
 
 ## [0.9.0] - 2026-03-28
 ### Added

@@ -1,2 +1,3 @@
 - think about rich-text handling (currently only plain text and images are supported, no rich text)
 - move to top on paste to exclude direct shortcut pasted items?
+- search highlight
