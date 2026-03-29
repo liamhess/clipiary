@@ -96,6 +96,9 @@ struct ThemeGlow: Codable, Sendable, Equatable {
     var color: String?
     var radius: CGFloat?
     var opacity: Double?
+    // Optional inner layer for double-glow neon effect
+    var innerRadius: CGFloat?
+    var innerOpacity: Double?
 }
 
 // MARK: - Theme
@@ -557,8 +560,8 @@ struct Theme: Codable, Sendable, Equatable {
             selectedRow: ThemeBorder(color: "#FF2D6F", width: 1, opacity: 0.5)
         ),
         effects: Effects(
-            selectedRowGlow: ThemeGlow(color: "#FF2D6F", radius: 8, opacity: 0.4),
-            hoveredRowGlow: ThemeGlow(color: "#FF2D6F", radius: 4, opacity: 0.15)
+            selectedRowGlow: ThemeGlow(color: "#FF2D6F", radius: 14, opacity: 0.3, innerRadius: 3, innerOpacity: 0.85),
+            hoveredRowGlow: ThemeGlow(color: "#FF2D6F", radius: 7, opacity: 0.15, innerRadius: 2, innerOpacity: 0.5)
         ),
         cornerRadii: CornerRadii(
             panel: 10, contentArea: 8, card: 6, tabBar: 6,
@@ -651,8 +654,8 @@ struct Theme: Codable, Sendable, Equatable {
             card: ThemeBorder(color: "#000000", width: 1, opacity: 0.12)
         ),
         effects: Effects(
-            selectedRowGlow: ThemeGlow(color: "#FF6A00", radius: 6, opacity: 0.3),
-            hoveredRowGlow: ThemeGlow(color: "#FF6A00", radius: 3, opacity: 0.1),
+            selectedRowGlow: ThemeGlow(color: "#FF6A00", radius: 10, opacity: 0.25, innerRadius: 3, innerOpacity: 0.75),
+            hoveredRowGlow: ThemeGlow(color: "#FF6A00", radius: 5, opacity: 0.12, innerRadius: 2, innerOpacity: 0.4),
             panelGlow: ThemeGlow(color: "#FF6A00", radius: 10, opacity: 0.08)
         ),
         cornerRadii: CornerRadii(
@@ -949,13 +952,21 @@ extension Theme {
     struct ResolvedGlow {
         let color: Color
         let radius: CGFloat
+        /// Non-nil when a double-glow inner layer is configured.
+        let innerColor: Color?
+        let innerRadius: CGFloat?
     }
 
     func resolvedGlow(_ glow: ThemeGlow?) -> ResolvedGlow? {
         guard let glow, let color = Color(hex: glow.color) else { return nil }
+        let innerColor: Color? = glow.innerRadius != nil
+            ? color.opacity(glow.innerOpacity ?? 0.8)
+            : nil
         return ResolvedGlow(
             color: color.opacity(glow.opacity ?? 0.5),
-            radius: glow.radius ?? 8
+            radius: glow.radius ?? 8,
+            innerColor: innerColor,
+            innerRadius: glow.innerRadius
         )
     }
 
