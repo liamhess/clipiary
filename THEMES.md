@@ -148,8 +148,30 @@ Glow effects rendered as colored shadows. Each is an object or `null` (no effect
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `color` | string | none | Hex color for the glow. |
-| `radius` | number | `8` | Blur radius of the shadow. |
-| `opacity` | number | `0.5` | Opacity of the glow color. |
+| `radius` | number | `8` | Blur radius of the outer (wide, dim) shadow. |
+| `opacity` | number | `0.5` | Opacity of the outer glow color. |
+| `innerRadius` | number | none | Blur radius of the inner (tight, bright) shadow. When set, enables the double-glow neon effect. |
+| `innerOpacity` | number | `0.8` | Opacity of the inner glow color. |
+
+Setting `innerRadius` activates two additional layers on top of the outer shadow:
+- A second tight `.shadow()` at `innerRadius` — produces the bright edge-lit look.
+- A `.blendMode(.screen)` fill overlay — additively brightens the core, giving the characteristic neon "hot tube" appearance on dark backgrounds.
+
+**Single-layer glow** (subtle ambient):
+```json
+"selectedRowGlow": { "color": "#FF2D6F", "radius": 8, "opacity": 0.4 }
+```
+
+**Double-layer neon glow**:
+```json
+"selectedRowGlow": {
+  "color": "#FF2D6F",
+  "radius": 14,
+  "opacity": 0.3,
+  "innerRadius": 3,
+  "innerOpacity": 0.85
+}
+```
 
 ### Effect slots
 

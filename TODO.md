@@ -11,10 +11,6 @@
 - `.colorMultiply(_:)` — tint all pixels by a color; useful for overlay effects
 - `.hue(rotation:)` — shift hues by degrees; could power dynamic/animated themes
 
-### Blending & compositing
-- `.blendMode(_:)` — screen, overlay, softLight, hardLight, multiply, difference, etc.; stacking a colored layer with `.blendMode(.screen)` over a dark background produces neon effects
-- Multi-layer `.shadow()` — multiple stacked shadow calls at different radii simulate a neon double-glow (inner bright tight, outer wide dim)
-
 ### Blur
 - `.blur(radius:)` — gaussian blur; could blur the overlay backdrop behind the favorites picker instead of just darkening it; frosted-glass panel option
 

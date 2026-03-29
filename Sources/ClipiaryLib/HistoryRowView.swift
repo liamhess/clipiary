@@ -204,10 +204,17 @@ struct HistoryRowView: View {
                     .stroke(border.color, style: border.strokeStyle)
             }
         }
-        .shadow(
-            color: rowGlowColor,
-            radius: rowGlowRadius
-        )
+        .overlay {
+            if let glow = activeGlow, let innerColor = glow.innerColor, let innerRadius = glow.innerRadius {
+                RoundedRectangle(cornerRadius: theme.cornerRadii.row, style: .continuous)
+                    .fill(innerColor.opacity(0.25))
+                    .blur(radius: innerRadius * 0.8)
+                    .blendMode(.screen)
+                    .allowsHitTesting(false)
+            }
+        }
+        .shadow(color: rowGlowColor, radius: rowGlowRadius)
+        .shadow(color: rowInnerGlowColor, radius: rowInnerGlowRadius)
         .contentShape(Rectangle())
         .onTapGesture {
             appState.selectedHistoryItemID = item.id
@@ -227,16 +234,26 @@ struct HistoryRowView: View {
         return AnyShapeStyle(Color.clear)
     }
 
+    private var activeGlow: Theme.ResolvedGlow? {
+        if isSelected { return theme.resolvedSelectedRowGlow }
+        if isHovered { return theme.resolvedHoveredRowGlow }
+        return nil
+    }
+
     private var rowGlowColor: Color {
-        if isSelected, let glow = theme.resolvedSelectedRowGlow { return glow.color }
-        if isHovered, let glow = theme.resolvedHoveredRowGlow { return glow.color }
-        return .clear
+        activeGlow?.color ?? .clear
     }
 
     private var rowGlowRadius: CGFloat {
-        if isSelected, let glow = theme.resolvedSelectedRowGlow { return glow.radius }
-        if isHovered, let glow = theme.resolvedHoveredRowGlow { return glow.radius }
-        return 0
+        activeGlow?.radius ?? 0
+    }
+
+    private var rowInnerGlowColor: Color {
+        activeGlow?.innerColor ?? .clear
+    }
+
+    private var rowInnerGlowRadius: CGFloat {
+        activeGlow?.innerRadius ?? 0
     }
 
     private var pasteFrequencyGauge: some View {
