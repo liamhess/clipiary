@@ -170,6 +170,8 @@ struct HistoryRowView: View {
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .shadow(color: !searchTerms.isEmpty ? (theme.resolvedSearchHighlightTextGlow?.color ?? .clear) : .clear,
+                            radius: !searchTerms.isEmpty ? (theme.resolvedSearchHighlightTextGlow?.radius ?? 0) : 0)
                     .padding(.leading, 22)
             }
 
