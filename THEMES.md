@@ -183,6 +183,9 @@ Setting `innerRadius` activates two additional layers on top of the outer shadow
 | `selectedRowGlow` | Shadow around the selected row. |
 | `hoveredRowGlow` | Shadow around a hovered row. |
 | `panelGlow` | Outer shadow around the entire panel. |
+| `selectedRowTextGlow` | Glow applied to the text of the selected row. |
+| `hoveredRowTextGlow` | Glow applied to the text of a hovered row. |
+| `searchHighlightTextGlow` | Glow applied to the main text when search highlights are active. |
 
 ## `cornerRadii`
 

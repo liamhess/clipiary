@@ -109,6 +109,10 @@ struct HistoryRowView: View {
                                 .foregroundStyle(.primary)
                                 .lineLimit(itemLineLimit)
                                 .multilineTextAlignment(.leading)
+                                .shadow(color: activeTextGlow?.color ?? .clear, radius: activeTextGlow?.radius ?? 0)
+                                .shadow(color: activeTextGlow?.innerColor ?? .clear, radius: activeTextGlow?.innerRadius ?? 0)
+                                .shadow(color: !searchTerms.isEmpty ? (theme.resolvedSearchHighlightTextGlow?.color ?? .clear) : .clear,
+                                        radius: !searchTerms.isEmpty ? (theme.resolvedSearchHighlightTextGlow?.radius ?? 0) : 0)
                         }
                     }
                 }
@@ -271,6 +275,12 @@ struct HistoryRowView: View {
     private var activeGlow: Theme.ResolvedGlow? {
         if isSelected { return theme.resolvedSelectedRowGlow }
         if isHovered { return theme.resolvedHoveredRowGlow }
+        return nil
+    }
+
+    private var activeTextGlow: Theme.ResolvedGlow? {
+        if isSelected { return theme.resolvedSelectedRowTextGlow }
+        if isHovered { return theme.resolvedHoveredRowTextGlow }
         return nil
     }
 

@@ -342,13 +342,19 @@ struct Theme: Codable, Sendable, Equatable {
         var selectedRowGlow: ThemeGlow?
         var hoveredRowGlow: ThemeGlow?
         var panelGlow: ThemeGlow?
+        var selectedRowTextGlow: ThemeGlow?
+        var hoveredRowTextGlow: ThemeGlow?
+        var searchHighlightTextGlow: ThemeGlow?
 
         static let `default` = Effects()
 
-        init(selectedRowGlow: ThemeGlow? = nil, hoveredRowGlow: ThemeGlow? = nil, panelGlow: ThemeGlow? = nil) {
+        init(selectedRowGlow: ThemeGlow? = nil, hoveredRowGlow: ThemeGlow? = nil, panelGlow: ThemeGlow? = nil, selectedRowTextGlow: ThemeGlow? = nil, hoveredRowTextGlow: ThemeGlow? = nil, searchHighlightTextGlow: ThemeGlow? = nil) {
             self.selectedRowGlow = selectedRowGlow
             self.hoveredRowGlow = hoveredRowGlow
             self.panelGlow = panelGlow
+            self.selectedRowTextGlow = selectedRowTextGlow
+            self.hoveredRowTextGlow = hoveredRowTextGlow
+            self.searchHighlightTextGlow = searchHighlightTextGlow
         }
 
         init(from decoder: Decoder) throws {
@@ -356,6 +362,9 @@ struct Theme: Codable, Sendable, Equatable {
             selectedRowGlow = try container.decodeIfPresent(ThemeGlow.self, forKey: .selectedRowGlow)
             hoveredRowGlow = try container.decodeIfPresent(ThemeGlow.self, forKey: .hoveredRowGlow)
             panelGlow = try container.decodeIfPresent(ThemeGlow.self, forKey: .panelGlow)
+            selectedRowTextGlow = try container.decodeIfPresent(ThemeGlow.self, forKey: .selectedRowTextGlow)
+            hoveredRowTextGlow = try container.decodeIfPresent(ThemeGlow.self, forKey: .hoveredRowTextGlow)
+            searchHighlightTextGlow = try container.decodeIfPresent(ThemeGlow.self, forKey: .searchHighlightTextGlow)
         }
     }
 
@@ -991,4 +1000,7 @@ extension Theme {
     var resolvedSelectedRowGlow: ResolvedGlow? { resolvedGlow(effects.selectedRowGlow) }
     var resolvedHoveredRowGlow: ResolvedGlow? { resolvedGlow(effects.hoveredRowGlow) }
     var resolvedPanelGlow: ResolvedGlow? { resolvedGlow(effects.panelGlow) }
+    var resolvedSelectedRowTextGlow: ResolvedGlow? { resolvedGlow(effects.selectedRowTextGlow) }
+    var resolvedHoveredRowTextGlow: ResolvedGlow? { resolvedGlow(effects.hoveredRowTextGlow) }
+    var resolvedSearchHighlightTextGlow: ResolvedGlow? { resolvedGlow(effects.searchHighlightTextGlow) }
 }
