@@ -11,6 +11,7 @@
   - animation support in theme fills (looping)
   - animation support for selectedRow border (one-shoot, upon selection change)
   - blendMode + multi-layered shadows for glow/neon like effects in themes (e.g. in the Sci-Fi theme)
+  - new App icon
 
 ## [0.9.0] - 2026-03-28
 ### Added
