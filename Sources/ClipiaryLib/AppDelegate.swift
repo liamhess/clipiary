@@ -19,7 +19,8 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         item.button?.image = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: "Clipiary")
         item.button?.imagePosition = .imageLeft
         item.button?.target = self
-        item.button?.action = #selector(togglePopover)
+        item.button?.action = #selector(statusItemClicked)
+        item.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
         return item
     }()
 
@@ -359,6 +360,47 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         panel?.close()
+    }
+
+    @objc
+    private func statusItemClicked() {
+        guard let event = NSApp.currentEvent else {
+            togglePopover()
+            return
+        }
+        if event.type == .rightMouseUp {
+            showStatusItemMenu()
+        } else {
+            togglePopover()
+        }
+    }
+
+    private func showStatusItemMenu() {
+        let menu = NSMenu()
+
+        let showItem = NSMenuItem(title: "Show Clipiary", action: #selector(togglePopover), keyEquivalent: "")
+        showItem.target = self
+        menu.addItem(showItem)
+
+        if updaterManager.isConfigured {
+            let updateItem = NSMenuItem(title: "Check for Updates…", action: #selector(checkForUpdates), keyEquivalent: "")
+            updateItem.target = self
+            menu.addItem(updateItem)
+        }
+
+        menu.addItem(.separator())
+
+        let quitItem = NSMenuItem(title: "Quit Clipiary", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "")
+        menu.addItem(quitItem)
+
+        statusItem.menu = menu
+        statusItem.button?.performClick(nil)
+        statusItem.menu = nil
+    }
+
+    @objc
+    private func checkForUpdates() {
+        updaterManager.checkForUpdates()
     }
 
     @objc
