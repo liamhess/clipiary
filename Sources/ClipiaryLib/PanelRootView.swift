@@ -279,10 +279,13 @@ struct PanelRootView: View {
         let selectedID = appState.selectedHistoryItemID
         let showingPicker = appState.showingFavoriteTabPicker
         let showFavoriteTabBadges = appState.settings.showFavoriteTabBadges && appState.selectedTab.kind == .history
-        let indexedItems = items.enumerated().map { ($0.offset, $0.element) }
+        let searchTerms = appState.searchQuery
+            .split(separator: " ", omittingEmptySubsequences: true)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
 
         return LazyVStack(spacing: theme.spacing.rowSpacing) {
-            ForEach(indexedItems, id: \.1.id) { index, item in
+            ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
                 VStack(spacing: 0) {
                     if dropTargetIndex == index, draggingItemID != item.id {
                         dropIndicator
@@ -303,8 +306,10 @@ struct PanelRootView: View {
                                 showingFavoriteTabPicker: showingPicker && selectedID == item.id,
                                 favoriteTabNames: showFavoriteTabBadges ? item.favoriteTabs.sorted() : [],
                                 itemLineLimit: itemLineLimit,
+                                searchTerms: searchTerms,
                                 appState: appState
                             )
+                            .equatable()
                         }
                     }
                     .contextMenu {

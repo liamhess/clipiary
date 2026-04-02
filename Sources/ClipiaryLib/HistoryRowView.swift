@@ -34,7 +34,7 @@ struct SelectedRowRectKey: PreferenceKey {
     }
 }
 
-struct HistoryRowView: View {
+struct HistoryRowView: View, Equatable {
     let item: HistoryItem
     let maxPasteCount: Int
     let isSelected: Bool
@@ -46,19 +46,28 @@ struct HistoryRowView: View {
     let showingFavoriteTabPicker: Bool
     let favoriteTabNames: [String]
     let itemLineLimit: Int
+    let searchTerms: [String]
     let appState: AppState
+
+    nonisolated static func == (lhs: HistoryRowView, rhs: HistoryRowView) -> Bool {
+        lhs.item == rhs.item &&
+        lhs.maxPasteCount == rhs.maxPasteCount &&
+        lhs.isSelected == rhs.isSelected &&
+        lhs.showAppIcons == rhs.showAppIcons &&
+        lhs.showItemDetails == rhs.showItemDetails &&
+        lhs.pasteCountBarScheme == rhs.pasteCountBarScheme &&
+        lhs.singleFavoriteTab == rhs.singleFavoriteTab &&
+        lhs.singleFavoriteTabName == rhs.singleFavoriteTabName &&
+        lhs.showingFavoriteTabPicker == rhs.showingFavoriteTabPicker &&
+        lhs.favoriteTabNames == rhs.favoriteTabNames &&
+        lhs.itemLineLimit == rhs.itemLineLimit &&
+        lhs.searchTerms == rhs.searchTerms
+    }
 
     @Environment(\.theme) private var theme
     @State private var isHovered = false
     @State private var borderFlash: Double = 0
     @State private var sweepStartDate: Date? = nil
-
-    private var searchTerms: [String] {
-        appState.searchQuery
-            .split(separator: " ", omittingEmptySubsequences: true)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {

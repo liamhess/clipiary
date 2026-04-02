@@ -26,6 +26,7 @@ import Testing
             showingFavoriteTabPicker: false,
             favoriteTabNames: [],
             itemLineLimit: 2,
+            searchTerms: [],
             appState: appState
         )
         .environment(appState)
@@ -54,6 +55,7 @@ import Testing
             showingFavoriteTabPicker: false,
             favoriteTabNames: [],
             itemLineLimit: 2,
+            searchTerms: [],
             appState: appState
         )
         .environment(appState)
@@ -83,6 +85,7 @@ import Testing
             showingFavoriteTabPicker: false,
             favoriteTabNames: ["Favorites"],
             itemLineLimit: 2,
+            searchTerms: [],
             appState: appState
         )
         .environment(appState)
@@ -112,6 +115,7 @@ import Testing
             showingFavoriteTabPicker: false,
             favoriteTabNames: [],
             itemLineLimit: 2,
+            searchTerms: [],
             appState: appState
         )
         .environment(appState)
@@ -140,6 +144,7 @@ import Testing
             showingFavoriteTabPicker: false,
             favoriteTabNames: [],
             itemLineLimit: 2,
+            searchTerms: [],
             appState: appState
         )
         .environment(appState)
@@ -169,6 +174,7 @@ import Testing
             showingFavoriteTabPicker: false,
             favoriteTabNames: [],
             itemLineLimit: 2,
+            searchTerms: [],
             appState: appState
         )
         .environment(appState)
@@ -198,6 +204,7 @@ import Testing
             showingFavoriteTabPicker: false,
             favoriteTabNames: ["Favorites", "Snippets"],
             itemLineLimit: 2,
+            searchTerms: [],
             appState: appState
         )
         .environment(appState)
@@ -229,6 +236,7 @@ import Testing
             showingFavoriteTabPicker: false,
             favoriteTabNames: [],
             itemLineLimit: 2,
+            searchTerms: ["hello"],
             appState: appState
         )
         .environment(appState)

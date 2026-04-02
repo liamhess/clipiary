@@ -25,6 +25,7 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     var sortIndex: Double?
     var snippetDescription: String?
     var isSeparator: Bool
+    let displayText: String
 
     init(
         id: UUID = UUID(),
@@ -62,6 +63,9 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         self.sortIndex = sortIndex
         self.snippetDescription = snippetDescription
         self.isSeparator = isSeparator
+        self.displayText = text
+            .replacingOccurrences(of: "\n", with: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     var isImage: Bool {
@@ -77,11 +81,6 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         return GlobalShortcut(keyCode: UInt32(keyCode), modifiers: NSEvent.ModifierFlags(rawValue: UInt(modifiers)))
     }
 
-    var displayText: String {
-        text
-            .replacingOccurrences(of: "\n", with: " ")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-    }
 }
 
 extension HistoryItem: Codable {
@@ -125,6 +124,9 @@ extension HistoryItem: Codable {
         } else {
             favoriteTabs = []
         }
+        displayText = text
+            .replacingOccurrences(of: "\n", with: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
     }
 
     func encode(to encoder: Encoder) throws {
