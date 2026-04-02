@@ -56,6 +56,17 @@ struct SettingsView: View {
                 )
             )
 
+            settingsToggleRow(
+                title: "Not for favorites",
+                help: "Favorites are not moved to the top when pasted.",
+                isOn: Binding(
+                    get: { appState.settings.moveToTopSkipFavorites },
+                    set: { appState.settings.moveToTopSkipFavorites = $0 }
+                )
+            )
+            .padding(.leading, 16)
+            .disabled(!appState.settings.moveToTopOnPaste)
+
             settingMetric(title: "History limit") {
                 optionPicker(
                     selection: Binding(
@@ -546,10 +557,10 @@ final class SettingsWindowController {
             .environment(AppState.shared)
 
         let hostingView = NSHostingView(rootView: settingsView)
-        hostingView.frame = NSRect(x: 0, y: 0, width: 540, height: 580)
+        hostingView.frame = NSRect(x: 0, y: 0, width: 540, height: 610)
 
         let window = SettingsPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 540, height: 580),
+            contentRect: NSRect(x: 0, y: 0, width: 540, height: 610),
             styleMask: [.titled, .closable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false

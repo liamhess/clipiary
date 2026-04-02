@@ -299,7 +299,7 @@ final class AppState {
         }
         history.markAsPasted(item)
         restore(item)
-        if settings.moveToTopOnPaste {
+        if settings.moveToTopOnPaste && !(settings.moveToTopSkipFavorites && item.isFavorite) {
             history.moveToTop(item)
         }
     }
@@ -397,7 +397,7 @@ final class AppState {
         guard let item = history.items.first(where: { $0.id == itemID }) else { return }
         history.markAsPasted(item)
         restore(item)
-        if settings.moveToTopOnPaste {
+        if settings.moveToTopOnPaste && !(settings.moveToTopSkipFavorites && item.isFavorite) {
             history.moveToTop(item)
         }
         quickPasteRequestID &+= 1
@@ -498,7 +498,7 @@ final class AppState {
         let item = history.items[1]
         history.markAsPasted(item)
         restore(item)
-        if settings.moveToTopOnPaste {
+        if settings.moveToTopOnPaste && !(settings.moveToTopSkipFavorites && item.isFavorite) {
             history.moveToTop(item)
         }
         quickPasteRequestID &+= 1

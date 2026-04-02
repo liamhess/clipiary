@@ -19,6 +19,7 @@ final class AppSettings {
         static let panelWidth = "panelWidth"
         static let panelHeight = "panelHeight"
         static let moveToTopOnPaste = "moveToTopOnPaste"
+        static let moveToTopSkipFavorites = "moveToTopSkipFavorites"
         static let showItemDetails = "showItemDetails"
         static let alwaysShowSearch = "alwaysShowSearch"
         static let copyOnSelectBufferLimit = "copyOnSelectBufferLimit"
@@ -87,6 +88,10 @@ final class AppSettings {
         didSet { defaults.set(moveToTopOnPaste, forKey: Keys.moveToTopOnPaste) }
     }
 
+    var moveToTopSkipFavorites: Bool {
+        didSet { defaults.set(moveToTopSkipFavorites, forKey: Keys.moveToTopSkipFavorites) }
+    }
+
     var showItemDetails: Bool {
         didSet { defaults.set(showItemDetails, forKey: Keys.showItemDetails) }
     }
@@ -143,6 +148,7 @@ final class AppSettings {
             Keys.panelWidth: 376.0,
             Keys.panelHeight: 600.0,
             Keys.moveToTopOnPaste: true,
+            Keys.moveToTopSkipFavorites: false,
             Keys.showItemDetails: true,
             Keys.alwaysShowSearch: true,
             Keys.copyOnSelectBufferLimit: 3,
@@ -168,6 +174,7 @@ final class AppSettings {
         panelWidth = defaults.double(forKey: Keys.panelWidth)
         panelHeight = defaults.double(forKey: Keys.panelHeight)
         moveToTopOnPaste = defaults.bool(forKey: Keys.moveToTopOnPaste)
+        moveToTopSkipFavorites = defaults.bool(forKey: Keys.moveToTopSkipFavorites)
         showItemDetails = defaults.bool(forKey: Keys.showItemDetails)
         alwaysShowSearch = defaults.bool(forKey: Keys.alwaysShowSearch)
         copyOnSelectBufferLimit = defaults.integer(forKey: Keys.copyOnSelectBufferLimit)

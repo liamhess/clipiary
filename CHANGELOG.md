@@ -2,8 +2,9 @@
 
 ## [Unreleased]
 ### Added
-- favorites dialog text fields (text, description) now support usual copy/select actions (Cmd+V/A/X/C/Z/Y)
+- Allow to exempt favorites from "Move to top on paste"
 - Preview popup now shows the items's description (if set)
+- Favorites dialog text fields (text, description) now support usual copy/select actions (Cmd+V/A/X/C/Z/Y)
 
 ## [1.0.1] - 2026-04-02
 ### Fixed
