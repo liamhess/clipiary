@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.0.1] - 2026-04-02
 - fix global shortcuts recording
 
 ## [1.0.0] - 2026-04-02
