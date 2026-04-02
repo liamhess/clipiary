@@ -530,7 +530,7 @@ private struct ThemedSettingsView: View {
 final class SettingsWindowController {
     static let shared = SettingsWindowController()
 
-    private var window: NSWindow?
+    private(set) var window: NSWindow?
 
     var isVisible: Bool {
         window?.isVisible ?? false

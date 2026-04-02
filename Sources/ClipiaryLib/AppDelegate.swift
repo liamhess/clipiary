@@ -205,7 +205,8 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func handleMonitoredEvent(_ event: NSEvent) -> NSEvent? {
-        guard event.window == panel else {
+        let isSettingsWindow = SettingsWindowController.shared.isVisible && event.window == SettingsWindowController.shared.window
+        guard event.window == panel || isSettingsWindow else {
             return event
         }
 
@@ -215,6 +216,12 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
 
         guard event.type == .keyDown else {
             return event
+        }
+
+        // When recording shortcuts from the settings window, only handle recording events
+        if isSettingsWindow {
+            let anyRecording = appState.isRecordingShortcut || appState.isRecordingQuickPasteShortcut
+            guard anyRecording else { return event }
         }
 
         return handleKeyDownEvent(event)
