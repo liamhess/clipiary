@@ -197,7 +197,7 @@ final class AppState {
         let baseItems = filteredItems()
         switch tab.kind {
         case .history:
-            return baseItems.sorted { $0.createdAt > $1.createdAt }
+            return baseItems.filter { !$0.isSeparator }.sorted { $0.createdAt > $1.createdAt }
         case .favorites(let tabName):
             return history.customOrderedItems(baseItems.filter { $0.favoriteTabs.contains(tabName) })
         }
@@ -258,7 +258,17 @@ final class AppState {
         }
 
         let nextIndex = min(max(currentIndex + direction, 0), items.count - 1)
-        selectedHistoryItemID = items[nextIndex].id
+        // Skip over separators
+        var resolved = nextIndex
+        let step = direction > 0 ? 1 : -1
+        while resolved > 0 && resolved < items.count - 1 && items[resolved].isSeparator {
+            resolved += step
+        }
+        // If we ended up on a separator at the boundary, keep the original position
+        if items[resolved].isSeparator {
+            resolved = currentIndex
+        }
+        selectedHistoryItemID = items[resolved].id
     }
 
     func moveSelectionByPage(direction: Int) {
@@ -290,11 +300,11 @@ final class AppState {
             return
         }
 
-        selectedHistoryItemID = items.first?.id
+        selectedHistoryItemID = items.first(where: { !$0.isSeparator })?.id
     }
 
     func restoreSelectedItem() {
-        guard let item = selectedItem else {
+        guard let item = selectedItem, !item.isSeparator else {
             return
         }
         history.markAsPasted(item)
@@ -349,6 +359,23 @@ final class AppState {
         history.toggleFavoriteTab(item, tabName: tabName)
     }
 
+    func insertSeparator(after item: HistoryItem, inTab tabName: String) {
+        let sep = HistoryItem(
+            text: "",
+            source: .restored,
+            appName: "",
+            bundleID: nil,
+            favoriteTabs: [tabName],
+            isSeparator: true
+        )
+        history.insertSeparator(sep, after: item, inTab: tabName)
+    }
+
+    func removeSeparator(_ item: HistoryItem) {
+        guard item.isSeparator else { return }
+        history.delete(item)
+    }
+
     func togglePickerMonospace() {
         guard let item = selectedItem else { return }
         history.toggleMonospace(item)
@@ -394,7 +421,7 @@ final class AppState {
     }
 
     func requestItemPaste(itemID: UUID) {
-        guard let item = history.items.first(where: { $0.id == itemID }) else { return }
+        guard let item = history.items.first(where: { $0.id == itemID }), !item.isSeparator else { return }
         history.markAsPasted(item)
         restore(item)
         if settings.moveToTopOnPaste && !(settings.moveToTopSkipFavorites && item.isFavorite) {

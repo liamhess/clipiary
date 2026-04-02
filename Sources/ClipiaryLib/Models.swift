@@ -24,6 +24,7 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     var shortcutModifiers: Int?
     var sortIndex: Double?
     var snippetDescription: String?
+    var isSeparator: Bool
 
     init(
         id: UUID = UUID(),
@@ -41,7 +42,8 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         shortcutKeyCode: Int? = nil,
         shortcutModifiers: Int? = nil,
         sortIndex: Double? = nil,
-        snippetDescription: String? = nil
+        snippetDescription: String? = nil,
+        isSeparator: Bool = false
     ) {
         self.id = id
         self.text = text
@@ -59,6 +61,7 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         self.shortcutModifiers = shortcutModifiers
         self.sortIndex = sortIndex
         self.snippetDescription = snippetDescription
+        self.isSeparator = isSeparator
     }
 
     var isImage: Bool {
@@ -93,6 +96,7 @@ extension HistoryItem: Codable {
         case shortcutKeyCode, shortcutModifiers
         case sortIndex
         case snippetDescription
+        case isSeparator
     }
 
     init(from decoder: Decoder) throws {
@@ -112,6 +116,7 @@ extension HistoryItem: Codable {
         shortcutModifiers = try container.decodeIfPresent(Int.self, forKey: .shortcutModifiers)
         sortIndex = try container.decodeIfPresent(Double.self, forKey: .sortIndex)
         snippetDescription = try container.decodeIfPresent(String.self, forKey: .snippetDescription)
+        isSeparator = (try? container.decode(Bool.self, forKey: .isSeparator)) ?? false
 
         if let tabs = try? container.decode(Set<String>.self, forKey: .favoriteTabs) {
             favoriteTabs = tabs
@@ -140,6 +145,7 @@ extension HistoryItem: Codable {
         try container.encodeIfPresent(shortcutModifiers, forKey: .shortcutModifiers)
         try container.encodeIfPresent(sortIndex, forKey: .sortIndex)
         try container.encodeIfPresent(snippetDescription, forKey: .snippetDescription)
+        try container.encode(isSeparator, forKey: .isSeparator)
     }
 }
 

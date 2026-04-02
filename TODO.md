@@ -1,8 +1,6 @@
 ## Top/Soon
-
 - think about rich-text handling (currently only plain text and images are supported, no rich text)
 - right-click menubar icon for settings/quit/updates
-- manual separator in favorites lists?
 
 ## Theme Ideas
 ### One time animation of item selection border

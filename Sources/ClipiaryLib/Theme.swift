@@ -228,6 +228,8 @@ struct Theme: Codable, Sendable, Equatable {
         var searchHighlight: String?
         var searchHighlightBackground: String?
         var searchHighlightBackgroundOpacity: Double?
+        var separator: String?
+        var separatorOpacity: Double?
 
         static let `default` = Colors(
             accent: "#007AFF",
@@ -247,7 +249,9 @@ struct Theme: Codable, Sendable, Equatable {
             gaugeUnfilledOpacity: 0.15,
             searchHighlight: nil,
             searchHighlightBackground: nil,
-            searchHighlightBackgroundOpacity: 0.15
+            searchHighlightBackgroundOpacity: 0.15,
+            separator: nil,
+            separatorOpacity: nil
         )
 
         init(
@@ -258,7 +262,8 @@ struct Theme: Codable, Sendable, Equatable {
             textPrimary: String? = nil, textSecondary: String? = nil, textTertiary: String? = nil,
             imageIndicator: String? = nil, statusReady: String? = nil, statusWarning: String? = nil,
             gaugeUnfilled: String? = nil, gaugeUnfilledOpacity: Double? = nil,
-            searchHighlight: String? = nil, searchHighlightBackground: String? = nil, searchHighlightBackgroundOpacity: Double? = nil
+            searchHighlight: String? = nil, searchHighlightBackground: String? = nil, searchHighlightBackgroundOpacity: Double? = nil,
+            separator: String? = nil, separatorOpacity: Double? = nil
         ) {
             self.accent = accent
             self.pillBackground = pillBackground
@@ -278,6 +283,8 @@ struct Theme: Codable, Sendable, Equatable {
             self.searchHighlight = searchHighlight
             self.searchHighlightBackground = searchHighlightBackground
             self.searchHighlightBackgroundOpacity = searchHighlightBackgroundOpacity
+            self.separator = separator
+            self.separatorOpacity = separatorOpacity
         }
 
         init(from decoder: Decoder) throws {
@@ -301,6 +308,8 @@ struct Theme: Codable, Sendable, Equatable {
             searchHighlight = try container.decodeIfPresent(String.self, forKey: .searchHighlight) ?? d.searchHighlight
             searchHighlightBackground = try container.decodeIfPresent(String.self, forKey: .searchHighlightBackground) ?? d.searchHighlightBackground
             searchHighlightBackgroundOpacity = try container.decodeIfPresent(Double.self, forKey: .searchHighlightBackgroundOpacity) ?? d.searchHighlightBackgroundOpacity
+            separator = try container.decodeIfPresent(String.self, forKey: .separator)
+            separatorOpacity = try container.decodeIfPresent(Double.self, forKey: .separatorOpacity)
         }
     }
 
@@ -345,16 +354,18 @@ struct Theme: Codable, Sendable, Equatable {
         var selectedRowTextGlow: ThemeGlow?
         var hoveredRowTextGlow: ThemeGlow?
         var searchHighlightTextGlow: ThemeGlow?
+        var separatorGlow: ThemeGlow?
 
         static let `default` = Effects()
 
-        init(selectedRowGlow: ThemeGlow? = nil, hoveredRowGlow: ThemeGlow? = nil, panelGlow: ThemeGlow? = nil, selectedRowTextGlow: ThemeGlow? = nil, hoveredRowTextGlow: ThemeGlow? = nil, searchHighlightTextGlow: ThemeGlow? = nil) {
+        init(selectedRowGlow: ThemeGlow? = nil, hoveredRowGlow: ThemeGlow? = nil, panelGlow: ThemeGlow? = nil, selectedRowTextGlow: ThemeGlow? = nil, hoveredRowTextGlow: ThemeGlow? = nil, searchHighlightTextGlow: ThemeGlow? = nil, separatorGlow: ThemeGlow? = nil) {
             self.selectedRowGlow = selectedRowGlow
             self.hoveredRowGlow = hoveredRowGlow
             self.panelGlow = panelGlow
             self.selectedRowTextGlow = selectedRowTextGlow
             self.hoveredRowTextGlow = hoveredRowTextGlow
             self.searchHighlightTextGlow = searchHighlightTextGlow
+            self.separatorGlow = separatorGlow
         }
 
         init(from decoder: Decoder) throws {
@@ -365,6 +376,7 @@ struct Theme: Codable, Sendable, Equatable {
             selectedRowTextGlow = try container.decodeIfPresent(ThemeGlow.self, forKey: .selectedRowTextGlow)
             hoveredRowTextGlow = try container.decodeIfPresent(ThemeGlow.self, forKey: .hoveredRowTextGlow)
             searchHighlightTextGlow = try container.decodeIfPresent(ThemeGlow.self, forKey: .searchHighlightTextGlow)
+            separatorGlow = try container.decodeIfPresent(ThemeGlow.self, forKey: .separatorGlow)
         }
     }
 
@@ -426,11 +438,13 @@ struct Theme: Codable, Sendable, Equatable {
         var rowVerticalPadding: CGFloat
         var contentAreaPadding: CGFloat
         var rowSpacing: CGFloat
+        var separatorThickness: CGFloat
 
         static let `default` = Spacing(
             panelPadding: 12, sectionSpacing: 12,
             rowHorizontalPadding: 8, rowVerticalPadding: 8,
-            contentAreaPadding: 10, rowSpacing: 2
+            contentAreaPadding: 10, rowSpacing: 2,
+            separatorThickness: 3
         )
 
         init(
@@ -439,11 +453,13 @@ struct Theme: Codable, Sendable, Equatable {
             rowHorizontalPadding: CGFloat = Self.default.rowHorizontalPadding,
             rowVerticalPadding: CGFloat = Self.default.rowVerticalPadding,
             contentAreaPadding: CGFloat = Self.default.contentAreaPadding,
-            rowSpacing: CGFloat = Self.default.rowSpacing
+            rowSpacing: CGFloat = Self.default.rowSpacing,
+            separatorThickness: CGFloat = Self.default.separatorThickness
         ) {
             self.panelPadding = panelPadding; self.sectionSpacing = sectionSpacing
             self.rowHorizontalPadding = rowHorizontalPadding; self.rowVerticalPadding = rowVerticalPadding
             self.contentAreaPadding = contentAreaPadding; self.rowSpacing = rowSpacing
+            self.separatorThickness = separatorThickness
         }
 
         init(from decoder: Decoder) throws {
@@ -455,6 +471,7 @@ struct Theme: Codable, Sendable, Equatable {
             rowVerticalPadding = try container.decodeIfPresent(CGFloat.self, forKey: .rowVerticalPadding) ?? d.rowVerticalPadding
             contentAreaPadding = try container.decodeIfPresent(CGFloat.self, forKey: .contentAreaPadding) ?? d.contentAreaPadding
             rowSpacing = try container.decodeIfPresent(CGFloat.self, forKey: .rowSpacing) ?? d.rowSpacing
+            separatorThickness = try container.decodeIfPresent(CGFloat.self, forKey: .separatorThickness) ?? d.separatorThickness
         }
     }
 
@@ -918,6 +935,15 @@ extension Theme {
         guard let hex = colors.searchHighlightBackground, Color(hex: hex) != nil else { return nil }
         return Color(hex: hex)!.opacity(colors.searchHighlightBackgroundOpacity ?? 0.15)
     }
+
+    var resolvedSeparator: Color {
+        let base = Color(hex: colors.separator) ?? resolvedCardStroke
+        return base.opacity(colors.separatorOpacity ?? 0.35)
+    }
+
+    var resolvedSeparatorThickness: CGFloat {
+        spacing.separatorThickness
+    }
 }
 
 // MARK: - Resolved Border Accessors
@@ -978,4 +1004,5 @@ extension Theme {
     var resolvedSelectedRowTextGlow: ResolvedGlow? { resolvedGlow(effects.selectedRowTextGlow) }
     var resolvedHoveredRowTextGlow: ResolvedGlow? { resolvedGlow(effects.hoveredRowTextGlow) }
     var resolvedSearchHighlightTextGlow: ResolvedGlow? { resolvedGlow(effects.searchHighlightTextGlow) }
+    var resolvedSeparatorGlow: ResolvedGlow? { resolvedGlow(effects.separatorGlow) }
 }

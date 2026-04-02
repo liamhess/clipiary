@@ -115,6 +115,8 @@ Flat hex colors (`#RRGGBB` or `#RRGGBBAA`) for small UI elements and foreground 
 | `searchHighlight` | accent | Text color of matched search substrings. `null` = uses the resolved accent color. |
 | `searchHighlightBackground` | none | Background color of matched search substrings. `null` = no background. |
 | `searchHighlightBackgroundOpacity` | `0.15` | Opacity for search highlight backgrounds. |
+| `separator` | card stroke | Color of horizontal separators in favorites tabs. `null` = uses the resolved card stroke color. |
+| `separatorOpacity` | `0.35` | Opacity for separator lines. |
 
 ## `borders`
 
@@ -156,9 +158,10 @@ Glow effects rendered as colored shadows. Each is an object or `null` (no effect
 | `innerRadius` | number | none | Blur radius of the inner (tight, bright) shadow. When set, enables the double-glow neon effect. |
 | `innerOpacity` | number | `0.8` | Opacity of the inner glow color. |
 
-Setting `innerRadius` activates two additional layers on top of the outer shadow:
-- A second tight `.shadow()` at `innerRadius` — produces the bright edge-lit look.
-- A `.blendMode(.screen)` fill overlay — additively brightens the core, giving the characteristic neon "hot tube" appearance on dark backgrounds.
+Setting `innerRadius` activates a tighter, brighter glow layer on top of the outer one, producing the characteristic neon "hot tube" look on dark backgrounds. How the inner layer is rendered depends on the element:
+
+- **Rows** (`selectedRowGlow`, `hoveredRowGlow`): uses a `.shadow()` + `.blendMode(.screen)` fill overlay.
+- **Separator** (`separatorGlow`): uses stacked blurred capsule layers (the scroll view clips `.shadow()` for thin shapes, so blurred layers are used instead — the visual result is identical).
 
 **Single-layer glow** (subtle ambient):
 ```json
@@ -186,6 +189,7 @@ Setting `innerRadius` activates two additional layers on top of the outer shadow
 | `selectedRowTextGlow` | Glow applied to the text of the selected row. |
 | `hoveredRowTextGlow` | Glow applied to the text of a hovered row. |
 | `searchHighlightTextGlow` | Glow applied to the main text when search highlights are active. |
+| `separatorGlow` | Glow around horizontal separators in favorites tabs. |
 
 ## `cornerRadii`
 
@@ -217,6 +221,7 @@ Layout spacing values (in points).
 | `rowVerticalPadding` | `8` | Vertical padding inside each row. |
 | `contentAreaPadding` | `10` | Padding inside the scroll area. |
 | `rowSpacing` | `2` | Vertical gap between rows. |
+| `separatorThickness` | `3` | Height in points of horizontal separators in favorites tabs. |
 
 ## Example: minimal custom theme
 

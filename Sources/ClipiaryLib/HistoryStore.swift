@@ -286,6 +286,31 @@ final class HistoryStore {
         persist()
     }
 
+    /// Inserts a separator item after `anchor` in the given favorite tab.
+    /// Ensures all items in the tab get explicit sort indices first, then slots
+    /// the separator at the midpoint between anchor and its successor.
+    func insertSeparator(_ separator: HistoryItem, after anchor: HistoryItem, inTab tabName: String) {
+        // Assign stable sort indices to all existing tab items
+        let tabItemIDs = Set(items.filter { $0.favoriteTabs.contains(tabName) }.map(\.id))
+        assignSortIndices(to: tabItemIDs)
+
+        // Re-read ordered items after indices are assigned
+        let ordered = customOrderedItems(items.filter { $0.favoriteTabs.contains(tabName) })
+        let anchorIndex = ordered.firstIndex(where: { $0.id == anchor.id }) ?? ordered.count - 1
+        let anchorSort = ordered[anchorIndex].sortIndex ?? (Double(anchorIndex) * 100.0)
+        let nextSort: Double
+        if anchorIndex + 1 < ordered.count {
+            nextSort = ordered[anchorIndex + 1].sortIndex ?? (anchorSort + 100.0)
+        } else {
+            nextSort = anchorSort + 100.0
+        }
+
+        var sep = separator
+        sep.sortIndex = (anchorSort + nextSort) / 2.0
+        items.insert(sep, at: 0)
+        persist()
+    }
+
     func evictUnpastedCopyOnSelect(limit: Int) {
         let unpasted = items
             .enumerated()

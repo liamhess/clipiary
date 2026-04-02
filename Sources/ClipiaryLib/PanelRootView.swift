@@ -287,20 +287,40 @@ struct PanelRootView: View {
                     if dropTargetIndex == index, draggingItemID != item.id {
                         dropIndicator
                     }
-                    HistoryRowView(
-                        item: item,
-                        maxPasteCount: maxPasteCount,
-                        isSelected: selectedID == item.id,
-                        showAppIcons: showAppIcons,
-                        showItemDetails: showItemDetails,
-                        pasteCountBarScheme: pasteCountBarScheme,
-                        singleFavoriteTab: singleFavoriteTab,
-                        singleFavoriteTabName: singleFavoriteTabName,
-                        showingFavoriteTabPicker: showingPicker && selectedID == item.id,
-                        favoriteTabNames: showFavoriteTabBadges ? item.favoriteTabs.sorted() : [],
-                        itemLineLimit: itemLineLimit,
-                        appState: appState
-                    )
+                    Group {
+                        if item.isSeparator {
+                            separatorRow
+                        } else {
+                            HistoryRowView(
+                                item: item,
+                                maxPasteCount: maxPasteCount,
+                                isSelected: selectedID == item.id,
+                                showAppIcons: showAppIcons,
+                                showItemDetails: showItemDetails,
+                                pasteCountBarScheme: pasteCountBarScheme,
+                                singleFavoriteTab: singleFavoriteTab,
+                                singleFavoriteTabName: singleFavoriteTabName,
+                                showingFavoriteTabPicker: showingPicker && selectedID == item.id,
+                                favoriteTabNames: showFavoriteTabBadges ? item.favoriteTabs.sorted() : [],
+                                itemLineLimit: itemLineLimit,
+                                appState: appState
+                            )
+                        }
+                    }
+                    .contextMenu {
+                        if case .favorites(let tabName) = appState.selectedTab.kind {
+                            if !item.isSeparator {
+                                Button("Insert Separator Below") {
+                                    appState.insertSeparator(after: item, inTab: tabName)
+                                }
+                            }
+                            if item.isSeparator {
+                                Button("Remove Separator", role: .destructive) {
+                                    appState.removeSeparator(item)
+                                }
+                            }
+                        }
+                    }
                     .opacity(draggingItemID == item.id ? 0.4 : 1.0)
                     .onDrag {
                         draggingItemID = item.id
@@ -339,6 +359,36 @@ struct PanelRootView: View {
             .frame(height: 2)
             .padding(.horizontal, 8)
             .padding(.vertical, 2)
+    }
+
+    private var separatorRow: some View {
+        let glow = theme.resolvedSeparatorGlow
+        let thickness = theme.resolvedSeparatorThickness
+        return ZStack {
+            // Outer glow: blurred copy rendered behind the capsule, contained within the padded frame
+            if let glow {
+                Capsule()
+                    .fill(glow.color)
+                    .frame(height: thickness)
+                    .blur(radius: glow.radius * 0.6)
+                    .allowsHitTesting(false)
+            }
+            // Inner glow: tighter, brighter
+            if let glow, let innerColor = glow.innerColor, let innerRadius = glow.innerRadius {
+                Capsule()
+                    .fill(innerColor)
+                    .frame(height: thickness)
+                    .blur(radius: innerRadius * 0.5)
+                    .allowsHitTesting(false)
+            }
+            // Actual separator
+            Capsule()
+                .fill(theme.resolvedSeparator)
+                .frame(height: thickness)
+        }
+        .padding(.horizontal, theme.spacing.rowHorizontalPadding + 4)
+        .padding(.vertical, 5)
+        .contentShape(Rectangle())
     }
 
     private func itemPreview(for item: HistoryItem) -> some View {
