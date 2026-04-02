@@ -265,6 +265,27 @@ private final class PanelHostingView: NSHostingView<AnyView> {
         let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         let normalizedCharacters = event.charactersIgnoringModifiers?.lowercased()
 
+        // When a text field/editor in the picker is active, forward standard editing key equivalents
+        // directly via the responder chain so they reach the focused NSTextField / NSTextView.
+        if modifiers == .command,
+           let chars = normalizedCharacters,
+           ["v", "a", "x", "c", "z", "y"].contains(chars),
+           appState.isEditingSnippetDescription || appState.isEditingItemText {
+            let selector: Selector? = switch chars {
+            case "v": #selector(NSText.paste(_:))
+            case "a": #selector(NSText.selectAll(_:))
+            case "x": #selector(NSText.cut(_:))
+            case "c": #selector(NSText.copy(_:))
+            case "z": #selector(UndoManager.undo)
+            case "y": #selector(UndoManager.redo)
+            default: nil
+            }
+            if let selector {
+                NSApp.sendAction(selector, to: nil, from: self)
+                return true
+            }
+        }
+
         if modifiers == .command, normalizedCharacters == "f" {
             appState.requestSearchFocus()
             return true

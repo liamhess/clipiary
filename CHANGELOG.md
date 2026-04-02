@@ -1,4 +1,5 @@
 # Changelog
+- favorites dialog text fields (text, description) now support usual copy/select actions (Cmd+V/A/X/C/Z/Y)
 
 ## [Unreleased]
 

@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(/usr/bin/swift --version)",
-      "Bash(/usr/bin/swift test:*)"
+      "Bash(/usr/bin/swift test:*)",
+      "Bash(python3 tools/clipiary.py build)"
     ],
     "additionalDirectories": [
       "/private/var/folders/gr/nygt_4d51zg8zjt_5jy67b780000gn/T/SnapshotTests"

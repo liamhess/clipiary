@@ -649,37 +649,6 @@ struct PanelRootView: View {
             Divider()
                 .padding(.vertical, 2)
 
-            HStack(spacing: 6) {
-                TextField("Description (optional)", text: $snippetDescriptionText)
-                    .font(.system(size: 11))
-                    .textFieldStyle(.roundedBorder)
-                    .focused($isDescriptionFieldFocused)
-                    .onChange(of: snippetDescriptionText) { _, newValue in
-                        appState.setSnippetDescription(newValue)
-                    }
-                    .onChange(of: isDescriptionFieldFocused) { _, focused in
-                        appState.isEditingSnippetDescription = focused
-                    }
-                    .onSubmit {
-                        isDescriptionFieldFocused = false
-                    }
-                if !isDescriptionFieldFocused {
-                    Text("D")
-                        .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 2)
-                        .background(
-                            RoundedRectangle(cornerRadius: theme.cornerRadii.keyBadge, style: .continuous)
-                                .fill(theme.resolvedPillBackground)
-                        )
-                }
-            }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 4)
-
-            Divider()
-                .padding(.vertical, 2)
-
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 6) {
                     Text("Edit text")
@@ -710,6 +679,37 @@ struct PanelRootView: View {
                             appState.setItemText(itemEditText)
                         }
                     }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+
+            Divider()
+                .padding(.vertical, 2)
+
+            HStack(spacing: 6) {
+                TextField("Description (optional)", text: $snippetDescriptionText)
+                    .font(.system(size: 11))
+                    .textFieldStyle(.roundedBorder)
+                    .focused($isDescriptionFieldFocused)
+                    .onChange(of: snippetDescriptionText) { _, newValue in
+                        appState.setSnippetDescription(newValue)
+                    }
+                    .onChange(of: isDescriptionFieldFocused) { _, focused in
+                        appState.isEditingSnippetDescription = focused
+                    }
+                    .onSubmit {
+                        isDescriptionFieldFocused = false
+                    }
+                if !isDescriptionFieldFocused {
+                    Text("D")
+                        .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(
+                            RoundedRectangle(cornerRadius: theme.cornerRadii.keyBadge, style: .continuous)
+                                .fill(theme.resolvedPillBackground)
+                        )
+                }
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
@@ -820,7 +820,7 @@ struct PanelRootView: View {
             }
         }
         .padding(10)
-        .frame(width: 240)
+        .frame(width: 320)
         .background(
             RoundedRectangle(cornerRadius: theme.cornerRadii.card, style: .continuous)
                 .fill(.regularMaterial)
