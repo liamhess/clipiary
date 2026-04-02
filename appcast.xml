@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss xmlns:ns0="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><title>Clipiary</title><item><title>Version 0.9.0</title><ns0:version>0.9.0</ns0:version><ns0:shortVersionString>0.9.0</ns0:shortVersionString><description ns0:format="markdown">### Added
-- Favorite tab name badges on history rows (configurable in Settings &gt; Appearance)
-- JSON-based theming system: customize colors, corner radii, and spacing via theme files in `~/Library/Application Support/Clipiary/themes/`. Copy and edit `default.json` to create your own themes.
-- Theme picker in Settings &gt; Appearance
-- Improved hints when accessibility permissions are missing
-</description><pubDate>Sat, 28 Mar 2026 15:38:34 +0000</pubDate><enclosure url="https://github.com/liamhess/clipiary/releases/download/v0.9.0/Clipiary-0.9.0.zip" ns0:edSignature="1f5MwNEf7lYqrEZA9a+ClESWRKiM9VGlyZqG5d3FJqjjg5CwD3XKT87o6N0n1xUaE5PiLMMfxdCJW2Lkh6x9Bg==" length="1910544" type="application/octet-stream" /></item></channel></rss>
+<rss xmlns:ns0="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><title>Clipiary</title><item><title>Version 1.0.0</title><ns0:version>1.0.0</ns0:version><ns0:shortVersionString>1.0.0</ns0:shortVersionString><description ns0:format="markdown">### Added
+- Edit copied text directly from the favorites picker (Cmd+D)
+- Search match highlighting in history rows
+- Theme engine greatly revamped
+  - support linear gradients, per-element border styles (width, color, dash)
+  - glow effects (colored shadows on selected rows, panel edges, texts)
+  - MeshGradient support in theme fills (macOS 15+); new built-in "Nebula" theme showcases it; falls back to a diagonal linear gradient on macOS 14
+  - animation support in theme fills (looping)
+  - animation support for selectedRow border (one-shoot, upon selection change)
+  - blendMode + multi-layered shadows for glow/neon like effects in themes (e.g. in the Sci-Fi theme)
+  - new App icon
+</description><pubDate>Thu, 02 Apr 2026 07:29:22 +0000</pubDate><enclosure url="https://github.com/liamhess/clipiary/releases/download/v1.0.0/Clipiary-1.0.0.zip" ns0:edSignature="JG8Q8n0HypbXZeQ1fRCHcHQ/GXfJKyKU+Qj5ihxM6CSu3k+G6y2i5x+SnJ6E4QPS1DAtabxno9g8lMiZmRm5Bg==" length="3073709" type="application/octet-stream" /></item></channel></rss>

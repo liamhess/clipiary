@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.0.0] - 2026-04-02
 ### Added
 - Edit copied text directly from the favorites picker (Cmd+D)
 - Search match highlighting in history rows
