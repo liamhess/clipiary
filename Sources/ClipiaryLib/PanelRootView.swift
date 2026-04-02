@@ -342,20 +342,32 @@ struct PanelRootView: View {
     }
 
     private func itemPreview(for item: HistoryItem) -> some View {
-        Group {
-            if item.isImage, let nsImage = appState.history.loadImage(for: item) {
-                Image(nsImage: nsImage)
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(maxWidth: 500, maxHeight: 580)
-                    .padding(12)
-            } else {
-                ScrollView {
-                    Text(item.text)
-                        .font(.system(size: 13))
-                        .frame(maxWidth: .infinity, alignment: .leading)
+        VStack(spacing: 0) {
+            Group {
+                if item.isImage, let nsImage = appState.history.loadImage(for: item) {
+                    Image(nsImage: nsImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: 500, maxHeight: 580)
                         .padding(12)
+                } else {
+                    ScrollView {
+                        Text(item.text)
+                            .font(.system(size: 13))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(12)
+                    }
                 }
+            }
+            if let desc = item.snippetDescription {
+                Divider()
+                Text(desc)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
             }
         }
         .frame(idealWidth: 500, maxHeight: 600)

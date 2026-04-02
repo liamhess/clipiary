@@ -1,9 +1,12 @@
 # Changelog
-- favorites dialog text fields (text, description) now support usual copy/select actions (Cmd+V/A/X/C/Z/Y)
 
 ## [Unreleased]
+### Added
+- favorites dialog text fields (text, description) now support usual copy/select actions (Cmd+V/A/X/C/Z/Y)
+- Preview popup now shows the items's description (if set)
 
 ## [1.0.1] - 2026-04-02
+### Fixed
 - fix global shortcuts recording
 
 ## [1.0.0] - 2026-04-02
