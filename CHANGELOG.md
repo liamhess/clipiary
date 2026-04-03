@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- Added a Theme Builder UI
+
 ### Fixed
 - Settings panel title bar longer bleeds through content
 

@@ -114,16 +114,31 @@ struct SettingsView: View {
     private var appearanceSection: some View {
         settingsCard("Appearance") {
             settingMetric(title: "Theme", help: "Themes are JSON files in ~/Library/Application Support/Clipiary/themes/. Copy and edit default.json to create your own. Ctrl+R in main window to reload selected theme.") {
-                Picker("", selection: Binding(
-                    get: { appState.settings.selectedThemeID },
-                    set: { appState.settings.selectedThemeID = $0 }
-                )) {
-                    ForEach(appState.themeManager.availableThemes, id: \.id) { theme in
-                        Text(theme.name).tag(theme.id)
+                HStack(spacing: 4) {
+                    Picker("", selection: Binding(
+                        get: { appState.settings.selectedThemeID },
+                        set: { appState.settings.selectedThemeID = $0 }
+                    )) {
+                        ForEach(appState.themeManager.availableThemes, id: \.id) { theme in
+                            Text(theme.name).tag(theme.id)
+                        }
                     }
+                    .labelsHidden()
+                    .pickerStyle(.menu)
+
+                    Button {
+                        ThemeBuilderWindowController.shared.open(
+                            themeID: appState.settings.selectedThemeID,
+                            appState: appState,
+                            adjacentTo: SettingsWindowController.shared.window?.frame
+                        )
+                    } label: {
+                        Image(systemName: "gearshape")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.tertiary)
+                    }
+                    .buttonStyle(.plain)
                 }
-                .labelsHidden()
-                .pickerStyle(.menu)
             }
 
             settingsToggleRow(

@@ -537,6 +537,7 @@ struct PanelRootView: View {
                 shortcutRow("Preview selected item", "Space")
                 shortcutRow("Delete selected item", "Delete / ⌫")
                 shortcutRow("Reload theme", "Ctrl R")
+                shortcutRow("Open Theme Builder", "Ctrl T")
                 shortcutRow("Close popover", "Esc")
             }
         }

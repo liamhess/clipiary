@@ -68,6 +68,35 @@ final class ThemeManager {
         activeTheme = availableThemes.first { $0.id == id } ?? .default
     }
 
+    /// Write a theme to disk and reload.
+    func save(_ theme: Theme) throws {
+        try fileManager.createDirectory(at: themesDirectoryURL, withIntermediateDirectories: true)
+        let url = themesDirectoryURL.appending(path: "\(theme.id).json")
+        let data = try encoder.encode(theme)
+        try data.write(to: url, options: .atomic)
+        load()
+    }
+
+    /// Duplicate any theme (including built-ins) with a new name and UUID-based id.
+    @discardableResult
+    func duplicate(_ theme: Theme, newName: String) throws -> Theme {
+        var copy = theme
+        copy.id = UUID().uuidString
+        copy.name = newName
+        try save(copy)
+        return copy
+    }
+
+    /// Delete a custom theme. Throws if the theme is a built-in.
+    func delete(id: String) throws {
+        guard !Theme.builtInThemes.contains(where: { $0.id == id }) else {
+            throw ThemeManagerError.cannotDeleteBuiltIn
+        }
+        let url = themesDirectoryURL.appending(path: "\(id).json")
+        try fileManager.removeItem(at: url)
+        load()
+    }
+
     func startWatching() {
         stopWatching()
         try? fileManager.createDirectory(at: themesDirectoryURL, withIntermediateDirectories: true)
@@ -100,5 +129,15 @@ final class ThemeManager {
     private func resolveActiveTheme() {
         let currentID = activeTheme.id
         activeTheme = availableThemes.first { $0.id == currentID } ?? .default
+    }
+}
+
+enum ThemeManagerError: Error, LocalizedError {
+    case cannotDeleteBuiltIn
+
+    var errorDescription: String? {
+        switch self {
+        case .cannotDeleteBuiltIn: "Built-in themes cannot be deleted."
+        }
     }
 }

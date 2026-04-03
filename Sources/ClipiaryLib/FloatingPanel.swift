@@ -116,6 +116,10 @@ final class FloatingPanel: NSPanel {
         if SettingsWindowController.shared.isVisible {
             return
         }
+        // Don't close if the theme builder window is taking focus within Clipiary.
+        if ThemeBuilderWindowController.shared.isVisible {
+            return
+        }
         // Don't close while the in-panel update overlay is visible.
         if UpdaterManager.shared.showOverlay {
             return
@@ -191,6 +195,13 @@ final class FloatingPanel: NSPanel {
            event.keyCode == 15 {
             appState.themeManager.load()
             appState.themeManager.selectTheme(id: appState.settings.selectedThemeID)
+            return
+        }
+        // Ctrl+T opens Theme Builder
+        if event.type == .keyDown,
+           event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .control,
+           event.keyCode == 17 {
+            ThemeBuilderWindowController.shared.open(themeID: appState.settings.selectedThemeID, appState: appState, adjacentTo: frame)
             return
         }
         // Escape: close preview first, then close panel

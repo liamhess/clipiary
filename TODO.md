@@ -1,7 +1,6 @@
 ## Top/Soon
 
 ## Theme Ideas
-- Theme Builder
 
 ### Color manipulation
 - `.saturation(_:)` — 0 for grayscale, >1 for oversaturation; expose as theme option for hover/selection states
