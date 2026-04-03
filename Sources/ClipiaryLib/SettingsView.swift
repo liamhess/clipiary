@@ -65,7 +65,6 @@ struct SettingsView: View {
                     set: { appState.settings.moveToTopSkipFavorites = $0 }
                 )
             )
-            .padding(.leading, 16)
             .disabled(!appState.settings.moveToTopOnPaste)
 
             settingMetric(title: "History limit") {
@@ -228,7 +227,6 @@ struct SettingsView: View {
                     set: { appState.settings.isCopyOnSelectSmartPasteEnabled = $0 }
                 )
             )
-            .padding(.leading, 16)
             .disabled(!appState.settings.isCopyOnSelectEnabled)
 
             if appState.settings.isCopyOnSelectEnabled &&
@@ -322,7 +320,6 @@ struct SettingsView: View {
                     set: { appState.settings.richTextPasteDefault = $0 }
                 )
             )
-            .padding(.leading, 16)
             .disabled(!appState.settings.isRichTextCaptureEnabled)
         }
     }
@@ -427,6 +424,7 @@ struct SettingsView: View {
                     .padding(.leading, 6)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 8)
         .padding(.vertical, 5)
     }

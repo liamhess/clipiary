@@ -8,6 +8,7 @@
 
 ### Fixed
 - Copy-on-select now collapses prefix-growth selections into a single transient history item instead of polluting history with intermediate prefixes
+- Settings toggles now align consistently at the left edge instead of indenting some dependent options
 
 ## [1.3.0] - 2026-04-03
 ### Added
