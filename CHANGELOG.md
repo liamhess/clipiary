@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.4.0] - 2026-04-03
 ### Added
 - Preview Panel now shows entry details (source app, format, timestamp)
 - Optional smart paste for copy-on-select: when the current selection still matches copy-on-select clipboard text, Cmd+V restores the immediately previous clipboard instead
