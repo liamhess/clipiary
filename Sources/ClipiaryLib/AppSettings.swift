@@ -16,8 +16,10 @@ final class AppSettings {
         static let globalHotKeyModifiers = "globalHotKeyModifiers"
         static let quickPasteHotKeyKeyCode = "quickPasteHotKeyKeyCode"
         static let quickPasteHotKeyModifiers = "quickPasteHotKeyModifiers"
-        static let altPasteHotKeyKeyCode = "altPasteHotKeyKeyCode"
-        static let altPasteHotKeyModifiers = "altPasteHotKeyModifiers"
+        static let localAltPasteHotKeyKeyCode = "localAltPasteHotKeyKeyCode"
+        static let localAltPasteHotKeyModifiers = "localAltPasteHotKeyModifiers"
+        static let globalAltPasteHotKeyKeyCode = "globalAltPasteHotKeyKeyCode"
+        static let globalAltPasteHotKeyModifiers = "globalAltPasteHotKeyModifiers"
         static let panelWidth = "panelWidth"
         static let panelHeight = "panelHeight"
         static let moveToTopOnPaste = "moveToTopOnPaste"
@@ -144,12 +146,20 @@ final class AppSettings {
         didSet { defaults.set(richTextPasteDefault, forKey: Keys.richTextPasteDefault) }
     }
 
-    var altPasteHotKeyKeyCode: Int {
-        didSet { defaults.set(altPasteHotKeyKeyCode, forKey: Keys.altPasteHotKeyKeyCode) }
+    var localAltPasteHotKeyKeyCode: Int {
+        didSet { defaults.set(localAltPasteHotKeyKeyCode, forKey: Keys.localAltPasteHotKeyKeyCode) }
     }
 
-    var altPasteHotKeyModifiers: Int {
-        didSet { defaults.set(altPasteHotKeyModifiers, forKey: Keys.altPasteHotKeyModifiers) }
+    var localAltPasteHotKeyModifiers: Int {
+        didSet { defaults.set(localAltPasteHotKeyModifiers, forKey: Keys.localAltPasteHotKeyModifiers) }
+    }
+
+    var globalAltPasteHotKeyKeyCode: Int {
+        didSet { defaults.set(globalAltPasteHotKeyKeyCode, forKey: Keys.globalAltPasteHotKeyKeyCode) }
+    }
+
+    var globalAltPasteHotKeyModifiers: Int {
+        didSet { defaults.set(globalAltPasteHotKeyModifiers, forKey: Keys.globalAltPasteHotKeyModifiers) }
     }
 
     init(defaults: UserDefaults = .standard) {
@@ -181,8 +191,10 @@ final class AppSettings {
             Keys.showFavoriteTabBadges: true,
             Keys.isRichTextCaptureEnabled: true,
             Keys.richTextPasteDefault: true,
-            Keys.altPasteHotKeyKeyCode: 36, // Return
-            Keys.altPasteHotKeyModifiers: Int(NSEvent.ModifierFlags.shift.rawValue),
+            Keys.localAltPasteHotKeyKeyCode: 36, // Return
+            Keys.localAltPasteHotKeyModifiers: Int(NSEvent.ModifierFlags.shift.rawValue),
+            Keys.globalAltPasteHotKeyKeyCode: 9,  // V
+            Keys.globalAltPasteHotKeyModifiers: Int(NSEvent.ModifierFlags.control.union(.option).union(.command).rawValue),
         ])
 
         isClipboardMonitoringEnabled = defaults.bool(forKey: Keys.clipboardMonitoringEnabled)
@@ -211,8 +223,10 @@ final class AppSettings {
         showFavoriteTabBadges = defaults.bool(forKey: Keys.showFavoriteTabBadges)
         isRichTextCaptureEnabled = defaults.bool(forKey: Keys.isRichTextCaptureEnabled)
         richTextPasteDefault = defaults.bool(forKey: Keys.richTextPasteDefault)
-        altPasteHotKeyKeyCode = defaults.integer(forKey: Keys.altPasteHotKeyKeyCode)
-        altPasteHotKeyModifiers = defaults.integer(forKey: Keys.altPasteHotKeyModifiers)
+        localAltPasteHotKeyKeyCode = defaults.integer(forKey: Keys.localAltPasteHotKeyKeyCode)
+        localAltPasteHotKeyModifiers = defaults.integer(forKey: Keys.localAltPasteHotKeyModifiers)
+        globalAltPasteHotKeyKeyCode = defaults.integer(forKey: Keys.globalAltPasteHotKeyKeyCode)
+        globalAltPasteHotKeyModifiers = defaults.integer(forKey: Keys.globalAltPasteHotKeyModifiers)
     }
 
     var globalShortcut: GlobalShortcut {
@@ -239,16 +253,28 @@ final class AppSettings {
         quickPasteHotKeyModifiers = Int(shortcut.modifiers.rawValue)
     }
 
-    var altPasteShortcut: GlobalShortcut {
+    var localAltPasteShortcut: GlobalShortcut {
         GlobalShortcut(
-            keyCode: UInt32(altPasteHotKeyKeyCode),
-            modifiers: NSEvent.ModifierFlags(rawValue: UInt(altPasteHotKeyModifiers))
+            keyCode: UInt32(localAltPasteHotKeyKeyCode),
+            modifiers: NSEvent.ModifierFlags(rawValue: UInt(localAltPasteHotKeyModifiers))
         )
     }
 
-    func updateAltPasteShortcut(_ shortcut: GlobalShortcut) {
-        altPasteHotKeyKeyCode = Int(shortcut.keyCode)
-        altPasteHotKeyModifiers = Int(shortcut.modifiers.rawValue)
+    func updateLocalAltPasteShortcut(_ shortcut: GlobalShortcut) {
+        localAltPasteHotKeyKeyCode = Int(shortcut.keyCode)
+        localAltPasteHotKeyModifiers = Int(shortcut.modifiers.rawValue)
+    }
+
+    var globalAltPasteShortcut: GlobalShortcut {
+        GlobalShortcut(
+            keyCode: UInt32(globalAltPasteHotKeyKeyCode),
+            modifiers: NSEvent.ModifierFlags(rawValue: UInt(globalAltPasteHotKeyModifiers))
+        )
+    }
+
+    func updateGlobalAltPasteShortcut(_ shortcut: GlobalShortcut) {
+        globalAltPasteHotKeyKeyCode = Int(shortcut.keyCode)
+        globalAltPasteHotKeyModifiers = Int(shortcut.modifiers.rawValue)
     }
 
     func ignores(bundleID: String?) -> Bool {

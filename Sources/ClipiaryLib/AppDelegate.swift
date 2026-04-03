@@ -11,7 +11,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     private var previousApp: NSRunningApplication?
     private let hotKeyManager = GlobalHotKeyManager(id: 1)
     private let quickPasteHotKeyManager = GlobalHotKeyManager(id: 2)
-    private let altPasteHotKeyManager = GlobalHotKeyManager(id: 3)
+    private let globalAltPasteHotKeyManager = GlobalHotKeyManager(id: 3)
     private var itemHotKeyManagers: [UUID: GlobalHotKeyManager] = [:]
     private var nextItemHotKeyID: UInt32 = 10
     private lazy var statusItem: NSStatusItem = {
@@ -139,8 +139,8 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         quickPasteHotKeyManager.onTrigger = { [weak self] in
             self?.appState.requestQuickPaste()
         }
-        altPasteHotKeyManager.onTrigger = { [weak self] in
-            self?.appState.requestAltPaste()
+        globalAltPasteHotKeyManager.onTrigger = { [weak self] in
+            self?.appState.requestGlobalAltPaste()
         }
         synchronizeHotKeyRegistration()
     }
@@ -151,16 +151,16 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func updateHotKeyRegistration() {
-        let anyRecording = appState.isRecordingShortcut || appState.isRecordingQuickPasteShortcut || appState.isRecordingAltPasteShortcut || appState.isRecordingItemShortcut
+        let anyRecording = appState.isRecordingShortcut || appState.isRecordingQuickPasteShortcut || appState.isRecordingLocalAltPasteShortcut || appState.isRecordingGlobalAltPasteShortcut || appState.isRecordingItemShortcut
         if anyRecording {
             hotKeyManager.unregister()
             quickPasteHotKeyManager.unregister()
-            altPasteHotKeyManager.unregister()
+            globalAltPasteHotKeyManager.unregister()
             for (_, mgr) in itemHotKeyManagers { mgr.unregister() }
         } else {
             hotKeyManager.register(shortcut: appState.settings.globalShortcut)
             quickPasteHotKeyManager.register(shortcut: appState.settings.quickPasteShortcut)
-            altPasteHotKeyManager.register(shortcut: appState.settings.altPasteShortcut)
+            globalAltPasteHotKeyManager.register(shortcut: appState.settings.globalAltPasteShortcut)
             rebuildItemHotKeys()
         }
     }
@@ -192,11 +192,12 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
                 appState.settings.globalHotKeyModifiers,
                 appState.settings.quickPasteHotKeyKeyCode,
                 appState.settings.quickPasteHotKeyModifiers,
-                appState.settings.altPasteHotKeyKeyCode,
-                appState.settings.altPasteHotKeyModifiers,
+                appState.settings.globalAltPasteHotKeyKeyCode,
+                appState.settings.globalAltPasteHotKeyModifiers,
                 appState.isRecordingShortcut,
                 appState.isRecordingQuickPasteShortcut,
-                appState.isRecordingAltPasteShortcut,
+                appState.isRecordingLocalAltPasteShortcut,
+                appState.isRecordingGlobalAltPasteShortcut,
                 appState.isRecordingItemShortcut,
                 appState.itemShortcutsChangedID
             )
@@ -230,7 +231,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // When recording shortcuts from the settings window, only handle recording events
         if isSettingsWindow {
-            let anyRecording = appState.isRecordingShortcut || appState.isRecordingQuickPasteShortcut || appState.isRecordingAltPasteShortcut
+            let anyRecording = appState.isRecordingShortcut || appState.isRecordingQuickPasteShortcut || appState.isRecordingLocalAltPasteShortcut || appState.isRecordingGlobalAltPasteShortcut
             guard anyRecording else { return event }
         }
 
@@ -275,13 +276,29 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             return suppressKeyUp(for: event)
         }
 
-        if appState.isRecordingAltPasteShortcut {
+        if appState.isRecordingLocalAltPasteShortcut {
             switch event.keyCode {
             case 53:
-                appState.isRecordingAltPasteShortcut = false
+                appState.isRecordingLocalAltPasteShortcut = false
             default:
                 appState.updateAltPasteShortcut(from: event)
             }
+            return suppressKeyUp(for: event)
+        }
+
+        if appState.isRecordingGlobalAltPasteShortcut {
+            switch event.keyCode {
+            case 53:
+                appState.isRecordingGlobalAltPasteShortcut = false
+            default:
+                appState.updateGlobalAltPasteShortcut(from: event)
+            }
+            return suppressKeyUp(for: event)
+        }
+
+        let localAlt = appState.settings.localAltPasteShortcut
+        if UInt32(event.keyCode) == localAlt.keyCode && modifiers == localAlt.modifiers {
+            appState.requestAltPaste()
             return suppressKeyUp(for: event)
         }
 
@@ -313,13 +330,8 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             appState.moveSelection(direction: -1)
             return suppressKeyUp(for: event)
         case 36:
-            let altShortcut = appState.settings.altPasteShortcut
-            let altIsShiftReturn = altShortcut.keyCode == 36 && altShortcut.modifiers == .shift
-            if altIsShiftReturn && modifiers == .shift {
-                appState.requestAltPaste()
-            } else if modifiers.isEmpty {
-                appState.requestPasteSelected(plainTextOnly: !appState.settings.richTextPasteDefault)
-            }
+            guard modifiers.isEmpty else { return event }
+            appState.requestPasteSelected(plainTextOnly: !appState.settings.richTextPasteDefault)
             return suppressKeyUp(for: event)
         case 51, 117: // Backspace, Forward Delete
             guard appState.searchQuery.isEmpty else { return event }

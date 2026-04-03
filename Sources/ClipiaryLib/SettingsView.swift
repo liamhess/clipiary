@@ -316,12 +316,21 @@ struct SettingsView: View {
             }
 
             shortcutRow(
-                title: "Alternate paste",
+                title: "Alt paste (in panel)",
                 help: "While Clipiary is open, pastes the opposite of your default format (rich text ↔ plain text).",
-                value: appState.isRecordingAltPasteShortcut ? "Press keys..." : appState.settings.altPasteShortcut.displayString,
-                isRecording: appState.isRecordingAltPasteShortcut
+                value: appState.isRecordingLocalAltPasteShortcut ? "Press keys..." : appState.settings.localAltPasteShortcut.displayString,
+                isRecording: appState.isRecordingLocalAltPasteShortcut
             ) {
-                appState.isRecordingAltPasteShortcut.toggle()
+                appState.isRecordingLocalAltPasteShortcut.toggle()
+            }
+
+            shortcutRow(
+                title: "Alt paste (global)",
+                help: "Pastes the most-recent clipboard item in the opposite of your default format, without opening Clipiary.",
+                value: appState.isRecordingGlobalAltPasteShortcut ? "Press keys..." : appState.settings.globalAltPasteShortcut.displayString,
+                isRecording: appState.isRecordingGlobalAltPasteShortcut
+            ) {
+                appState.isRecordingGlobalAltPasteShortcut.toggle()
             }
         }
     }

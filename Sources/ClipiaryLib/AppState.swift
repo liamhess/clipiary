@@ -46,7 +46,8 @@ final class AppState {
     private var selectedItemIDByTab: [String: HistoryItem.ID] = [:]
     var isRecordingShortcut = false
     var isRecordingQuickPasteShortcut = false
-    var isRecordingAltPasteShortcut = false
+    var isRecordingLocalAltPasteShortcut = false
+    var isRecordingGlobalAltPasteShortcut = false
     var isPreviewVisible = false
     var showingFavoriteTabPicker = false
     var favoriteTabPickerIndex = 0
@@ -516,8 +517,17 @@ final class AppState {
             return
         }
 
-        settings.updateAltPasteShortcut(shortcut)
-        isRecordingAltPasteShortcut = false
+        settings.updateLocalAltPasteShortcut(shortcut)
+        isRecordingLocalAltPasteShortcut = false
+    }
+
+    func updateGlobalAltPasteShortcut(from event: NSEvent) {
+        guard let shortcut = GlobalShortcut(event: event) else {
+            return
+        }
+
+        settings.updateGlobalAltPasteShortcut(shortcut)
+        isRecordingGlobalAltPasteShortcut = false
     }
 
     func requestSearchFocus() {
@@ -532,8 +542,19 @@ final class AppState {
     }
 
     func requestAltPaste() {
-        // Pastes the opposite of the default format
+        // Pastes the opposite of the default format (panel must be open)
         requestPasteSelected(plainTextOnly: settings.richTextPasteDefault)
+    }
+
+    func requestGlobalAltPaste() {
+        // Pastes the most-recent item in alt format, without opening the panel
+        guard let item = history.items.first(where: { !$0.isSeparator && !$0.isImage }) else { return }
+        history.markAsPasted(item)
+        restore(item, plainTextOnly: settings.richTextPasteDefault)
+        if settings.moveToTopOnPaste && !(settings.moveToTopSkipFavorites && item.isFavorite) {
+            history.moveToTop(item)
+        }
+        quickPasteRequestID &+= 1
     }
 
     func requestQuickPaste() {
