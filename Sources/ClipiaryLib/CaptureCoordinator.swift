@@ -163,7 +163,9 @@ final class CaptureCoordinator {
             bundleID: snapshot.bundleID,
             isMonospace: settings.isTerminalApp(bundleID: snapshot.bundleID)
         )
-        history.add(item, limit: settings.historyLimit)
+        if !history.replaceLatestTransientCopyOnSelectChain(with: item) {
+            history.add(item, limit: settings.historyLimit)
+        }
         history.evictUnpastedCopyOnSelect(limit: settings.copyOnSelectBufferLimit)
         lastCopyOnSelectText = text
         lastCopyOnSelectAt = .now

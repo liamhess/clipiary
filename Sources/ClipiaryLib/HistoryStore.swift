@@ -95,6 +95,49 @@ final class HistoryStore {
         persist()
     }
 
+    func replaceLatestTransientCopyOnSelectChain(with item: HistoryItem) -> Bool {
+        guard let candidateIndex = items.firstIndex(where: { existing in
+            existing.source == .copyOnSelect &&
+            !existing.wasPasted &&
+            existing.favoriteTabs.isEmpty &&
+            matchesCopyOnSelectAppIdentity(existing, appName: item.appName, bundleID: item.bundleID)
+        }) else {
+            return false
+        }
+
+        let existing = items.remove(at: candidateIndex)
+        guard textsBelongToSameSelectionChain(existing.text, item.text) else {
+            items.insert(existing, at: candidateIndex)
+            return false
+        }
+
+        let replacement = HistoryItem(
+            id: existing.id,
+            text: item.text,
+            source: .copyOnSelect,
+            appName: item.appName,
+            bundleID: item.bundleID,
+            createdAt: item.createdAt,
+            favoriteTabs: existing.favoriteTabs,
+            isMonospace: item.isMonospace,
+            imageFileName: existing.imageFileName,
+            imageHash: existing.imageHash,
+            wasPasted: existing.wasPasted,
+            pasteCount: existing.pasteCount,
+            shortcutKeyCode: existing.shortcutKeyCode,
+            shortcutModifiers: existing.shortcutModifiers,
+            sortIndex: existing.sortIndex,
+            snippetDescription: existing.snippetDescription,
+            isSeparator: existing.isSeparator,
+            rtfData: existing.rtfData,
+            htmlData: existing.htmlData
+        )
+
+        items.insert(replacement, at: 0)
+        persist()
+        return true
+    }
+
     func delete(_ item: HistoryItem) {
         deleteImageFile(for: item)
         items.removeAll { $0.id == item.id }
@@ -343,6 +386,18 @@ final class HistoryStore {
         source.sorted {
             return $0.createdAt > $1.createdAt
         }
+    }
+
+    private func matchesCopyOnSelectAppIdentity(_ item: HistoryItem, appName: String, bundleID: String?) -> Bool {
+        if let bundleID {
+            return item.bundleID == bundleID
+        }
+
+        return item.bundleID == nil && item.appName == appName
+    }
+
+    private func textsBelongToSameSelectionChain(_ lhs: String, _ rhs: String) -> Bool {
+        lhs.hasPrefix(rhs) || rhs.hasPrefix(lhs)
     }
 
     private func deleteImageFile(for item: HistoryItem) {

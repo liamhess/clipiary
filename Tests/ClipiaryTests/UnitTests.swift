@@ -236,6 +236,12 @@ func makeItem(
         return HistoryStore(storageDirectory: dir)
     }
 
+    private func makeCaptureCoordinator(store: HistoryStore, settings: AppSettings? = nil) -> (CaptureCoordinator, AppSettings) {
+        let defaults = UserDefaults(suiteName: "test-\(UUID().uuidString)")!
+        let settings = settings ?? AppSettings(defaults: defaults)
+        return (CaptureCoordinator(history: store, settings: settings), settings)
+    }
+
     @Test func addAndRetrieve() {
         let store = makeTempStore()
         let item = makeItem(text: "hello")
@@ -296,6 +302,224 @@ func makeItem(
 
         store.setSnippetDescription("trimmed  ", for: store.items[0])
         #expect(store.items[0].snippetDescription == "trimmed")
+    }
+
+    @Test func collapsesGrowingCopyOnSelectChainIntoSingleItem() {
+        let store = makeTempStore()
+        let (coordinator, settings) = makeCaptureCoordinator(store: store)
+        settings.isCopyOnSelectEnabled = true
+        settings.copyOnSelectCooldownMilliseconds = 0
+
+        let snapshot = SelectionSnapshot(
+            appName: "Safari",
+            bundleID: "com.apple.Safari",
+            role: nil,
+            subrole: nil,
+            selectedText: nil,
+            selectionReadable: true,
+            failureReason: nil
+        )
+
+        coordinator.consumeCopyOnSelectSnapshot(SelectionSnapshot(
+            appName: snapshot.appName,
+            bundleID: snapshot.bundleID,
+            role: snapshot.role,
+            subrole: snapshot.subrole,
+            selectedText: "hel",
+            selectionReadable: snapshot.selectionReadable,
+            failureReason: snapshot.failureReason
+        ))
+        coordinator.consumeCopyOnSelectSnapshot(SelectionSnapshot(
+            appName: snapshot.appName,
+            bundleID: snapshot.bundleID,
+            role: snapshot.role,
+            subrole: snapshot.subrole,
+            selectedText: "hell",
+            selectionReadable: snapshot.selectionReadable,
+            failureReason: snapshot.failureReason
+        ))
+        coordinator.consumeCopyOnSelectSnapshot(SelectionSnapshot(
+            appName: snapshot.appName,
+            bundleID: snapshot.bundleID,
+            role: snapshot.role,
+            subrole: snapshot.subrole,
+            selectedText: "hello",
+            selectionReadable: snapshot.selectionReadable,
+            failureReason: snapshot.failureReason
+        ))
+
+        #expect(store.items.count == 1)
+        #expect(store.items[0].text == "hello")
+        #expect(store.items[0].source == .copyOnSelect)
+    }
+
+    @Test func collapsesShrinkingCopyOnSelectChainIntoSingleItem() {
+        let store = makeTempStore()
+        let (coordinator, settings) = makeCaptureCoordinator(store: store)
+        settings.isCopyOnSelectEnabled = true
+        settings.copyOnSelectCooldownMilliseconds = 0
+
+        coordinator.consumeCopyOnSelectSnapshot(SelectionSnapshot(
+            appName: "Safari",
+            bundleID: "com.apple.Safari",
+            role: nil,
+            subrole: nil,
+            selectedText: "hello",
+            selectionReadable: true,
+            failureReason: nil
+        ))
+        coordinator.consumeCopyOnSelectSnapshot(SelectionSnapshot(
+            appName: "Safari",
+            bundleID: "com.apple.Safari",
+            role: nil,
+            subrole: nil,
+            selectedText: "hell",
+            selectionReadable: true,
+            failureReason: nil
+        ))
+
+        #expect(store.items.count == 1)
+        #expect(store.items[0].text == "hell")
+    }
+
+    @Test func keepsCopyOnSelectChainsSeparateAcrossApps() {
+        let store = makeTempStore()
+        let (coordinator, settings) = makeCaptureCoordinator(store: store)
+        settings.isCopyOnSelectEnabled = true
+        settings.copyOnSelectCooldownMilliseconds = 0
+
+        coordinator.consumeCopyOnSelectSnapshot(SelectionSnapshot(
+            appName: "Safari",
+            bundleID: "com.apple.Safari",
+            role: nil,
+            subrole: nil,
+            selectedText: "hello",
+            selectionReadable: true,
+            failureReason: nil
+        ))
+        coordinator.consumeCopyOnSelectSnapshot(SelectionSnapshot(
+            appName: "Notes",
+            bundleID: "com.apple.Notes",
+            role: nil,
+            subrole: nil,
+            selectedText: "hello world",
+            selectionReadable: true,
+            failureReason: nil
+        ))
+
+        #expect(store.items.count == 2)
+    }
+
+    @Test func keepsNonPrefixCopyOnSelectChangesAsDistinctItems() {
+        let store = makeTempStore()
+        let (coordinator, settings) = makeCaptureCoordinator(store: store)
+        settings.isCopyOnSelectEnabled = true
+        settings.copyOnSelectCooldownMilliseconds = 0
+
+        coordinator.consumeCopyOnSelectSnapshot(SelectionSnapshot(
+            appName: "Safari",
+            bundleID: "com.apple.Safari",
+            role: nil,
+            subrole: nil,
+            selectedText: "hello",
+            selectionReadable: true,
+            failureReason: nil
+        ))
+        coordinator.consumeCopyOnSelectSnapshot(SelectionSnapshot(
+            appName: "Safari",
+            bundleID: "com.apple.Safari",
+            role: nil,
+            subrole: nil,
+            selectedText: "world",
+            selectionReadable: true,
+            failureReason: nil
+        ))
+
+        #expect(store.items.count == 2)
+        #expect(Set(store.items.map(\.text)) == ["hello", "world"])
+    }
+
+    @Test func doesNotReusePastedCopyOnSelectItemAsChainTarget() {
+        let store = makeTempStore()
+        let item = makeItem(
+            text: "hel",
+            source: .copyOnSelect,
+            appName: "Safari",
+            bundleID: "com.apple.Safari"
+        )
+        store.add(item, limit: 100)
+        store.markAsPasted(store.items[0])
+
+        let replacement = HistoryItem(
+            text: "hello",
+            source: .copyOnSelect,
+            appName: "Safari",
+            bundleID: "com.apple.Safari"
+        )
+
+        let didReplace = store.replaceLatestTransientCopyOnSelectChain(with: replacement)
+
+        #expect(didReplace == false)
+        #expect(store.items.count == 1)
+        #expect(store.items[0].text == "hel")
+        #expect(store.items[0].wasPasted == true)
+    }
+
+    @Test func collapsesSlowCopyOnSelectGrowthWithoutRecencyLimit() {
+        let store = makeTempStore()
+        let older = HistoryItem(
+            text: "hel",
+            source: .copyOnSelect,
+            appName: "Safari",
+            bundleID: "com.apple.Safari",
+            createdAt: Date(timeIntervalSinceNow: -60)
+        )
+        store.add(older, limit: 100)
+
+        let replacement = HistoryItem(
+            text: "hello",
+            source: .copyOnSelect,
+            appName: "Safari",
+            bundleID: "com.apple.Safari"
+        )
+
+        let didReplace = store.replaceLatestTransientCopyOnSelectChain(with: replacement)
+
+        #expect(didReplace == true)
+        #expect(store.items.count == 1)
+        #expect(store.items[0].text == "hello")
+    }
+
+    @Test func onlyMatchesLatestTransientChainItemForSameApp() {
+        let store = makeTempStore()
+        store.add(HistoryItem(
+            text: "hel",
+            source: .copyOnSelect,
+            appName: "Safari",
+            bundleID: "com.apple.Safari",
+            createdAt: Date(timeIntervalSinceNow: -10)
+        ), limit: 100)
+        store.add(HistoryItem(
+            text: "hello there",
+            source: .copyOnSelect,
+            appName: "Safari",
+            bundleID: "com.apple.Safari",
+            createdAt: Date()
+        ), limit: 100)
+
+        let replacement = HistoryItem(
+            text: "hello",
+            source: .copyOnSelect,
+            appName: "Safari",
+            bundleID: "com.apple.Safari"
+        )
+
+        let didReplace = store.replaceLatestTransientCopyOnSelectChain(with: replacement)
+
+        #expect(didReplace == false)
+        #expect(store.items.count == 2)
+        #expect(store.items[0].text == "hello there")
+        #expect(store.items[1].text == "hel")
     }
 }
 
