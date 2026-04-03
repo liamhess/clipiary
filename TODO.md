@@ -1,8 +1,7 @@
 ## Top/Soon
-- think about rich-text handling (currently only plain text and images are supported, no rich text)
 
 ## Theme Ideas
-### One time animation of item selection border
+- Theme Builder
 
 ### Color manipulation
 - `.saturation(_:)` — 0 for grayscale, >1 for oversaturation; expose as theme option for hover/selection states

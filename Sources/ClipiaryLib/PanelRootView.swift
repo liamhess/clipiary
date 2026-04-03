@@ -19,6 +19,10 @@ struct PanelRootView: View {
         VStack(spacing: theme.spacing.sectionSpacing) {
             header
             historySection
+            if UpdaterManager.shared.showOverlay {
+                UpdatePanelView()
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
             footer
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -35,6 +39,7 @@ struct PanelRootView: View {
         .onChange(of: appState.popoverOpenRequestID) {
             shortcutsHelpPresented = false
         }
+        .animation(.easeInOut(duration: 0.18), value: UpdaterManager.shared.showOverlay)
         .overlayPreferenceValue(SelectedRowAnchorKey.self) { anchor in
             if appState.showingFavoriteTabPicker {
                 favoriteTabPickerOverlay(anchor: anchor)
@@ -125,7 +130,11 @@ struct PanelRootView: View {
             accessibilityStatus
             Spacer()
             Button {
-                UpdaterManager.shared.checkForUpdates()
+                if UpdaterManager.shared.showOverlay {
+                    UpdaterManager.shared.dismissOverlay()
+                } else {
+                    UpdaterManager.shared.checkForUpdates()
+                }
             } label: {
                 HStack(spacing: 3) {
                     Image(systemName: UpdaterManager.shared.updateAvailable ? "arrow.triangle.2.circlepath.circle.fill" : "arrow.triangle.2.circlepath")

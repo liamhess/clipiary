@@ -116,8 +116,8 @@ final class FloatingPanel: NSPanel {
         if SettingsWindowController.shared.isVisible {
             return
         }
-        // Don't close if the Sparkle updater is showing a window.
-        if UpdaterManager.shared.isShowingUpdateWindow {
+        // Don't close while the in-panel update overlay is visible.
+        if UpdaterManager.shared.showOverlay {
             return
         }
         // Don't close if the mouse is near the panel frame —

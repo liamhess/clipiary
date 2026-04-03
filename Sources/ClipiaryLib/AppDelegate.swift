@@ -302,6 +302,13 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             return suppressKeyUp(for: event)
         }
 
+        #if DEBUG
+        if event.keyCode == 32 && modifiers == .control { // Ctrl+U — cycle update phases
+            cycleDebugUpdatePhase()
+            return suppressKeyUp(for: event)
+        }
+        #endif
+
         if !modifiers.isDisjoint(with: [.command, .option, .control]) {
             return event
         }
@@ -540,4 +547,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         keyDown.post(tap: .cghidEventTap)
         keyUp.post(tap: .cghidEventTap)
     }
+
+    #if DEBUG
+    private func cycleDebugUpdatePhase() {
+        UpdaterManager.shared.cycleDebugPhase()
+    }
+    #endif
 }
