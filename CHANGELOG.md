@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- Preview Panel now shows entry details (source app, format, timestamp)
 
 ## [1.3.0] - 2026-04-03
 ### Added

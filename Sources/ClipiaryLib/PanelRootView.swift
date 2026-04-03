@@ -430,6 +430,26 @@ struct PanelRootView: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 8)
             }
+            Divider()
+            HStack(spacing: 5) {
+                if let icon = appIcon(for: item.bundleID) {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .frame(width: 12, height: 12)
+                        .opacity(0.6)
+                }
+                Text(item.appName)
+                Text("·").foregroundStyle(.quaternary)
+                Text(item.isImage ? "Image" : item.rtfData != nil ? "RTF" : item.htmlData != nil ? "HTML" : "Plain text")
+                Text("·").foregroundStyle(.quaternary)
+                Text(item.createdAt.formatted(date: .abbreviated, time: .shortened))
+            }
+            .font(.system(size: 10, weight: .medium))
+            .foregroundStyle(.tertiary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(.black.opacity(0.15))
         }
         .frame(idealWidth: 500, maxHeight: 600)
     }
