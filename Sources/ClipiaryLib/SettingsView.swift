@@ -631,12 +631,11 @@ final class SettingsWindowController {
 
         let window = SettingsPanel(
             contentRect: NSRect(x: 0, y: 0, width: 720, height: 610),
-            styleMask: [.titled, .closable, .resizable, .fullSizeContentView],
+            styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.title = "Clipiary Settings"
-        window.titlebarAppearsTransparent = true
         window.contentView = hostingView
         window.minSize = NSSize(width: 460, height: 340)
         window.maxSize = NSSize(width: 700, height: 800)
