@@ -8,6 +8,7 @@ final class AppSettings {
     private enum Keys {
         static let clipboardMonitoringEnabled = "clipboardMonitoringEnabled"
         static let copyOnSelectEnabled = "copyOnSelectEnabled"
+        static let copyOnSelectSmartPasteEnabled = "copyOnSelectSmartPasteEnabled"
         static let minimumSelectionLength = "minimumSelectionLength"
         static let copyOnSelectCooldownMilliseconds = "copyOnSelectCooldownMilliseconds"
         static let ignoredBundleIDs = "ignoredBundleIDs"
@@ -48,6 +49,10 @@ final class AppSettings {
 
     var isCopyOnSelectEnabled: Bool {
         didSet { defaults.set(isCopyOnSelectEnabled, forKey: Keys.copyOnSelectEnabled) }
+    }
+
+    var isCopyOnSelectSmartPasteEnabled: Bool {
+        didSet { defaults.set(isCopyOnSelectSmartPasteEnabled, forKey: Keys.copyOnSelectSmartPasteEnabled) }
     }
 
     var minimumSelectionLength: Int {
@@ -167,6 +172,7 @@ final class AppSettings {
         defaults.register(defaults: [
             Keys.clipboardMonitoringEnabled: true,
             Keys.copyOnSelectEnabled: false,
+            Keys.copyOnSelectSmartPasteEnabled: false,
             Keys.minimumSelectionLength: 2,
             Keys.copyOnSelectCooldownMilliseconds: 350,
             Keys.ignoredBundleIDs: [],
@@ -199,6 +205,7 @@ final class AppSettings {
 
         isClipboardMonitoringEnabled = defaults.bool(forKey: Keys.clipboardMonitoringEnabled)
         isCopyOnSelectEnabled = defaults.bool(forKey: Keys.copyOnSelectEnabled)
+        isCopyOnSelectSmartPasteEnabled = defaults.bool(forKey: Keys.copyOnSelectSmartPasteEnabled)
         minimumSelectionLength = defaults.integer(forKey: Keys.minimumSelectionLength)
         copyOnSelectCooldownMilliseconds = defaults.integer(forKey: Keys.copyOnSelectCooldownMilliseconds)
         ignoredBundleIDs = defaults.stringArray(forKey: Keys.ignoredBundleIDs) ?? []

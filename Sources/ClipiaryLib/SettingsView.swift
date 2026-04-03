@@ -220,6 +220,36 @@ struct SettingsView: View {
                 )
             )
 
+            settingsToggleRow(
+                title: "Smart paste over selection",
+                help: "If copy-on-select put the current selection on your clipboard, pressing paste while that same text is still selected restores your previous clipboard instead.",
+                isOn: Binding(
+                    get: { appState.settings.isCopyOnSelectSmartPasteEnabled },
+                    set: { appState.settings.isCopyOnSelectSmartPasteEnabled = $0 }
+                )
+            )
+            .padding(.leading, 16)
+            .disabled(!appState.settings.isCopyOnSelectEnabled)
+
+            if appState.settings.isCopyOnSelectEnabled &&
+                appState.settings.isCopyOnSelectSmartPasteEnabled &&
+                !appState.inputMonitoringPermissionManager.isTrusted {
+                Button {
+                    appState.requestInputMonitoringAccess()
+                } label: {
+                    HStack(spacing: 5) {
+                        Circle()
+                            .fill(Color(nsColor: .systemOrange))
+                            .frame(width: 6, height: 6)
+                        Text("Grant Input Monitoring")
+                            .font(.system(size: 11, weight: .medium))
+                    }
+                }
+                .buttonStyle(.plain)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+            }
+
             if appState.settings.isCopyOnSelectEnabled && !appState.permissionManager.isTrusted {
                 Button {
                     appState.refreshCopyOnSelectPermissions()

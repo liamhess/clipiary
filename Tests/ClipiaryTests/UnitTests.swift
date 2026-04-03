@@ -20,6 +20,7 @@ func makeTestAppState() -> AppState {
         history: history,
         configManager: configManager,
         permissionManager: permissionManager,
+        inputMonitoringPermissionManager: InputMonitoringPermissionManager(),
         themeManager: themeManager
     )
 }
@@ -48,6 +49,31 @@ func makeItem(
         pasteCount: pasteCount,
         snippetDescription: snippetDescription
     )
+}
+
+@MainActor
+func makeCaptureCoordinator(
+    store: HistoryStore? = nil,
+    settings: AppSettings? = nil
+) -> (CaptureCoordinator, HistoryStore, AppSettings) {
+    let resolvedStore: HistoryStore
+    if let store {
+        resolvedStore = store
+    } else {
+        let dir = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try! FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        resolvedStore = HistoryStore(storageDirectory: dir)
+    }
+
+    let resolvedSettings: AppSettings
+    if let settings {
+        resolvedSettings = settings
+    } else {
+        let defaults = UserDefaults(suiteName: "test-\(UUID().uuidString)")!
+        resolvedSettings = AppSettings(defaults: defaults)
+    }
+
+    return (CaptureCoordinator(history: resolvedStore, settings: resolvedSettings), resolvedStore, resolvedSettings)
 }
 
 // MARK: - HistoryItem Model Tests
@@ -161,6 +187,7 @@ func makeItem(
         #expect(settings.historyLimit == 1000)
         #expect(settings.moveToTopOnPaste == true)
         #expect(settings.isCopyOnSelectEnabled == false)
+        #expect(settings.isCopyOnSelectSmartPasteEnabled == false)
     }
 
     @Test func persistsChanges() {
@@ -168,9 +195,11 @@ func makeItem(
         let defaults = UserDefaults(suiteName: suiteName)!
         let settings = AppSettings(defaults: defaults)
         settings.historyLimit = 500
+        settings.isCopyOnSelectSmartPasteEnabled = true
 
         let settings2 = AppSettings(defaults: defaults)
         #expect(settings2.historyLimit == 500)
+        #expect(settings2.isCopyOnSelectSmartPasteEnabled == true)
     }
 
     @Test func toggleIgnoredBundleID() {
@@ -234,12 +263,6 @@ func makeItem(
         let dir = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
         try! FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return HistoryStore(storageDirectory: dir)
-    }
-
-    private func makeCaptureCoordinator(store: HistoryStore, settings: AppSettings? = nil) -> (CaptureCoordinator, AppSettings) {
-        let defaults = UserDefaults(suiteName: "test-\(UUID().uuidString)")!
-        let settings = settings ?? AppSettings(defaults: defaults)
-        return (CaptureCoordinator(history: store, settings: settings), settings)
     }
 
     @Test func addAndRetrieve() {
@@ -306,7 +329,7 @@ func makeItem(
 
     @Test func collapsesGrowingCopyOnSelectChainIntoSingleItem() {
         let store = makeTempStore()
-        let (coordinator, settings) = makeCaptureCoordinator(store: store)
+        let (coordinator, _, settings) = makeCaptureCoordinator(store: store)
         settings.isCopyOnSelectEnabled = true
         settings.copyOnSelectCooldownMilliseconds = 0
 
@@ -355,7 +378,7 @@ func makeItem(
 
     @Test func collapsesShrinkingCopyOnSelectChainIntoSingleItem() {
         let store = makeTempStore()
-        let (coordinator, settings) = makeCaptureCoordinator(store: store)
+        let (coordinator, _, settings) = makeCaptureCoordinator(store: store)
         settings.isCopyOnSelectEnabled = true
         settings.copyOnSelectCooldownMilliseconds = 0
 
@@ -384,7 +407,7 @@ func makeItem(
 
     @Test func keepsCopyOnSelectChainsSeparateAcrossApps() {
         let store = makeTempStore()
-        let (coordinator, settings) = makeCaptureCoordinator(store: store)
+        let (coordinator, _, settings) = makeCaptureCoordinator(store: store)
         settings.isCopyOnSelectEnabled = true
         settings.copyOnSelectCooldownMilliseconds = 0
 
@@ -412,7 +435,7 @@ func makeItem(
 
     @Test func keepsNonPrefixCopyOnSelectChangesAsDistinctItems() {
         let store = makeTempStore()
-        let (coordinator, settings) = makeCaptureCoordinator(store: store)
+        let (coordinator, _, settings) = makeCaptureCoordinator(store: store)
         settings.isCopyOnSelectEnabled = true
         settings.copyOnSelectCooldownMilliseconds = 0
 
@@ -520,6 +543,161 @@ func makeItem(
         #expect(store.items.count == 2)
         #expect(store.items[0].text == "hello there")
         #expect(store.items[1].text == "hel")
+    }
+}
+
+@MainActor
+@Suite struct CaptureCoordinatorTests {
+    @Test func smartPasteRestoresPreviousClipboardOnlyForExactSelectedCopyOnSelectText() {
+        let (coordinator, _, settings) = makeCaptureCoordinator()
+        settings.isCopyOnSelectSmartPasteEnabled = true
+
+        coordinator.rememberCopyOnSelectClipboardOwnership(
+            text: "selected",
+            previousClipboard: ClipboardSnapshot(text: "previous", rtfData: nil, htmlData: nil, pngData: nil),
+            changeCount: 42
+        )
+
+        let shouldRestore = coordinator.shouldRestorePreviousClipboardBeforePaste(
+            selectionSnapshot: SelectionSnapshot(
+                appName: "Notes",
+                bundleID: "com.apple.Notes",
+                role: nil,
+                subrole: nil,
+                selectedText: "selected",
+                selectionReadable: true,
+                failureReason: nil
+            ),
+            currentClipboardText: "selected",
+            currentPasteboardChangeCount: 42
+        )
+
+        #expect(shouldRestore == true)
+    }
+
+    @Test func smartPasteDoesNotRestoreWhenClipboardOwnershipChanged() {
+        let (coordinator, _, settings) = makeCaptureCoordinator()
+        settings.isCopyOnSelectSmartPasteEnabled = true
+
+        coordinator.rememberCopyOnSelectClipboardOwnership(
+            text: "selected",
+            previousClipboard: ClipboardSnapshot(text: "previous", rtfData: nil, htmlData: nil, pngData: nil),
+            changeCount: 42
+        )
+
+        let shouldRestore = coordinator.shouldRestorePreviousClipboardBeforePaste(
+            selectionSnapshot: SelectionSnapshot(
+                appName: "Notes",
+                bundleID: "com.apple.Notes",
+                role: nil,
+                subrole: nil,
+                selectedText: "selected",
+                selectionReadable: true,
+                failureReason: nil
+            ),
+            currentClipboardText: "selected",
+            currentPasteboardChangeCount: 43
+        )
+
+        #expect(shouldRestore == false)
+    }
+
+    @Test func smartPasteDoesNotRestoreWhenSelectionDiffersFromClipboard() {
+        let (coordinator, _, settings) = makeCaptureCoordinator()
+        settings.isCopyOnSelectSmartPasteEnabled = true
+
+        coordinator.rememberCopyOnSelectClipboardOwnership(
+            text: "selected",
+            previousClipboard: ClipboardSnapshot(text: "previous", rtfData: nil, htmlData: nil, pngData: nil),
+            changeCount: 42
+        )
+
+        let shouldRestore = coordinator.shouldRestorePreviousClipboardBeforePaste(
+            selectionSnapshot: SelectionSnapshot(
+                appName: "Notes",
+                bundleID: "com.apple.Notes",
+                role: nil,
+                subrole: nil,
+                selectedText: "other",
+                selectionReadable: true,
+                failureReason: nil
+            ),
+            currentClipboardText: "selected",
+            currentPasteboardChangeCount: 42
+        )
+
+        #expect(shouldRestore == false)
+    }
+
+    @Test func smartPasteDoesNotRestoreWhenDisabled() {
+        let (coordinator, _, settings) = makeCaptureCoordinator()
+        settings.isCopyOnSelectSmartPasteEnabled = false
+
+        coordinator.rememberCopyOnSelectClipboardOwnership(
+            text: "selected",
+            previousClipboard: ClipboardSnapshot(text: "previous", rtfData: nil, htmlData: nil, pngData: nil),
+            changeCount: 42
+        )
+
+        let shouldRestore = coordinator.shouldRestorePreviousClipboardBeforePaste(
+            selectionSnapshot: SelectionSnapshot(
+                appName: "Notes",
+                bundleID: "com.apple.Notes",
+                role: nil,
+                subrole: nil,
+                selectedText: "selected",
+                selectionReadable: true,
+                failureReason: nil
+            ),
+            currentClipboardText: "selected",
+            currentPasteboardChangeCount: 42
+        )
+
+        #expect(shouldRestore == false)
+    }
+
+    @Test func latestCopyOnSelectOverwriteBecomesSmartPasteFallback() {
+        let (coordinator, _, settings) = makeCaptureCoordinator()
+        settings.isCopyOnSelectEnabled = true
+        settings.isCopyOnSelectSmartPasteEnabled = true
+        settings.copyOnSelectCooldownMilliseconds = 0
+
+        coordinator.consumeCopyOnSelectSnapshot(SelectionSnapshot(
+            appName: "Notes",
+            bundleID: "com.apple.Notes",
+            role: nil,
+            subrole: nil,
+            selectedText: "first",
+            selectionReadable: true,
+            failureReason: nil
+        ))
+        coordinator.rememberCopyOnSelectClipboardOwnership(
+            text: "first",
+            previousClipboard: ClipboardSnapshot(text: "first", rtfData: nil, htmlData: nil, pngData: nil),
+            changeCount: 2
+        )
+
+        coordinator.rememberCopyOnSelectClipboardOwnership(
+            text: "second",
+            previousClipboard: ClipboardSnapshot(text: "first", rtfData: nil, htmlData: nil, pngData: nil),
+            changeCount: 3
+        )
+
+        let shouldRestore = coordinator.shouldRestorePreviousClipboardBeforePaste(
+            selectionSnapshot: SelectionSnapshot(
+                appName: "Notes",
+                bundleID: "com.apple.Notes",
+                role: nil,
+                subrole: nil,
+                selectedText: "second",
+                selectionReadable: true,
+                failureReason: nil
+            ),
+            currentClipboardText: "second",
+            currentPasteboardChangeCount: 3
+        )
+
+        #expect(shouldRestore == true)
     }
 }
 

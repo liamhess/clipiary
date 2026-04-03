@@ -192,17 +192,31 @@ struct PanelRootView: View {
     private var accessibilityStatus: some View {
         HStack(spacing: 6) {
             let isTrusted = appState.permissionManager.isTrusted
+            let hasInputMonitoring = appState.inputMonitoringPermissionManager.isTrusted
             let copyOnSelect = appState.settings.isCopyOnSelectEnabled
+            let smartPaste = appState.settings.isCopyOnSelectSmartPasteEnabled
             let monitoring = appState.settings.isClipboardMonitoringEnabled
             let allDisabled = !monitoring && !copyOnSelect
             let copyOnSelectNeedsPermission = copyOnSelect && !isTrusted
+            let smartPasteNeedsPermission = copyOnSelect && smartPaste && !hasInputMonitoring
 
             Circle()
-                .fill(allDisabled || copyOnSelectNeedsPermission ? theme.resolvedStatusWarning : !isTrusted ? theme.resolvedStatusWarning : theme.resolvedStatusReady)
+                .fill(
+                    allDisabled || copyOnSelectNeedsPermission || smartPasteNeedsPermission
+                    ? theme.resolvedStatusWarning
+                    : !isTrusted ? theme.resolvedStatusWarning : theme.resolvedStatusReady
+                )
                 .frame(width: 6, height: 6)
             if allDisabled {
                 Text("Clipboard Monitoring Disabled")
                     .font(.system(size: 11, weight: .medium))
+            } else if smartPasteNeedsPermission {
+                Button("Input Monitoring Required") {
+                    appState.requestInputMonitoringAccess()
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 11, weight: .medium))
+                .help("Input Monitoring is needed so smart paste can intercept Cmd+V before the target app pastes")
             } else if copyOnSelectNeedsPermission {
                 Button("Accessibility Required") {
                     appState.refreshCopyOnSelectPermissions()

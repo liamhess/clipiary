@@ -3,6 +3,8 @@
 ## [Unreleased]
 ### Added
 - Preview Panel now shows entry details (source app, format, timestamp)
+- Optional smart paste for copy-on-select: when the current selection still matches copy-on-select clipboard text, Cmd+V restores the immediately previous clipboard instead
+- Input Monitoring permission prompts/status for smart paste interception
 
 ### Fixed
 - Copy-on-select now collapses prefix-growth selections into a single transient history item instead of polluting history with intermediate prefixes

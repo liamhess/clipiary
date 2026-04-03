@@ -39,6 +39,7 @@ final class AppState {
     let settings: AppSettings
     let history: HistoryStore
     let permissionManager: AccessibilityPermissionManager
+    let inputMonitoringPermissionManager: InputMonitoringPermissionManager
     let configManager: ConfigManager
     let themeManager: ThemeManager
     var selectedTab: PopoverTab = .history
@@ -70,11 +71,13 @@ final class AppState {
         let settings = AppSettings()
         let history = HistoryStore()
         let permissionManager = AccessibilityPermissionManager()
+        let inputMonitoringPermissionManager = InputMonitoringPermissionManager()
         let configManager = ConfigManager()
         let themeManager = ThemeManager()
         self.settings = settings
         self.history = history
         self.permissionManager = permissionManager
+        self.inputMonitoringPermissionManager = inputMonitoringPermissionManager
         self.configManager = configManager
         self.themeManager = themeManager
         let captureCoordinator = CaptureCoordinator(history: history, settings: settings)
@@ -92,12 +95,14 @@ final class AppState {
         history: HistoryStore,
         configManager: ConfigManager,
         permissionManager: AccessibilityPermissionManager,
+        inputMonitoringPermissionManager: InputMonitoringPermissionManager = InputMonitoringPermissionManager(),
         themeManager: ThemeManager = ThemeManager()
     ) {
         self.settings = settings
         self.history = history
         self.configManager = configManager
         self.permissionManager = permissionManager
+        self.inputMonitoringPermissionManager = inputMonitoringPermissionManager
         self.themeManager = themeManager
         let captureCoordinator = CaptureCoordinator(history: history, settings: settings)
         self.captureCoordinator = captureCoordinator
@@ -120,6 +125,7 @@ final class AppState {
         seedConfigEntries()
         history.enforceLimit(settings.historyLimit)
         permissionManager.refreshTrust()
+        inputMonitoringPermissionManager.refreshTrust()
         clipboardMonitor.start()
         copyOnSelectEngine.start()
         captureCoordinator.startPasteMonitor()
@@ -130,6 +136,10 @@ final class AppState {
 
     func refreshCopyOnSelectPermissions() {
         permissionManager.openPrivacySettings()
+    }
+
+    func requestInputMonitoringAccess() {
+        inputMonitoringPermissionManager.requestAccessPrompt()
     }
 
     func restore(_ item: HistoryItem, plainTextOnly: Bool = false) {
