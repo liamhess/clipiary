@@ -47,7 +47,18 @@ final class ClipboardMonitor {
 
         // Text takes priority when both text and image are present
         if let text = pasteboard.string(forType: .string) {
-            captureCoordinator.consumeClipboardText(text, app: NSWorkspace.shared.frontmostApplication)
+            var rtfData: Data?
+            var htmlData: String?
+            if settings.isRichTextCaptureEnabled {
+                rtfData = pasteboard.data(forType: .rtf)
+                htmlData = pasteboard.string(forType: .html)
+            }
+            captureCoordinator.consumeClipboardText(
+                text,
+                app: NSWorkspace.shared.frontmostApplication,
+                rtfData: rtfData,
+                htmlData: htmlData
+            )
             return
         }
 

@@ -16,6 +16,8 @@ final class AppSettings {
         static let globalHotKeyModifiers = "globalHotKeyModifiers"
         static let quickPasteHotKeyKeyCode = "quickPasteHotKeyKeyCode"
         static let quickPasteHotKeyModifiers = "quickPasteHotKeyModifiers"
+        static let altPasteHotKeyKeyCode = "altPasteHotKeyKeyCode"
+        static let altPasteHotKeyModifiers = "altPasteHotKeyModifiers"
         static let panelWidth = "panelWidth"
         static let panelHeight = "panelHeight"
         static let moveToTopOnPaste = "moveToTopOnPaste"
@@ -30,6 +32,8 @@ final class AppSettings {
         static let terminalBundleIDs = "terminalBundleIDs"
         static let selectedThemeID = "selectedThemeID"
         static let showFavoriteTabBadges = "showFavoriteTabBadges"
+        static let isRichTextCaptureEnabled = "isRichTextCaptureEnabled"
+        static let richTextPasteDefault = "richTextPasteDefault"
     }
 
     static let defaultTerminalBundleIDsString = "com.apple.Terminal, com.googlecode.iterm2, com.mitchellh.ghostty, com.microsoft.VSCode, com.jetbrains.goland"
@@ -132,6 +136,22 @@ final class AppSettings {
         didSet { defaults.set(showFavoriteTabBadges, forKey: Keys.showFavoriteTabBadges) }
     }
 
+    var isRichTextCaptureEnabled: Bool {
+        didSet { defaults.set(isRichTextCaptureEnabled, forKey: Keys.isRichTextCaptureEnabled) }
+    }
+
+    var richTextPasteDefault: Bool {
+        didSet { defaults.set(richTextPasteDefault, forKey: Keys.richTextPasteDefault) }
+    }
+
+    var altPasteHotKeyKeyCode: Int {
+        didSet { defaults.set(altPasteHotKeyKeyCode, forKey: Keys.altPasteHotKeyKeyCode) }
+    }
+
+    var altPasteHotKeyModifiers: Int {
+        didSet { defaults.set(altPasteHotKeyModifiers, forKey: Keys.altPasteHotKeyModifiers) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -159,6 +179,10 @@ final class AppSettings {
             Keys.terminalBundleIDs: Self.defaultTerminalBundleIDsString,
             Keys.selectedThemeID: "default",
             Keys.showFavoriteTabBadges: true,
+            Keys.isRichTextCaptureEnabled: true,
+            Keys.richTextPasteDefault: true,
+            Keys.altPasteHotKeyKeyCode: 36, // Return
+            Keys.altPasteHotKeyModifiers: Int(NSEvent.ModifierFlags.shift.rawValue),
         ])
 
         isClipboardMonitoringEnabled = defaults.bool(forKey: Keys.clipboardMonitoringEnabled)
@@ -185,6 +209,10 @@ final class AppSettings {
         terminalBundleIDs = defaults.string(forKey: Keys.terminalBundleIDs) ?? Self.defaultTerminalBundleIDsString
         selectedThemeID = defaults.string(forKey: Keys.selectedThemeID) ?? "default"
         showFavoriteTabBadges = defaults.bool(forKey: Keys.showFavoriteTabBadges)
+        isRichTextCaptureEnabled = defaults.bool(forKey: Keys.isRichTextCaptureEnabled)
+        richTextPasteDefault = defaults.bool(forKey: Keys.richTextPasteDefault)
+        altPasteHotKeyKeyCode = defaults.integer(forKey: Keys.altPasteHotKeyKeyCode)
+        altPasteHotKeyModifiers = defaults.integer(forKey: Keys.altPasteHotKeyModifiers)
     }
 
     var globalShortcut: GlobalShortcut {
@@ -209,6 +237,18 @@ final class AppSettings {
     func updateQuickPasteShortcut(_ shortcut: GlobalShortcut) {
         quickPasteHotKeyKeyCode = Int(shortcut.keyCode)
         quickPasteHotKeyModifiers = Int(shortcut.modifiers.rawValue)
+    }
+
+    var altPasteShortcut: GlobalShortcut {
+        GlobalShortcut(
+            keyCode: UInt32(altPasteHotKeyKeyCode),
+            modifiers: NSEvent.ModifierFlags(rawValue: UInt(altPasteHotKeyModifiers))
+        )
+    }
+
+    func updateAltPasteShortcut(_ shortcut: GlobalShortcut) {
+        altPasteHotKeyKeyCode = Int(shortcut.keyCode)
+        altPasteHotKeyModifiers = Int(shortcut.modifiers.rawValue)
     }
 
     func ignores(bundleID: String?) -> Bool {

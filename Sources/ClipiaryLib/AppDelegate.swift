@@ -11,6 +11,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     private var previousApp: NSRunningApplication?
     private let hotKeyManager = GlobalHotKeyManager(id: 1)
     private let quickPasteHotKeyManager = GlobalHotKeyManager(id: 2)
+    private let altPasteHotKeyManager = GlobalHotKeyManager(id: 3)
     private var itemHotKeyManagers: [UUID: GlobalHotKeyManager] = [:]
     private var nextItemHotKeyID: UInt32 = 10
     private lazy var statusItem: NSStatusItem = {
@@ -138,6 +139,9 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         quickPasteHotKeyManager.onTrigger = { [weak self] in
             self?.appState.requestQuickPaste()
         }
+        altPasteHotKeyManager.onTrigger = { [weak self] in
+            self?.appState.requestAltPaste()
+        }
         synchronizeHotKeyRegistration()
     }
 
@@ -147,14 +151,16 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func updateHotKeyRegistration() {
-        let anyRecording = appState.isRecordingShortcut || appState.isRecordingQuickPasteShortcut || appState.isRecordingItemShortcut
+        let anyRecording = appState.isRecordingShortcut || appState.isRecordingQuickPasteShortcut || appState.isRecordingAltPasteShortcut || appState.isRecordingItemShortcut
         if anyRecording {
             hotKeyManager.unregister()
             quickPasteHotKeyManager.unregister()
+            altPasteHotKeyManager.unregister()
             for (_, mgr) in itemHotKeyManagers { mgr.unregister() }
         } else {
             hotKeyManager.register(shortcut: appState.settings.globalShortcut)
             quickPasteHotKeyManager.register(shortcut: appState.settings.quickPasteShortcut)
+            altPasteHotKeyManager.register(shortcut: appState.settings.altPasteShortcut)
             rebuildItemHotKeys()
         }
     }
@@ -186,8 +192,11 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
                 appState.settings.globalHotKeyModifiers,
                 appState.settings.quickPasteHotKeyKeyCode,
                 appState.settings.quickPasteHotKeyModifiers,
+                appState.settings.altPasteHotKeyKeyCode,
+                appState.settings.altPasteHotKeyModifiers,
                 appState.isRecordingShortcut,
                 appState.isRecordingQuickPasteShortcut,
+                appState.isRecordingAltPasteShortcut,
                 appState.isRecordingItemShortcut,
                 appState.itemShortcutsChangedID
             )
@@ -221,7 +230,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // When recording shortcuts from the settings window, only handle recording events
         if isSettingsWindow {
-            let anyRecording = appState.isRecordingShortcut || appState.isRecordingQuickPasteShortcut
+            let anyRecording = appState.isRecordingShortcut || appState.isRecordingQuickPasteShortcut || appState.isRecordingAltPasteShortcut
             guard anyRecording else { return event }
         }
 
@@ -266,6 +275,16 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             return suppressKeyUp(for: event)
         }
 
+        if appState.isRecordingAltPasteShortcut {
+            switch event.keyCode {
+            case 53:
+                appState.isRecordingAltPasteShortcut = false
+            default:
+                appState.updateAltPasteShortcut(from: event)
+            }
+            return suppressKeyUp(for: event)
+        }
+
         if !modifiers.isDisjoint(with: [.command, .option, .control]) {
             return event
         }
@@ -294,7 +313,13 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             appState.moveSelection(direction: -1)
             return suppressKeyUp(for: event)
         case 36:
-            appState.requestPasteSelected()
+            let altShortcut = appState.settings.altPasteShortcut
+            let altIsShiftReturn = altShortcut.keyCode == 36 && altShortcut.modifiers == .shift
+            if altIsShiftReturn && modifiers == .shift {
+                appState.requestAltPaste()
+            } else if modifiers.isEmpty {
+                appState.requestPasteSelected(plainTextOnly: !appState.settings.richTextPasteDefault)
+            }
             return suppressKeyUp(for: event)
         case 51, 117: // Backspace, Forward Delete
             guard appState.searchQuery.isEmpty else { return event }

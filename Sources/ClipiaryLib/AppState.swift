@@ -46,6 +46,7 @@ final class AppState {
     private var selectedItemIDByTab: [String: HistoryItem.ID] = [:]
     var isRecordingShortcut = false
     var isRecordingQuickPasteShortcut = false
+    var isRecordingAltPasteShortcut = false
     var isPreviewVisible = false
     var showingFavoriteTabPicker = false
     var favoriteTabPickerIndex = 0
@@ -58,6 +59,7 @@ final class AppState {
     private(set) var popoverOpenRequestID = 0
     private(set) var pasteSelectedRequestID = 0
     private(set) var quickPasteRequestID = 0
+    private(set) var altPasteRequestID = 0
 
     @ObservationIgnored private let captureCoordinator: CaptureCoordinator
     @ObservationIgnored private let clipboardMonitor: ClipboardMonitor
@@ -129,8 +131,8 @@ final class AppState {
         permissionManager.openPrivacySettings()
     }
 
-    func restore(_ item: HistoryItem) {
-        captureCoordinator.restore(item)
+    func restore(_ item: HistoryItem, plainTextOnly: Bool = false) {
+        captureCoordinator.restore(item, plainTextOnly: plainTextOnly)
     }
 
     func didOpenPopover() {
@@ -303,12 +305,12 @@ final class AppState {
         selectedHistoryItemID = items.first(where: { !$0.isSeparator })?.id
     }
 
-    func restoreSelectedItem() {
+    func restoreSelectedItem(plainTextOnly: Bool = false) {
         guard let item = selectedItem, !item.isSeparator else {
             return
         }
         history.markAsPasted(item)
-        restore(item)
+        restore(item, plainTextOnly: plainTextOnly)
         if settings.moveToTopOnPaste && !(settings.moveToTopSkipFavorites && item.isFavorite) {
             history.moveToTop(item)
         }
@@ -509,15 +511,29 @@ final class AppState {
         isRecordingQuickPasteShortcut = false
     }
 
+    func updateAltPasteShortcut(from event: NSEvent) {
+        guard let shortcut = GlobalShortcut(event: event) else {
+            return
+        }
+
+        settings.updateAltPasteShortcut(shortcut)
+        isRecordingAltPasteShortcut = false
+    }
+
     func requestSearchFocus() {
         searchFocusRequestID &+= 1
     }
 
-    func requestPasteSelected() {
-        restoreSelectedItem()
+    func requestPasteSelected(plainTextOnly: Bool = false) {
+        restoreSelectedItem(plainTextOnly: plainTextOnly)
         searchQuery = ""
         isPreviewVisible = false
         pasteSelectedRequestID &+= 1
+    }
+
+    func requestAltPaste() {
+        // Pastes the opposite of the default format
+        requestPasteSelected(plainTextOnly: settings.richTextPasteDefault)
     }
 
     func requestQuickPaste() {

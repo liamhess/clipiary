@@ -141,6 +141,18 @@ struct HistoryRowView: View, Equatable {
                             )
                     }
 
+                    if let richLabel = item.rtfData != nil ? "RTF" : (item.htmlData != nil ? "HTML" : nil) {
+                        Text(richLabel)
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(.secondary)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(
+                                RoundedRectangle(cornerRadius: theme.cornerRadii.keyBadge, style: .continuous)
+                                    .fill(theme.resolvedPillBackground)
+                            )
+                    }
+
                     if let shortcut = item.globalShortcut {
                         Text(shortcut.displayString)
                             .font(.system(size: 9, weight: .semibold, design: .monospaced))

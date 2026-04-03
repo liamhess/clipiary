@@ -16,6 +16,7 @@ struct SettingsView: View {
                 HStack(alignment: .top, spacing: 12) {
                     generalSection
                     copyOnSelectSection
+                    richTextSection
                 }
 
                 HStack(alignment: .top, spacing: 12) {
@@ -272,8 +273,31 @@ struct SettingsView: View {
         }
     }
 
-    private var shortcutsSection: some View {
-        settingsCard("Shortcuts") {
+    private var richTextSection: some View {
+        settingsCard("Rich Text") {
+            settingsToggleRow(
+                title: "Capture rich text (RTF/HTML)",
+                help: "When enabled, Clipiary also stores rich text formatting from the clipboard. Items with rich text show an RTF or HTML badge.",
+                isOn: Binding(
+                    get: { appState.settings.isRichTextCaptureEnabled },
+                    set: { appState.settings.isRichTextCaptureEnabled = $0 }
+                )
+            )
+
+            settingsToggleRow(
+                title: "Paste rich text by default",
+                help: "When pasting, use RTF/HTML formatting if available. Use the alternate paste shortcut to paste plain text instead.",
+                isOn: Binding(
+                    get: { appState.settings.richTextPasteDefault },
+                    set: { appState.settings.richTextPasteDefault = $0 }
+                )
+            )
+            .padding(.leading, 16)
+            .disabled(!appState.settings.isRichTextCaptureEnabled)
+        }
+    }
+
+    private var shortcutsSection: some View {        settingsCard("Shortcuts") {
             shortcutRow(
                 title: "Open Clipiary",
                 value: appState.isRecordingShortcut ? "Press keys..." : appState.settings.globalShortcut.displayString,
@@ -289,6 +313,15 @@ struct SettingsView: View {
                 isRecording: appState.isRecordingQuickPasteShortcut
             ) {
                 appState.isRecordingQuickPasteShortcut.toggle()
+            }
+
+            shortcutRow(
+                title: "Alternate paste",
+                help: "While Clipiary is open, pastes the opposite of your default format (rich text ↔ plain text).",
+                value: appState.isRecordingAltPasteShortcut ? "Press keys..." : appState.settings.altPasteShortcut.displayString,
+                isRecording: appState.isRecordingAltPasteShortcut
+            ) {
+                appState.isRecordingAltPasteShortcut.toggle()
             }
         }
     }
@@ -557,10 +590,10 @@ final class SettingsWindowController {
             .environment(AppState.shared)
 
         let hostingView = NSHostingView(rootView: settingsView)
-        hostingView.frame = NSRect(x: 0, y: 0, width: 540, height: 610)
+        hostingView.frame = NSRect(x: 0, y: 0, width: 720, height: 610)
 
         let window = SettingsPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 540, height: 610),
+            contentRect: NSRect(x: 0, y: 0, width: 720, height: 610),
             styleMask: [.titled, .closable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false

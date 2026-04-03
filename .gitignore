@@ -1,6 +1,7 @@
 .build/
 .tmp-home/
 .tmp/
+.claude/
 dist/
 .DS_Store
 .env

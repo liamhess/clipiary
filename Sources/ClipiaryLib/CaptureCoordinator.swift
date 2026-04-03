@@ -16,7 +16,7 @@ final class CaptureCoordinator {
         self.settings = settings
     }
 
-    func consumeClipboardText(_ text: String, app: NSRunningApplication?) {
+    func consumeClipboardText(_ text: String, app: NSRunningApplication?, rtfData: Data? = nil, htmlData: String? = nil) {
         guard settings.isClipboardMonitoringEnabled else {
             return
         }
@@ -41,7 +41,9 @@ final class CaptureCoordinator {
                 source: .clipboard,
                 appName: app?.localizedName ?? "Unknown",
                 bundleID: app?.bundleIdentifier,
-                isMonospace: settings.isTerminalApp(bundleID: app?.bundleIdentifier)
+                isMonospace: settings.isTerminalApp(bundleID: app?.bundleIdentifier),
+                rtfData: rtfData,
+                htmlData: htmlData
             ),
             limit: settings.historyLimit
         )
@@ -101,12 +103,22 @@ final class CaptureCoordinator {
         }
     }
 
-    func restore(_ item: HistoryItem) {
+    func restore(_ item: HistoryItem, plainTextOnly: Bool = false) {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
 
         if item.isImage, let image = history.loadImage(for: item) {
             pasteboard.writeObjects([image])
+        } else if !plainTextOnly, let rtfData = item.rtfData {
+            let pasteboardItem = NSPasteboardItem()
+            pasteboardItem.setData(rtfData, forType: .rtf)
+            pasteboardItem.setString(item.text, forType: .string)
+            pasteboard.writeObjects([pasteboardItem])
+        } else if !plainTextOnly, let htmlData = item.htmlData {
+            let pasteboardItem = NSPasteboardItem()
+            pasteboardItem.setString(htmlData, forType: .html)
+            pasteboardItem.setString(item.text, forType: .string)
+            pasteboard.writeObjects([pasteboardItem])
         } else {
             guard pasteboard.setString(item.text, forType: .string) else {
                 return
