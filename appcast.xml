@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss xmlns:ns0="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><title>Clipiary</title><item><title>Version 1.2.0</title><ns0:version>1.2.0</ns0:version><ns0:shortVersionString>1.2.0</ns0:shortVersionString><description ns0:format="markdown">### Added
-- Rich text support: captures RTF and HTML formatting from the clipboard by default (Settings → Rich Text to disable)
-- Option to paste rich text by default; use a configurable alternate paste shortcut (default: Shift+Return) to paste the opposite format
-</description><pubDate>Fri, 03 Apr 2026 15:36:45 +0000</pubDate><enclosure url="https://github.com/liamhess/clipiary/releases/download/v1.2.0/Clipiary-1.2.0.zip" ns0:edSignature="Jt5mEidVg8kfhw6N73J9a2rLuic/IQnFgm2hKJ7ZngfqysDbApiK8uD0MCLOLiRQV2MT+Anh7MbJdl9mJeU6Aw==" length="3126236" type="application/octet-stream" /></item></channel></rss>
+<rss xmlns:ns0="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><title>Clipiary</title><item><title>Version 1.3.0</title><ns0:version>1.3.0</ns0:version><ns0:shortVersionString>1.3.0</ns0:shortVersionString><description ns0:format="markdown">### Added
+- New update UI
+</description><pubDate>Fri, 03 Apr 2026 18:15:30 +0000</pubDate><enclosure url="https://github.com/liamhess/clipiary/releases/download/v1.3.0/Clipiary-1.3.0.zip" ns0:edSignature="ZNxyeT3q9IW3YEe+or1saIexCWvLz2AISmOn4TRIZ68T0JU5Rj7x0GwaJSnMlRtHwbkM0/FHnxex5ticOIJSDQ==" length="3217182" type="application/octet-stream" /></item></channel></rss>
