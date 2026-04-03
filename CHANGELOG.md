@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.1.0] - 2026-04-03
 ### Added
 - Improved rendering/scrolling/search performance
 - Allow to exempt favorites from "Move to top on paste"
