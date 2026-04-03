@@ -127,6 +127,32 @@ public final class UpdaterManager: NSObject, SPUUpdaterDelegate {
     /// Last update state seen from a real Sparkle check — used by cycleDebugPhase().
     var debugLastUpdateFound: (item: SUAppcastItem, state: SPUUserUpdateState?)?
 
+    var canShowDebugPreview: Bool { true }
+
+    func showDebugPreview() {
+        guard let fakeItem = debugFakeAppcastItem() else { return }
+        let item = debugLastUpdateFound?.item ?? fakeItem
+        let state = debugLastUpdateFound?.state
+        phase = .updateFound(item: item, state: state, reply: { choice in
+            switch choice {
+            case .dismiss, .skip:
+                self.phase = .idle
+                self.releaseNotesHTML = nil
+            case .install:
+                self.downloadExpectedBytes = 3_126_236
+                self.downloadReceivedBytes = 0
+                self.phase = .downloading(cancel: {})
+            @unknown default:
+                self.phase = .idle
+                self.releaseNotesHTML = nil
+            }
+        })
+        releaseNotesHTML = debugReleaseNotesHTML
+        downloadExpectedBytes = 0
+        downloadReceivedBytes = 0
+        extractionProgress = 0
+    }
+
     func cycleDebugPhase() {
         switch phase {
         case .idle:
@@ -179,6 +205,7 @@ public final class UpdaterManager: NSObject, SPUUpdaterDelegate {
         <h3>Added</h3>
         <ul>
           <li>Custom in-panel update UI — no more separate Sparkle window</li>
+          <li>Release notes now include intentionally long bullet points so we can verify that wrapped lines keep the correct hanging indent instead of snapping back to the left edge of the panel</li>
           <li>Copy-on-select now works in Terminal and VS Code</li>
         </ul>
         <h3>Fixed</h3>

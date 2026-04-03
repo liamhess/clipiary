@@ -228,12 +228,9 @@ struct UpdatePanelView: View {
     // MARK: - Release notes
 
     private func releaseNotesView(html: String) -> some View {
-        ScrollView(.vertical, showsIndicators: true) {
-            if let attrStr = attributedString(from: html) {
-                Text(attrStr)
-                    .font(.system(size: 11))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(6)
+        Group {
+            if let notes = attributedString(from: html) {
+                ReleaseNotesTextView(attributedText: notes)
             }
         }
         .frame(maxHeight: 120)
@@ -247,13 +244,15 @@ struct UpdatePanelView: View {
         )
     }
 
-    private func attributedString(from html: String) -> AttributedString? {
+    private func attributedString(from html: String) -> NSAttributedString? {
         let styled = """
         <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; font-size: 11px; }
-        h1, h2, h3 { font-size: 12px; font-weight: 600; margin: 4px 0 2px 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; font-size: 13px; margin: 0; }
+        h1 { font-size: 18px; font-weight: 700; margin: 10px 0 4px 0; }
+        h2 { font-size: 16px; font-weight: 700; margin: 9px 0 3px 0; }
+        h3 { font-size: 15px; font-weight: 700; margin: 8px 0 3px 0; }
         p { margin: 2px 0; }
-        ul { margin: 2px 0; padding-left: 16px; }
+        ul { margin: 2px 0 8px 18px; padding-left: 0; }
         li { margin: 1px 0; }
         strong { font-weight: 600; }
         </style>
@@ -269,7 +268,34 @@ struct UpdatePanelView: View {
                 documentAttributes: nil
               )
         else { return nil }
-        return try? AttributedString(nsAttr, including: AttributeScopes.AppKitAttributes.self)
+        let themed = NSMutableAttributedString(attributedString: nsAttr)
+        let fullRange = NSRange(location: 0, length: themed.length)
+        themed.addAttribute(.foregroundColor, value: NSColor(theme.resolvedTextPrimary), range: fullRange)
+        applyReleaseNotesParagraphStyling(to: themed)
+        return themed
+    }
+
+    private func applyReleaseNotesParagraphStyling(to text: NSMutableAttributedString) {
+        let nsString = text.string as NSString
+        var location = 0
+
+        while location < nsString.length {
+            let paragraphRange = nsString.paragraphRange(for: NSRange(location: location, length: 0))
+            let attributes = text.attributes(at: paragraphRange.location, effectiveRange: nil)
+            let font = attributes[.font] as? NSFont
+            let existingStyle = (attributes[.paragraphStyle] as? NSParagraphStyle) ?? NSParagraphStyle.default
+            let style = existingStyle.mutableCopy() as? NSMutableParagraphStyle ?? NSMutableParagraphStyle()
+
+            if let font, font.pointSize >= 15 {
+                style.paragraphSpacingBefore = paragraphRange.location == 0 ? 0 : 8
+                style.paragraphSpacing = 3
+            } else {
+                style.paragraphSpacingBefore = 0
+            }
+
+            text.addAttribute(.paragraphStyle, value: style, range: paragraphRange)
+            location = NSMaxRange(paragraphRange)
+        }
     }
 
     // MARK: - Buttons
@@ -302,6 +328,84 @@ struct UpdatePanelView: View {
         let formatter = ByteCountFormatter()
         formatter.countStyle = .file
         return "\(formatter.string(fromByteCount: received)) of \(formatter.string(fromByteCount: expected))"
+    }
+}
+
+private struct ReleaseNotesTextView: NSViewRepresentable {
+    let attributedText: NSAttributedString
+
+    func makeNSView(context: Context) -> ReleaseNotesScrollView {
+        let scrollView = ReleaseNotesScrollView()
+        scrollView.apply(attributedText: attributedText)
+        return scrollView
+    }
+
+    func updateNSView(_ nsView: ReleaseNotesScrollView, context: Context) {
+        nsView.apply(attributedText: attributedText)
+    }
+}
+
+private final class ReleaseNotesScrollView: NSScrollView {
+    private let textView: NSTextView
+
+    init() {
+        let textView = NSTextView(frame: .zero)
+        self.textView = textView
+        super.init(frame: .zero)
+
+        drawsBackground = false
+        borderType = .noBorder
+        hasVerticalScroller = true
+        hasHorizontalScroller = false
+        autohidesScrollers = true
+
+        textView.drawsBackground = false
+        textView.isEditable = false
+        textView.isSelectable = true
+        textView.isRichText = true
+        textView.importsGraphics = false
+        textView.linkTextAttributes = [
+            .foregroundColor: NSColor.controlAccentColor
+        ]
+        textView.textContainerInset = NSSize(width: 6, height: 6)
+        textView.minSize = .zero
+        textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        textView.isVerticallyResizable = true
+        textView.isHorizontallyResizable = false
+        textView.autoresizingMask = [.width]
+        textView.textContainer?.widthTracksTextView = true
+        textView.textContainer?.heightTracksTextView = false
+        textView.textContainer?.lineFragmentPadding = 0
+
+        documentView = textView
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override func layout() {
+        super.layout()
+        guard let textContainer = textView.textContainer,
+              let layoutManager = textView.layoutManager else {
+            return
+        }
+
+        let width = contentSize.width
+        textView.frame.size.width = width
+        textContainer.containerSize = NSSize(width: width, height: CGFloat.greatestFiniteMagnitude)
+        layoutManager.ensureLayout(for: textContainer)
+
+        let usedHeight = layoutManager.usedRect(for: textContainer).height
+        let totalHeight = ceil(usedHeight + (textView.textContainerInset.height * 2))
+        textView.frame.size.height = max(totalHeight, contentSize.height)
+    }
+
+    func apply(attributedText: NSAttributedString) {
+        textView.textStorage?.setAttributedString(attributedText)
+        needsLayout = true
+        layoutSubtreeIfNeeded()
     }
 }
 

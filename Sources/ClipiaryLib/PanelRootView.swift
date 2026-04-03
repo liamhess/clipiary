@@ -130,19 +130,15 @@ struct PanelRootView: View {
             accessibilityStatus
             Spacer()
             Button {
-                if UpdaterManager.shared.showOverlay {
-                    UpdaterManager.shared.dismissOverlay()
-                } else {
-                    UpdaterManager.shared.checkForUpdates()
-                }
+                handleUpdateButtonPress()
             } label: {
                 HStack(spacing: 3) {
                     Image(systemName: UpdaterManager.shared.updateAvailable ? "arrow.triangle.2.circlepath.circle.fill" : "arrow.triangle.2.circlepath")
                     Text(UpdaterManager.shared.updateAvailable ? "Update Available" : "Updates")
                 }
             }
-            .help("Check for Updates (v\(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"))" + (UpdaterManager.shared.isConfigured ? "" : " — updates not available in this build"))
-            .disabled(!UpdaterManager.shared.isConfigured)
+            .help(updateButtonHelpText)
+            .disabled(updateButtonDisabled)
             Button {
                 SettingsWindowController.shared.open()
             } label: {
@@ -187,6 +183,44 @@ struct PanelRootView: View {
         .buttonStyle(.plain)
         .font(.system(size: 11, weight: .medium))
         .padding(.horizontal, 2)
+    }
+
+    private func handleUpdateButtonPress() {
+        if UpdaterManager.shared.showOverlay {
+            UpdaterManager.shared.dismissOverlay()
+            return
+        }
+        #if DEBUG
+        if !UpdaterManager.shared.isConfigured || NSEvent.modifierFlags.contains(.option) {
+            UpdaterManager.shared.showDebugPreview()
+            return
+        }
+        #endif
+        UpdaterManager.shared.checkForUpdates()
+    }
+
+    private var updateButtonDisabled: Bool {
+        #if DEBUG
+        false
+        #else
+        !UpdaterManager.shared.isConfigured
+        #endif
+    }
+
+    private var updateButtonHelpText: String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        var text = "Check for Updates (v\(version))"
+        if !UpdaterManager.shared.isConfigured {
+            #if DEBUG
+            text += " — debug preview available in this build"
+            #else
+            text += " — updates not available in this build"
+            #endif
+        }
+        #if DEBUG
+        text += " — hold Option while clicking to preview the changelog UI"
+        #endif
+        return text
     }
 
     private var accessibilityStatus: some View {

@@ -9,6 +9,7 @@
 ### Fixed
 - Copy-on-select now collapses prefix-growth selections into a single transient history item instead of polluting history with intermediate prefixes
 - Settings toggles now align consistently at the left edge instead of indenting some dependent options
+- In-app update release notes now keep proper bullet indentation and use clearer heading, spacing, and text styling
 
 ## [1.3.0] - 2026-04-03
 ### Added
