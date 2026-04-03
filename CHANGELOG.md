@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.2.0] - 2026-04-03
 ### Added
 - Rich text support: captures RTF and HTML formatting from the clipboard by default (Settings → Rich Text to disable)
 - Option to paste rich text by default; use a configurable alternate paste shortcut (default: Shift+Return) to paste the opposite format
