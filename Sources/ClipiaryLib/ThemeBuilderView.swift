@@ -66,17 +66,18 @@ final class ThemeBuilderWindowController {
         }
 
         let hosting = NSHostingView(rootView: AnyView(rootView))
-        hosting.frame = NSRect(x: 0, y: 0, width: 480, height: 680)
+        let height = panelFrame.map { $0.height } ?? appState.settings.panelHeight
+        hosting.frame = NSRect(x: 0, y: 0, width: 640, height: height)
 
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 480, height: 680),
+            contentRect: NSRect(x: 0, y: 0, width: 640, height: height),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false
         )
         panel.title = "Theme Builder"
         panel.contentView = hosting
-        panel.minSize = NSSize(width: 460, height: 400)
+        panel.minSize = NSSize(width: 560, height: 400)
         panel.isReleasedWhenClosed = false
         panel.level = NSWindow.Level(rawValue: NSWindow.Level.floating.rawValue + 1)
 
@@ -114,30 +115,72 @@ final class ThemeBuilderWindowController {
 
 // MARK: - Main Builder View
 
+private enum BuilderSection: String, CaseIterable, Identifiable {
+    case options = "Options"
+    case fills = "Fills"
+    case colors = "Colors"
+    case borders = "Borders"
+    case effects = "Effects"
+    case cornerRadii = "Corner Radii"
+    case spacing = "Spacing"
+
+    var id: Self { self }
+
+    var icon: String {
+        switch self {
+        case .options:     return "gearshape"
+        case .fills:       return "drop.fill"
+        case .colors:      return "paintpalette"
+        case .borders:     return "square.dashed"
+        case .effects:     return "sparkles"
+        case .cornerRadii: return "app"
+        case .spacing:     return "ruler"
+        }
+    }
+}
+
 struct ThemeBuilderView: View {
     @State var editorState: ThemeEditorState
     let appState: AppState
+    @State private var selectedSection: BuilderSection = .options
 
     @Environment(\.theme) private var activeTheme
 
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 14) {
-                headerRow
-                optionsSection
-                fillsSection
-                colorsSection
-                bordersSection
-                effectsSection
-                cornerRadiiSection
-                spacingSection
+        VStack(spacing: 0) {
+            // Header: theme picker + rename/hint
+            headerRow
+                .padding(.horizontal, 16)
+                .padding(.vertical, 10)
+
+            Divider()
+
+            HStack(spacing: 0) {
+                // Sidebar
+                List(BuilderSection.allCases, selection: $selectedSection) { section in
+                    Label(section.rawValue, systemImage: section.icon)
+                        .font(.system(size: 12))
+                        .tag(section)
+                }
+                .listStyle(.sidebar)
+                .onAppear { focusSidebarList() }
+                .frame(width: 160)
+
+                Divider()
+
+                // Content
+                ScrollView {
+                    VStack(spacing: 14) {
+                        sectionContent(selectedSection)
+                    }
+                    .padding(16)
+                }
+                .simultaneousGesture(TapGesture().onEnded {
+                    NSApp.keyWindow?.makeFirstResponder(nil)
+                })
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .padding(16)
         }
-        .simultaneousGesture(TapGesture().onEnded {
-            NSApp.keyWindow?.makeFirstResponder(nil)
-        })
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background {
             if activeTheme.options.useMaterial {
                 Rectangle().fill(.regularMaterial).ignoresSafeArea()
@@ -148,6 +191,40 @@ struct ThemeBuilderView: View {
         .onChange(of: editorState.theme) {
             guard !editorState.isBuiltIn else { return }
             try? appState.themeManager.save(editorState.theme)
+        }
+    }
+
+    @ViewBuilder
+    private func sectionContent(_ section: BuilderSection) -> some View {
+        switch section {
+        case .options:     optionsSection
+        case .fills:       fillsSection
+        case .colors:      colorsSection
+        case .borders:     bordersSection
+        case .effects:     effectsSection
+        case .cornerRadii: cornerRadiiSection
+        case .spacing:     spacingSection
+        }
+    }
+
+    // The sidebar List is backed by NSTableView. SwiftUI's @FocusState doesn't reliably
+    // transfer AppKit focus to it, so we walk the window's view hierarchy directly.
+    // The content area uses SwiftUI ScrollView (no NSTableView), so the first NSTableView
+    // found is always the sidebar.
+    private func focusSidebarList() {
+        DispatchQueue.main.async {
+            guard let window = NSApp.keyWindow,
+                  let root = window.contentView else { return }
+            func findTableView(_ view: NSView) -> NSTableView? {
+                if let tv = view as? NSTableView { return tv }
+                for sub in view.subviews {
+                    if let found = findTableView(sub) { return found }
+                }
+                return nil
+            }
+            if let tv = findTableView(root) {
+                window.makeFirstResponder(tv)
+            }
         }
     }
 
