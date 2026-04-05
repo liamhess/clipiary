@@ -11,11 +11,22 @@ final class ThemeEditorState {
     var showingDuplicatePopover = false
     var duplicateName = ""
     var showingDeleteAlert = false
+    var showingRevertAlert = false
+    private let snapshot: Theme?
+
+    var isDirty: Bool { !isBuiltIn && theme != snapshot }
 
     init(theme: Theme) {
         self.theme = theme
-        self.isBuiltIn = Theme.builtInThemes.contains(where: { $0.id == theme.id })
+        let builtIn = Theme.builtInThemes.contains(where: { $0.id == theme.id })
+        self.isBuiltIn = builtIn
         self.duplicateName = "\(theme.name) Copy"
+        self.snapshot = builtIn ? nil : theme
+    }
+
+    func revert() {
+        guard let snapshot else { return }
+        theme = snapshot
     }
 }
 
@@ -48,6 +59,8 @@ final class ThemeBuilderWindowController {
     }
 
     var isVisible: Bool { window?.isVisible ?? false }
+
+    func orderFront() { window?.makeKeyAndOrderFront(nil) }
 
     func open(themeID: String, appState: AppState, adjacentTo panelFrame: NSRect? = nil) {
         let theme = appState.themeManager.availableThemes.first { $0.id == themeID } ?? .default
@@ -164,7 +177,7 @@ struct ThemeBuilderView: View {
                 }
                 .listStyle(.sidebar)
                 .onAppear { focusSidebarList() }
-                .frame(width: 160)
+                .frame(width: 140)
 
                 Divider()
 
@@ -272,6 +285,7 @@ struct ThemeBuilderView: View {
                         .foregroundStyle(.secondary)
                         .fixedSize()
                 }
+                Spacer(minLength: 0)
             } else {
                 // Rename field — only for custom themes
                 Text("Name:")
@@ -281,12 +295,28 @@ struct ThemeBuilderView: View {
                 TextField("Theme name", text: $editorState.theme.name)
                     .textFieldStyle(.roundedBorder)
                     .font(.system(size: 12))
-                    .frame(minWidth: 80, maxWidth: 160)
             }
 
-            Spacer(minLength: 0)
-
             duplicateButton
+
+            if editorState.isDirty {
+                Button {
+                    editorState.showingRevertAlert = true
+                } label: {
+                    Text("Revert")
+                        .font(.system(size: 11, weight: .medium))
+                }
+                .buttonStyle(.borderless)
+                .alert("Revert \"\(editorState.theme.name)\"?", isPresented: $editorState.showingRevertAlert) {
+                    Button("Revert", role: .destructive) {
+                        editorState.revert()
+                        try? appState.themeManager.save(editorState.theme)
+                    }
+                    Button("Cancel", role: .cancel) {}
+                } message: {
+                    Text("All changes will be discarded and the theme will be restored to the state it was in when you opened the builder.")
+                }
+            }
 
             if !editorState.isBuiltIn {
                 Button(role: .destructive) {
@@ -401,13 +431,14 @@ struct ThemeBuilderView: View {
     private var fillsSection: some View {
         builderCard("Fills") {
             let disabled = editorState.isBuiltIn
-            FillEditorRow(label: "Panel", fill: $editorState.theme.fills.panel, disabled: disabled)
-            FillEditorRow(label: "Tab Bar", fill: $editorState.theme.fills.tabBar, disabled: disabled)
-            OptionalFillEditorRow(label: "Tab Button Selected", fill: $editorState.theme.fills.tabButtonSelected, disabled: disabled)
-            FillEditorRow(label: "Row Selected", fill: $editorState.theme.fills.rowSelected, disabled: disabled)
-            FillEditorRow(label: "Row Hovered", fill: $editorState.theme.fills.rowHovered, disabled: disabled)
-            FillEditorRow(label: "Card", fill: $editorState.theme.fills.card, disabled: disabled)
-            FillEditorRow(label: "Overlay", fill: $editorState.theme.fills.overlay, disabled: disabled)
+            let d = Theme.Fills.default
+            FillEditorRow(label: "Panel", fill: $editorState.theme.fills.panel, disabled: disabled, defaultFill: d.panel)
+            FillEditorRow(label: "Tab Bar", fill: $editorState.theme.fills.tabBar, disabled: disabled, defaultFill: d.tabBar)
+            OptionalFillEditorRow(label: "Tab Button Selected", fill: $editorState.theme.fills.tabButtonSelected, disabled: disabled, defaultValue: d.tabButtonSelected)
+            FillEditorRow(label: "Row Selected", fill: $editorState.theme.fills.rowSelected, disabled: disabled, defaultFill: d.rowSelected)
+            FillEditorRow(label: "Row Hovered", fill: $editorState.theme.fills.rowHovered, disabled: disabled, defaultFill: d.rowHovered)
+            FillEditorRow(label: "Card", fill: $editorState.theme.fills.card, disabled: disabled, defaultFill: d.card)
+            FillEditorRow(label: "Overlay", fill: $editorState.theme.fills.overlay, disabled: disabled, defaultFill: d.overlay)
         }
     }
 
@@ -613,6 +644,9 @@ private struct FillEditorRow: View {
     let label: String
     @Binding var fill: ThemeFill
     let disabled: Bool
+    var defaultFill: ThemeFill? = nil
+
+    private var isDefault: Bool { defaultFill.map { fill == $0 } ?? false }
 
     private enum FillKind: String, CaseIterable {
         case solid = "Solid"
@@ -628,26 +662,36 @@ private struct FillEditorRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 8) {
-                Text(label)
-                    .font(.system(size: 12))
-                    .lineLimit(1)
-                    .fixedSize(horizontal: true, vertical: false)
-                Spacer()
-                Picker("", selection: Binding(
-                    get: { kind },
-                    set: { switchKind(to: $0) }
-                )) {
-                    ForEach(FillKind.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+            if !label.isEmpty {
+                HStack(spacing: 8) {
+                    Text(label)
+                        .font(.system(size: 12))
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
+                    if defaultFill != nil {
+                        if isDefault { defaultBadge("default") }
+                        else {
+                            changedBadge()
+                            resetButton(tooltip: "Reset to default") { fill = defaultFill! }
+                                .disabled(disabled)
+                        }
+                    }
+                    Spacer()
+                    Picker("", selection: Binding(
+                        get: { kind },
+                        set: { switchKind(to: $0) }
+                    )) {
+                        ForEach(FillKind.allCases, id: \.self) { Text($0.rawValue).tag($0) }
+                    }
+                    .labelsHidden()
+                    .pickerStyle(.segmented)
+                    .controlSize(.small)
+                    .frame(width: 180)
+                    .disabled(disabled)
                 }
-                .labelsHidden()
-                .pickerStyle(.segmented)
-                .controlSize(.small)
-                .frame(width: 180)
-                .disabled(disabled)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 3)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 3)
 
             Group {
                 switch kind {
@@ -866,6 +910,9 @@ private struct OptionalFillEditorRow: View {
     let label: String
     @Binding var fill: ThemeFill?
     let disabled: Bool
+    var defaultValue: ThemeFill? = nil
+
+    private var isDefault: Bool { fill == defaultValue }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -878,6 +925,12 @@ private struct OptionalFillEditorRow: View {
                 }
                 .toggleStyle(.checkbox)
                 .disabled(disabled)
+                if isDefault { defaultBadge("default") }
+                else {
+                    changedBadge()
+                    resetButton(tooltip: "Reset to default") { fill = defaultValue }
+                        .disabled(disabled)
+                }
                 Spacer()
             }
             .padding(.horizontal, 8)
@@ -908,6 +961,9 @@ private struct BorderEditorRow: View {
     let label: String
     @Binding var border: ThemeBorder?
     let disabled: Bool
+    var defaultValue: ThemeBorder? = nil
+
+    private var isDefault: Bool { border == defaultValue }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -920,6 +976,12 @@ private struct BorderEditorRow: View {
                 }
                 .toggleStyle(.checkbox)
                 .disabled(disabled)
+                if isDefault { defaultBadge("default") }
+                else {
+                    changedBadge()
+                    resetButton(tooltip: "Reset to default") { border = defaultValue }
+                        .disabled(disabled)
+                }
                 Spacer()
             }
             .padding(.horizontal, 8)
@@ -1006,6 +1068,9 @@ private struct GlowEditorRow: View {
     let label: String
     @Binding var glow: ThemeGlow?
     let disabled: Bool
+    var defaultValue: ThemeGlow? = nil
+
+    private var isDefault: Bool { glow == defaultValue }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -1018,6 +1083,12 @@ private struct GlowEditorRow: View {
                 }
                 .toggleStyle(.checkbox)
                 .disabled(disabled)
+                if isDefault { defaultBadge("default") }
+                else {
+                    changedBadge()
+                    resetButton(tooltip: "Reset to default") { glow = defaultValue }
+                        .disabled(disabled)
+                }
                 Spacer()
             }
             .padding(.horizontal, 8)
@@ -1110,7 +1181,8 @@ private struct RadiusRow: View {
             format: "%.0f",
             disabled: disabled,
             trailingReset: value != defaultValue && !disabled ? { value = defaultValue } : nil,
-            trailingResetTooltip: "Reset to default (\(Int(defaultValue)))"
+            trailingResetTooltip: "Reset to default (\(Int(defaultValue)))",
+            showDefaultBadge: value == defaultValue
         )
     }
 }
@@ -1130,7 +1202,8 @@ private struct SpacingRow: View {
             format: "%.0f",
             disabled: disabled,
             trailingReset: value != defaultValue && !disabled ? { value = defaultValue } : nil,
-            trailingResetTooltip: "Reset to default (\(Int(defaultValue)))"
+            trailingResetTooltip: "Reset to default (\(Int(defaultValue)))",
+            showDefaultBadge: value == defaultValue
         )
     }
 }
@@ -1144,6 +1217,15 @@ private func defaultBadge(_ label: String) -> some View {
         .padding(.horizontal, 5)
         .padding(.vertical, 2)
         .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(.secondary.opacity(0.12)))
+}
+
+private func changedBadge() -> some View {
+    Text("changed")
+        .font(.system(size: 10))
+        .foregroundStyle(.orange)
+        .padding(.horizontal, 5)
+        .padding(.vertical, 2)
+        .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(.orange.opacity(0.12)))
 }
 
 private func resetButton(tooltip: String = "Reset to default", action: @escaping () -> Void) -> some View {
@@ -1230,18 +1312,18 @@ private struct OptionalColorRow: View {
     var body: some View {
         HStack(spacing: 8) {
             Text(label).font(.system(size: 12))
-            Spacer()
             if isDefault {
                 defaultBadge(defaultLabel)
             } else {
+                changedBadge()
                 resetButton(tooltip: "Reset to default (\(defaultLabel))") { hex = nil }
                     .disabled(disabled)
             }
+            Spacer()
             ColorPickerRow(label: "", hex: Binding(
                 get: { hex ?? defaultColor.hexString },
                 set: { hex = $0 }
             ))
-            .opacity(isDefault ? 0.4 : 1)
             .disabled(disabled)
         }
         .padding(.horizontal, 8)
@@ -1264,32 +1346,34 @@ private struct OptionalColorOpacityRow: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(spacing: 8) {
                 Text(label).font(.system(size: 12))
-                Spacer()
                 if isDefault {
                     defaultBadge(defaultLabel)
                 } else {
+                    changedBadge()
                     resetButton(tooltip: "Reset to default (\(defaultLabel))") { hex = nil; opacity = nil }
                         .disabled(disabled)
                 }
+                Spacer()
+            }
+            .padding(.horizontal, 8)
+            .padding(.top, 6)
+            HStack(spacing: 0) {
                 ColorPickerRow(label: "", hex: Binding(
                     get: { hex ?? defaultColor.hexString },
                     set: { hex = $0 }
                 ))
-                .opacity(isDefault ? 0.4 : 1)
+                .disabled(disabled)
+                OpacitySlider(value: Binding(
+                    get: { opacity ?? defaultOpacity },
+                    set: {
+                        if hex == nil { hex = defaultColor.hexString }
+                        opacity = $0
+                    }
+                ))
                 .disabled(disabled)
             }
-            .padding(.horizontal, 8)
-            .padding(.vertical, 2)
-
-            OpacitySlider(value: Binding(
-                get: { opacity ?? defaultOpacity },
-                set: {
-                    if hex == nil { hex = defaultColor.hexString }
-                    opacity = $0
-                }
-            ), compact: true)
-            .opacity(isDefault ? 0.4 : 1)
-            .disabled(disabled)
+            .padding(.leading, 16)
+            .padding(.bottom, 4)
         }
     }
 }
@@ -1389,13 +1473,15 @@ private struct LabeledSliderRow: View {
     var horizontalPadding: CGFloat = 8
     var trailingReset: (() -> Void)? = nil
     var trailingResetTooltip: String = "Reset to default"
+    var showDefaultBadge: Bool = false
 
     @State private var editText: String
     @FocusState private var isFocused: Bool
 
     init(label: String, value: Binding<Double>, range: ClosedRange<Double>, step: Double,
          format: String, disabled: Bool = false, labelWidth: CGFloat? = 90, verticalPadding: Double = 3,
-         horizontalPadding: CGFloat = 8, trailingReset: (() -> Void)? = nil, trailingResetTooltip: String = "Reset to default") {
+         horizontalPadding: CGFloat = 8, trailingReset: (() -> Void)? = nil, trailingResetTooltip: String = "Reset to default",
+         showDefaultBadge: Bool = false) {
         self.label = label
         self._value = value
         self.range = range
@@ -1407,6 +1493,7 @@ private struct LabeledSliderRow: View {
         self.horizontalPadding = horizontalPadding
         self.trailingReset = trailingReset
         self.trailingResetTooltip = trailingResetTooltip
+        self.showDefaultBadge = showDefaultBadge
         let numFmt = format.components(separatedBy: " ").first ?? format
         self._editText = State(initialValue: String(format: numFmt, value.wrappedValue))
     }
@@ -1432,6 +1519,12 @@ private struct LabeledSliderRow: View {
                     .foregroundStyle(.secondary)
                     .fixedSize()
             }
+            if let reset = trailingReset {
+                changedBadge()
+                resetButton(tooltip: trailingResetTooltip, action: reset)
+            } else if showDefaultBadge {
+                defaultBadge("default")
+            }
             if isIntegerStep {
                 Slider(value: $value, in: range, step: step)
                     .disabled(disabled)
@@ -1449,12 +1542,6 @@ private struct LabeledSliderRow: View {
                 .focused($isFocused)
                 .onSubmit { commit() }
                 .disabled(disabled)
-            if let reset = trailingReset {
-                resetButton(tooltip: trailingResetTooltip, action: reset)
-            } else {
-                // Fixed-width placeholder to keep slider widths consistent across rows
-                Color.clear.frame(width: 16, height: 1)
-            }
         }
         .padding(.horizontal, horizontalPadding)
         .padding(.vertical, verticalPadding)
