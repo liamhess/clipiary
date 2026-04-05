@@ -465,6 +465,12 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.activate(ignoringOtherApps: true)
             appState.didOpenPopover()
             panel.open()
+            if ThemeBuilderWindowController.shared.isVisible {
+                let panelFrame = panel.frame
+                DispatchQueue.main.async {
+                    ThemeBuilderWindowController.shared.orderFront(adjacentTo: panelFrame)
+                }
+            }
         }
     }
 
