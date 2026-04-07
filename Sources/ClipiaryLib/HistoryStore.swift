@@ -374,7 +374,8 @@ final class HistoryStore {
     private func trim(limit: Int) {
         let favorites = items.filter { !$0.favoriteTabs.isEmpty }
         let nonFavorites = recencyOrderedItems(items.filter { $0.favoriteTabs.isEmpty })
-        let retainedItems = favorites + Array(nonFavorites.prefix(max(0, limit - favorites.count)))
+        let nonSeparatorFavoriteCount = favorites.filter { !$0.isSeparator }.count
+        let retainedItems = favorites + Array(nonFavorites.prefix(max(0, limit - nonSeparatorFavoriteCount)))
         let retainedIDs = Set(retainedItems.map(\.id))
         for item in items where !retainedIDs.contains(item.id) {
             deleteImageFile(for: item)

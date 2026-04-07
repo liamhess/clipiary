@@ -299,6 +299,17 @@ func makeCaptureCoordinator(
         #expect(store.items.count == 5)
     }
 
+    @Test func separatorsInFavoritesDoNotReduceNonFavoritesCap() {
+        let store = makeTempStore()
+        let separator = HistoryItem(text: "", source: .restored, appName: "", bundleID: nil, favoriteTabs: ["Favorites"], isSeparator: true)
+        store.add(separator, limit: 5)
+        for i in 0..<5 {
+            store.add(makeItem(text: "item \(i)"), limit: 5)
+        }
+        let nonFavorites = store.items.filter { $0.favoriteTabs.isEmpty }
+        #expect(nonFavorites.count == 5)
+    }
+
     @Test func persistAndLoad() {
         let dir = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
         try! FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)

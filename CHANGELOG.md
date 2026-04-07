@@ -6,6 +6,7 @@
 
 ### Fixed
 - Settings panel title bar longer bleeds through content
+- Separators in favorites tabs no longer reduce the effective history limit
 
 ## [1.4.0] - 2026-04-03
 ### Added
