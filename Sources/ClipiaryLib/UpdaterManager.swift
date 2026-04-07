@@ -4,6 +4,7 @@ import Sparkle
 @MainActor
 enum UpdatePhase {
     case idle
+    case backgroundUpdateAvailable
     case checking(cancel: @MainActor () -> Void)
     case updateFound(item: SUAppcastItem, state: SPUUserUpdateState?, reply: @MainActor (SPUUserUpdateChoice) -> Void)
     case notFound(acknowledge: @MainActor () -> Void)
@@ -33,14 +34,18 @@ public final class UpdaterManager: NSObject, SPUUpdaterDelegate {
 
     var updateAvailable: Bool {
         switch phase {
-        case .updateFound, .readyToInstall: return true
-        default: return false
+        case .idle, .checking, .notFound, .error:
+            return false
+        default:
+            return true
         }
     }
 
     var showOverlay: Bool {
-        if case .idle = phase { return false }
-        return true
+        switch phase {
+        case .idle, .backgroundUpdateAvailable: return false
+        default: return true
+        }
     }
 
     private override init() {
@@ -107,7 +112,7 @@ public final class UpdaterManager: NSObject, SPUUpdaterDelegate {
             phase = .idle
         case .readyToInstall(let reply):
             reply(.dismiss)
-        case .idle, .extracting, .installing:
+        case .idle, .extracting, .installing, .backgroundUpdateAvailable:
             break
         }
     }
@@ -156,6 +161,8 @@ public final class UpdaterManager: NSObject, SPUUpdaterDelegate {
     func cycleDebugPhase() {
         switch phase {
         case .idle:
+            phase = .backgroundUpdateAvailable
+        case .backgroundUpdateAvailable:
             phase = .checking(cancel: {})
         case .checking:
             guard let fakeItem = debugFakeAppcastItem() else { break }

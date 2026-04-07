@@ -23,7 +23,7 @@ struct UpdatePanelView: View {
     @ViewBuilder
     private var phaseContent: some View {
         switch manager.phase {
-        case .idle:
+        case .idle, .backgroundUpdateAvailable:
             EmptyView()
 
         case .checking(let cancel):
