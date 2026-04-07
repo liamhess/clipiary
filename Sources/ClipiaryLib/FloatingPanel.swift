@@ -256,6 +256,27 @@ private final class PanelHostingView: NSHostingView<AnyView> {
         self.onClose = onClose
         super.init(rootView: rootView)
         sizingOptions = []
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(backingPropertiesDidChange),
+            name: NSWindow.didChangeBackingPropertiesNotification,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(backingPropertiesDidChange),
+            name: NSApplication.didChangeScreenParametersNotification,
+            object: nil
+        )
+    }
+
+    // When the display configuration changes (sleep/wake, monitor attach/detach,
+    // resolution change), SwiftUI's LazyVStack can leave some cells with an
+    // incorrect transform, causing them to render upside-down. Force a full
+    // layout pass to reset any stale cell geometry.
+    @objc private func backingPropertiesDidChange() {
+        needsLayout = true
+        layoutSubtreeIfNeeded()
     }
 
     @available(*, unavailable)
