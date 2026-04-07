@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss xmlns:ns0="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><title>Clipiary</title><item><title>Version 1.4.0</title><ns0:version>1.4.0</ns0:version><ns0:shortVersionString>1.4.0</ns0:shortVersionString><description ns0:format="markdown">### Added
-- Preview Panel now shows entry details (source app, format, timestamp)
-- Optional smart paste for copy-on-select: when the current selection still matches copy-on-select clipboard text, Cmd+V restores the immediately previous clipboard instead
-- Input Monitoring permission prompts/status for smart paste interception
+<rss xmlns:ns0="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><title>Clipiary</title><item><title>Version 1.5.0</title><ns0:version>1.5.0</ns0:version><ns0:shortVersionString>1.5.0</ns0:shortVersionString><description ns0:format="markdown">### Added
+- Added a Theme Builder UI
+- Settings window now aligns to some UX patterns of the theme builder
+- Full date in item details
 
 ### Fixed
-- Copy-on-select now collapses prefix-growth selections into a single transient history item instead of polluting history with intermediate prefixes
-- Settings toggles now align consistently at the left edge instead of indenting some dependent options
-- In-app update release notes now keep proper bullet indentation and use clearer heading, spacing, and text styling
-</description><pubDate>Fri, 03 Apr 2026 21:56:47 +0000</pubDate><enclosure url="https://github.com/liamhess/clipiary/releases/download/v1.4.0/Clipiary-1.4.0.zip" ns0:edSignature="i0F192ZqvLh2hYtlJ48sJUakxjFfeAIVIn5ymlThwuOBIg79ErvHhOW8DqOMcf5h5X0XhrOfPL8xwh1XHPk+DA==" length="3244471" type="application/octet-stream" /></item></channel></rss>
+- Settings panel title bar longer bleeds through content
+- Separators in favorites tabs no longer reduce the effective history limit
+</description><pubDate>Tue, 07 Apr 2026 17:34:43 +0000</pubDate><enclosure url="https://github.com/liamhess/clipiary/releases/download/v1.5.0/Clipiary-1.5.0.zip" ns0:edSignature="viFu0LbLntfdEuABOvtaet/ce3X02GDBqVY2VqRVmRi+KlLzw4/72L67IFXKoR62HQfNbNZOlCtuynRA4HIwCw==" length="3606873" type="application/octet-stream" /></item></channel></rss>

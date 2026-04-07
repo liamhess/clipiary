@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.5.0] - 2026-04-07
 ### Added
 - Added a Theme Builder UI
 - Settings window now aligns to some UX patterns of the theme builder
