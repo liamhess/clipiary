@@ -191,6 +191,7 @@ struct ThemeBuilderView: View {
     let appState: AppState
     @State private var selectedSection: BuilderSection = .options
     @State private var sidebarTableView: NSTableView? = nil
+    @State private var saveTask: Task<Void, Never>? = nil
 
     @Environment(\.theme) private var activeTheme
 
@@ -245,7 +246,13 @@ struct ThemeBuilderView: View {
         }
         .onChange(of: editorState.theme) {
             guard !editorState.isBuiltIn else { return }
-            try? appState.themeManager.save(editorState.theme)
+            saveTask?.cancel()
+            let theme = editorState.theme
+            saveTask = Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(300))
+                guard !Task.isCancelled else { return }
+                try? appState.themeManager.save(theme)
+            }
         }
         .background(ThemeBuilderScrollConfigurator())
     }

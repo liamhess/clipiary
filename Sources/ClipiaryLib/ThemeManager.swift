@@ -17,6 +17,7 @@ final class ThemeManager {
     }()
     private let decoder = JSONDecoder()
     @ObservationIgnored private var directoryWatchSource: DispatchSourceFileSystemObject?
+    @ObservationIgnored private var isSaving = false
 
     init(fileManager: FileManager = .default, storageDirectory: URL? = nil) {
         self.fileManager = fileManager
@@ -86,8 +87,19 @@ final class ThemeManager {
             try? fileManager.removeItem(at: oldURL)
         }
         let data = try encoder.encode(theme)
+        isSaving = true
+        defer { isSaving = false }
         try data.write(to: newURL, options: .atomic)
-        load()
+        // Update in-memory state directly instead of re-reading all files from disk.
+        // This avoids a full reload (and the resulting re-render cascade) during live editing.
+        filenameByID[theme.id] = newFilename
+        if let idx = availableThemes.firstIndex(where: { $0.id == theme.id }) {
+            availableThemes[idx] = theme
+        } else {
+            availableThemes.append(theme)
+            availableThemes.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        }
+        resolveActiveTheme()
     }
 
     /// Duplicate any theme (including built-ins) with a new name and UUID-based id.
@@ -125,7 +137,8 @@ final class ThemeManager {
         )
         source.setEventHandler { [weak self] in
             Task { @MainActor [weak self] in
-                self?.load()
+                guard let self, !self.isSaving else { return }
+                self.load()
             }
         }
         source.setCancelHandler {
