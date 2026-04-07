@@ -1,5 +1,4 @@
 ## Top/Soon
-- Full date in item details
 
 ## Theme Ideas
 

@@ -4,6 +4,7 @@
 ### Added
 - Added a Theme Builder UI
 - Settings window follows "dependent settings" pattern of theme builder
+- Full date in item details
 
 ### Fixed
 - Settings panel title bar longer bleeds through content
