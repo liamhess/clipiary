@@ -446,11 +446,12 @@ struct ThemeBuilderView: View {
         builderCard("Fills") {
             let disabled = editorState.isBuiltIn
             let d = Theme.Fills.default
+            let accentHex = editorState.theme.resolvedAccent.hexString
             FillEditorRow(label: "Panel", fill: $editorState.theme.fills.panel, disabled: disabled, defaultFill: d.panel)
             FillEditorRow(label: "Tab Bar", fill: $editorState.theme.fills.tabBar, disabled: disabled, defaultFill: d.tabBar)
             OptionalFillEditorRow(label: "Tab Button Selected", fill: $editorState.theme.fills.tabButtonSelected, disabled: disabled, defaultValue: d.tabButtonSelected)
-            FillEditorRow(label: "Row Selected", fill: $editorState.theme.fills.rowSelected, disabled: disabled, defaultFill: d.rowSelected)
-            FillEditorRow(label: "Row Hovered", fill: $editorState.theme.fills.rowHovered, disabled: disabled, defaultFill: d.rowHovered)
+            FillEditorRow(label: "Row Selected", fill: $editorState.theme.fills.rowSelected, disabled: disabled, defaultFill: d.rowSelected, accentHex: accentHex)
+            FillEditorRow(label: "Row Hovered", fill: $editorState.theme.fills.rowHovered, disabled: disabled, defaultFill: d.rowHovered, accentHex: accentHex)
             FillEditorRow(label: "Card", fill: $editorState.theme.fills.card, disabled: disabled, defaultFill: d.card)
             FillEditorRow(label: "Overlay", fill: $editorState.theme.fills.overlay, disabled: disabled, defaultFill: d.overlay)
         }
@@ -659,6 +660,7 @@ private struct FillEditorRow: View {
     @Binding var fill: ThemeFill
     let disabled: Bool
     var defaultFill: ThemeFill? = nil
+    var accentHex: String = "#FFFFFF"
 
     private var isDefault: Bool { defaultFill.map { fill == $0 } ?? false }
 
@@ -722,7 +724,7 @@ private struct FillEditorRow: View {
     private var solidEditor: some View {
         HStack(spacing: 0) {
             ColorPickerRow(label: "", hex: Binding(
-                get: { fill.color ?? "#FFFFFF" },
+                get: { fill.color ?? accentHex },
                 set: { fill.color = $0; fill.gradient = nil; fill.mesh = nil }
             ))
             OpacitySlider(value: Binding(
@@ -905,14 +907,14 @@ private struct FillEditorRow: View {
     private func switchKind(to newKind: FillKind) {
         switch newKind {
         case .solid:
-            let c = fill.gradient?.first ?? fill.mesh?.first ?? "#FFFFFF"
+            let c = fill.gradient?.first ?? fill.mesh?.first ?? accentHex
             fill = .solid(c, opacity: fill.opacity)
         case .linear:
-            let first = fill.color ?? fill.mesh?.first ?? "#FFFFFF"
+            let first = fill.color ?? fill.mesh?.first ?? accentHex
             let last = fill.mesh?.last ?? "#000000"
             fill = .linearGradient([first, last], opacity: fill.opacity)
         case .mesh:
-            let base = fill.color ?? fill.gradient?.first ?? "#FFFFFF"
+            let base = fill.color ?? fill.gradient?.first ?? accentHex
             fill = .meshGradient([String](repeating: base, count: 9), columns: 3, rows: 3, opacity: fill.opacity)
         }
     }

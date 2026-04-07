@@ -3,7 +3,7 @@
 ## [Unreleased]
 ### Added
 - Added a Theme Builder UI
-- Settings window follows "dependent settings" pattern of theme builder
+- Settings window now aligns to some UX patterns of the theme builder
 - Full date in item details
 
 ### Fixed
