@@ -16,6 +16,7 @@ Clipiary is a vibe coded macOS clipboard manager with powerful features and an o
 - **Search** — filter clipboard history with a search field (always visible or auto-hide) and highlight matches
 - **Item preview** — press **Space** to preview the full text or image of the selected item in a popover
 - **Themes support** — sophisticated themes and effects support
+- **Theme Builder** — UI to configure all aspects of a theme and instantly see the results
 - **Image support** — captures images copied to the clipboard with dimensions display and preview
 - **Drag-and-drop reordering** — reorder items in favorites tabs by dragging
 - **Paste count bar** — a colored frequency gauge on each item showing how often you paste it, with 8 color schemes
