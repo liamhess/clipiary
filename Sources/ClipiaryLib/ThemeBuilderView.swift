@@ -247,6 +247,7 @@ struct ThemeBuilderView: View {
             guard !editorState.isBuiltIn else { return }
             try? appState.themeManager.save(editorState.theme)
         }
+        .background(ThemeBuilderScrollConfigurator())
     }
 
     @ViewBuilder
@@ -1612,6 +1613,22 @@ private extension NSColor {
         let g = Int((c.greenComponent * 255).rounded())
         let b = Int((c.blueComponent * 255).rounded())
         return String(format: "#%02X%02X%02X", r, g, b)
+    }
+}
+
+/// Sets all NSScrollViews in the theme builder's own window to overlay scroller style.
+private struct ThemeBuilderScrollConfigurator: NSViewRepresentable {
+    func makeNSView(context: Context) -> NSView { NSView() }
+
+    func updateNSView(_ nsView: NSView, context: Context) {
+        DispatchQueue.main.async {
+            guard let root = nsView.window?.contentView else { return }
+            func apply(_ view: NSView) {
+                if let sv = view as? NSScrollView { sv.scrollerStyle = .overlay; sv.tile() }
+                view.subviews.forEach { apply($0) }
+            }
+            apply(root)
+        }
     }
 }
 
