@@ -32,6 +32,34 @@ final class ThemeEditorState {
 
 // MARK: - Window Controller
 
+/// NSHostingView subclass that bypasses SwiftUI's performKeyEquivalent for standard
+/// text-editing shortcuts (Cmd+A/C/V/X/Z/Y), sending them directly to the first
+/// responder so they reach the focused field editor inside text fields.
+@MainActor
+private final class ThemeBuilderHostingView: NSHostingView<AnyView> {
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        guard event.type == .keyDown,
+              event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
+              let chars = event.charactersIgnoringModifiers?.lowercased() else {
+            return super.performKeyEquivalent(with: event)
+        }
+        let selector: Selector? = switch chars {
+        case "a": #selector(NSText.selectAll(_:))
+        case "c": #selector(NSText.copy(_:))
+        case "v": #selector(NSText.paste(_:))
+        case "x": #selector(NSText.cut(_:))
+        case "z": #selector(UndoManager.undo)
+        case "y": #selector(UndoManager.redo)
+        default: nil
+        }
+        if let selector, let responder = window?.firstResponder, responder.responds(to: selector) {
+            responder.perform(selector, with: nil)
+            return true
+        }
+        return super.performKeyEquivalent(with: event)
+    }
+}
+
 @MainActor
 final class ThemeBuilderWindowController {
     static let shared = ThemeBuilderWindowController()
@@ -84,7 +112,7 @@ final class ThemeBuilderWindowController {
             return
         }
 
-        let hosting = NSHostingView(rootView: AnyView(rootView))
+        let hosting = ThemeBuilderHostingView(rootView: AnyView(rootView))
         let height = panelFrame.map { $0.height } ?? appState.settings.panelHeight
         hosting.frame = NSRect(x: 0, y: 0, width: 640, height: height)
 
