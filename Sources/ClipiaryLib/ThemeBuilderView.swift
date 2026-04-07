@@ -168,7 +168,7 @@ private enum BuilderSection: String, CaseIterable, Identifiable {
     case colors = "Colors"
     case borders = "Borders"
     case effects = "Effects"
-    case cornerRadii = "Corner Radii"
+    case cornerRadii = "Corner radii"
     case spacing = "Spacing"
 
     var id: Self { self }
@@ -486,10 +486,10 @@ struct ThemeBuilderView: View {
             let d = Theme.Fills.default
             let accentHex = editorState.theme.resolvedAccent.hexString
             FillEditorRow(label: "Panel", fill: $editorState.theme.fills.panel, disabled: disabled, defaultFill: d.panel)
-            FillEditorRow(label: "Tab Bar", fill: $editorState.theme.fills.tabBar, disabled: disabled, defaultFill: d.tabBar)
-            OptionalFillEditorRow(label: "Tab Button Selected", fill: $editorState.theme.fills.tabButtonSelected, disabled: disabled, defaultValue: d.tabButtonSelected)
-            FillEditorRow(label: "Row Selected", fill: $editorState.theme.fills.rowSelected, disabled: disabled, defaultFill: d.rowSelected, accentHex: accentHex)
-            FillEditorRow(label: "Row Hovered", fill: $editorState.theme.fills.rowHovered, disabled: disabled, defaultFill: d.rowHovered, accentHex: accentHex)
+            FillEditorRow(label: "Tab bar", fill: $editorState.theme.fills.tabBar, disabled: disabled, defaultFill: d.tabBar)
+            OptionalFillEditorRow(label: "Tab button selected", fill: $editorState.theme.fills.tabButtonSelected, disabled: disabled, defaultValue: d.tabButtonSelected)
+            FillEditorRow(label: "Selected row", fill: $editorState.theme.fills.rowSelected, disabled: disabled, defaultFill: d.rowSelected, accentHex: accentHex)
+            FillEditorRow(label: "Hovered row", fill: $editorState.theme.fills.rowHovered, disabled: disabled, defaultFill: d.rowHovered, accentHex: accentHex)
             FillEditorRow(label: "Card", fill: $editorState.theme.fills.card, disabled: disabled, defaultFill: d.card)
             FillEditorRow(label: "Overlay", fill: $editorState.theme.fills.overlay, disabled: disabled, defaultFill: d.overlay)
         }
@@ -537,7 +537,7 @@ struct ThemeBuilderView: View {
             OptionalColorRow(label: "Status warning", hex: $editorState.theme.colors.statusWarning,
                              disabled: disabled, defaultColor: Color(nsColor: .systemOrange), defaultLabel: "system orange")
 
-            builderSubHeader("Search & Gauge")
+            builderSubHeader("Search & gauge")
             OptionalColorRow(label: "Search highlight", hex: $editorState.theme.colors.searchHighlight,
                              disabled: disabled, defaultColor: t.resolvedAccent, defaultLabel: "accent color")
             OptionalColorOpacityRow(label: "Search highlight background",
@@ -564,11 +564,11 @@ struct ThemeBuilderView: View {
         builderCard("Borders") {
             let disabled = editorState.isBuiltIn
             BorderEditorRow(label: "Panel", border: $editorState.theme.borders.panel, disabled: disabled)
-            BorderEditorRow(label: "Content Area", border: $editorState.theme.borders.contentArea, disabled: disabled)
-            BorderEditorRow(label: "Selected Row", border: $editorState.theme.borders.selectedRow, disabled: disabled)
+            BorderEditorRow(label: "Content area", border: $editorState.theme.borders.contentArea, disabled: disabled)
+            BorderEditorRow(label: "Selected row", border: $editorState.theme.borders.selectedRow, disabled: disabled)
             BorderEditorRow(label: "Card", border: $editorState.theme.borders.card, disabled: disabled)
-            BorderEditorRow(label: "Search Field", border: $editorState.theme.borders.searchField, disabled: disabled)
-            BorderEditorRow(label: "Tab Bar", border: $editorState.theme.borders.tabBar, disabled: disabled)
+            BorderEditorRow(label: "Search field", border: $editorState.theme.borders.searchField, disabled: disabled)
+            BorderEditorRow(label: "Tab bar", border: $editorState.theme.borders.tabBar, disabled: disabled)
         }
     }
 
