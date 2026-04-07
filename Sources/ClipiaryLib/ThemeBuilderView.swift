@@ -190,6 +190,7 @@ struct ThemeBuilderView: View {
     @State var editorState: ThemeEditorState
     let appState: AppState
     @State private var selectedSection: BuilderSection = .options
+    @State private var sidebarTableView: NSTableView? = nil
 
     @Environment(\.theme) private var activeTheme
 
@@ -204,13 +205,14 @@ struct ThemeBuilderView: View {
 
             HStack(spacing: 0) {
                 // Sidebar
+                // Sidebar
                 List(BuilderSection.allCases, selection: $selectedSection) { section in
                     Label(section.rawValue, systemImage: section.icon)
                         .font(.system(size: 12))
                         .tag(section)
                 }
                 .listStyle(.sidebar)
-                .onAppear { focusSidebarList() }
+                .onAppear { findAndStoreSidebarTableView() }
                 .frame(width: 140)
 
                 Divider()
@@ -223,7 +225,13 @@ struct ThemeBuilderView: View {
                     .padding(16)
                 }
                 .simultaneousGesture(TapGesture().onEnded {
-                    NSApp.keyWindow?.makeFirstResponder(nil)
+                    DispatchQueue.main.async {
+                        guard let window = NSApp.keyWindow else { return }
+                        // If a text field is now focused, leave it alone; otherwise keep sidebar active
+                        if !(window.firstResponder is NSText) {
+                            window.makeFirstResponder(sidebarTableView)
+                        }
+                    }
                 })
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
@@ -254,23 +262,17 @@ struct ThemeBuilderView: View {
         }
     }
 
-    // The sidebar List is backed by NSTableView. SwiftUI's @FocusState doesn't reliably
-    // transfer AppKit focus to it, so we walk the window's view hierarchy directly.
-    // The content area uses SwiftUI ScrollView (no NSTableView), so the first NSTableView
-    // found is always the sidebar.
-    private func focusSidebarList() {
+    private func findAndStoreSidebarTableView() {
         DispatchQueue.main.async {
-            guard let window = NSApp.keyWindow,
-                  let root = window.contentView else { return }
+            guard let root = NSApp.keyWindow?.contentView else { return }
             func findTableView(_ view: NSView) -> NSTableView? {
                 if let tv = view as? NSTableView { return tv }
-                for sub in view.subviews {
-                    if let found = findTableView(sub) { return found }
-                }
+                for sub in view.subviews { if let found = findTableView(sub) { return found } }
                 return nil
             }
             if let tv = findTableView(root) {
-                window.makeFirstResponder(tv)
+                sidebarTableView = tv
+                NSApp.keyWindow?.makeFirstResponder(tv)
             }
         }
     }
