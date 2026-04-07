@@ -60,11 +60,6 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     public func applicationDidResignActive(_ notification: Notification) {
-        // Keep the app alive if the settings window is open —
-        // clicking into it from another app triggers resign-active momentarily.
-        // Note: the theme builder guard is intentionally absent — when the app truly
-        // deactivates (cmd+tab, click away), the panel must close even if the builder is open.
-        guard !SettingsWindowController.shared.isVisible else { return }
         if isPanelVisible {
             panel?.close()
         }
@@ -465,10 +460,15 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.activate(ignoringOtherApps: true)
             appState.didOpenPopover()
             panel.open()
+            let panelFrame = panel.frame
             if ThemeBuilderWindowController.shared.isVisible {
-                let panelFrame = panel.frame
                 DispatchQueue.main.async {
                     ThemeBuilderWindowController.shared.orderFront(adjacentTo: panelFrame)
+                }
+            }
+            if SettingsWindowController.shared.isVisible {
+                DispatchQueue.main.async {
+                    SettingsWindowController.shared.orderFront()
                 }
             }
         }

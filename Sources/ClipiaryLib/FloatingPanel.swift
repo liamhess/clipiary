@@ -228,7 +228,6 @@ final class FloatingPanel: NSPanel {
             appState.requestSearchFocus()
             return
         }
-        SettingsWindowController.shared.close()
         super.close()
         statusBarButton?.isHighlighted = false
         onClose?()

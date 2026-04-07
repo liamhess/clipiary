@@ -702,8 +702,15 @@ final class SettingsWindowController {
         window.makeKeyAndOrderFront(nil)
     }
 
+    func orderFront() {
+        window?.makeKeyAndOrderFront(nil)
+    }
+
     func close() {
         window?.close()
+    }
+
+    func reset() {
         window = nil
     }
 }
