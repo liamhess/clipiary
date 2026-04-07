@@ -6,6 +6,7 @@ import Observation
 final class ThemeManager {
     private(set) var availableThemes: [Theme] = []
     private(set) var activeTheme: Theme = .default
+    private var filenameByID: [String: String] = [:]
 
     private let fileManager: FileManager
     private(set) var themesDirectoryURL: URL
@@ -42,17 +43,22 @@ final class ThemeManager {
             includingPropertiesForKeys: nil
         ) else {
             availableThemes = [.default]
+            filenameByID = [:]
             resolveActiveTheme()
             return
         }
 
         var themes: [Theme] = []
+        var newFilenameByID: [String: String] = [:]
         for url in contents where url.pathExtension == "json" {
             guard let data = try? Data(contentsOf: url),
                   let theme = try? decoder.decode(Theme.self, from: data) else {
                 continue
             }
+            // Deduplicate: skip if we already loaded a file for this ID
+            guard newFilenameByID[theme.id] == nil else { continue }
             themes.append(theme)
+            newFilenameByID[theme.id] = url.deletingPathExtension().lastPathComponent
         }
 
         themes.sort { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
@@ -61,6 +67,7 @@ final class ThemeManager {
             themes = [.default]
         }
         availableThemes = themes
+        filenameByID = newFilenameByID
         resolveActiveTheme()
     }
 
@@ -71,9 +78,15 @@ final class ThemeManager {
     /// Write a theme to disk and reload.
     func save(_ theme: Theme) throws {
         try fileManager.createDirectory(at: themesDirectoryURL, withIntermediateDirectories: true)
-        let url = themesDirectoryURL.appending(path: "\(theme.id).json")
+        let newFilename = nextAvailableFilename(sanitizedFilename(for: theme.name), excludingID: theme.id)
+        let newURL = themesDirectoryURL.appending(path: "\(newFilename).json")
+        // Remove old file if the theme was renamed
+        if let oldFilename = filenameByID[theme.id], oldFilename != newFilename {
+            let oldURL = themesDirectoryURL.appending(path: "\(oldFilename).json")
+            try? fileManager.removeItem(at: oldURL)
+        }
         let data = try encoder.encode(theme)
-        try data.write(to: url, options: .atomic)
+        try data.write(to: newURL, options: .atomic)
         load()
     }
 
@@ -92,7 +105,8 @@ final class ThemeManager {
         guard !Theme.builtInThemes.contains(where: { $0.id == id }) else {
             throw ThemeManagerError.cannotDeleteBuiltIn
         }
-        let url = themesDirectoryURL.appending(path: "\(id).json")
+        guard let filename = filenameByID[id] else { return }
+        let url = themesDirectoryURL.appending(path: "\(filename).json")
         try fileManager.removeItem(at: url)
         load()
     }
@@ -124,6 +138,25 @@ final class ThemeManager {
     func stopWatching() {
         directoryWatchSource?.cancel()
         directoryWatchSource = nil
+    }
+
+    private func sanitizedFilename(for name: String) -> String {
+        var safe = name
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "/", with: "-")
+            .replacingOccurrences(of: "\0", with: "")
+            .replacingOccurrences(of: ":", with: "-")
+        if safe.isEmpty { safe = "theme" }
+        if safe.count > 64 { safe = String(safe.prefix(64)) }
+        return safe
+    }
+
+    private func nextAvailableFilename(_ base: String, excludingID: String) -> String {
+        let taken = Set(filenameByID.filter { $0.key != excludingID }.values)
+        guard taken.contains(base) else { return base }
+        var n = 2
+        while taken.contains("\(base) \(n)") { n += 1 }
+        return "\(base) \(n)"
     }
 
     private func resolveActiveTheme() {
