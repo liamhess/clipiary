@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Added
 - Added a Theme Builder UI
+- Settings window follows "dependent settings" pattern of theme builder
 
 ### Fixed
 - Settings panel title bar longer bleeds through content

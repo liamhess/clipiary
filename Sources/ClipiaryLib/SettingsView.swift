@@ -48,24 +48,23 @@ struct SettingsView: View {
                 )
             )
 
-            settingsToggleRow(
+            settingsToggleWithDependents(
                 title: "Move to top on paste",
                 help: "When you paste an item, move it to the top of your history so recent pastes are always first.",
                 isOn: Binding(
                     get: { appState.settings.moveToTopOnPaste },
                     set: { appState.settings.moveToTopOnPaste = $0 }
                 )
-            )
-
-            settingsToggleRow(
-                title: "Not for favorites",
-                help: "Favorites are not moved to the top when pasted.",
-                isOn: Binding(
-                    get: { appState.settings.moveToTopSkipFavorites },
-                    set: { appState.settings.moveToTopSkipFavorites = $0 }
+            ) {
+                settingsToggleRow(
+                    title: "Not for favorites",
+                    help: "Favorites are not moved to the top when pasted.",
+                    isOn: Binding(
+                        get: { appState.settings.moveToTopSkipFavorites },
+                        set: { appState.settings.moveToTopSkipFavorites = $0 }
+                    )
                 )
-            )
-            .disabled(!appState.settings.moveToTopOnPaste)
+            }
 
             settingMetric(title: "History limit") {
                 optionPicker(
@@ -225,117 +224,115 @@ struct SettingsView: View {
 
     private var copyOnSelectSection: some View {
         settingsCard("Copy on Select") {
-            settingsToggleRow(
+            settingsToggleWithDependents(
                 title: "Enable globally (best effort)",
                 help: "Automatically capture text you select in any app, without pressing Cmd+C. Requires Accessibility access.",
                 isOn: Binding(
                     get: { appState.settings.isCopyOnSelectEnabled },
                     set: { appState.settings.isCopyOnSelectEnabled = $0 }
                 )
-            )
-
-            settingsToggleRow(
-                title: "Smart paste over selection",
-                help: "If copy-on-select put the current selection on your clipboard, pressing paste while that same text is still selected restores your previous clipboard instead.",
-                isOn: Binding(
-                    get: { appState.settings.isCopyOnSelectSmartPasteEnabled },
-                    set: { appState.settings.isCopyOnSelectSmartPasteEnabled = $0 }
+            ) {
+                settingsToggleRow(
+                    title: "Smart paste over selection",
+                    help: "If copy-on-select put the current selection on your clipboard, pressing paste while that same text is still selected restores your previous clipboard instead.",
+                    isOn: Binding(
+                        get: { appState.settings.isCopyOnSelectSmartPasteEnabled },
+                        set: { appState.settings.isCopyOnSelectSmartPasteEnabled = $0 }
+                    )
                 )
-            )
-            .disabled(!appState.settings.isCopyOnSelectEnabled)
 
-            if appState.settings.isCopyOnSelectEnabled &&
-                appState.settings.isCopyOnSelectSmartPasteEnabled &&
-                !appState.inputMonitoringPermissionManager.isTrusted {
-                Button {
-                    appState.requestInputMonitoringAccess()
-                } label: {
-                    HStack(spacing: 5) {
-                        Circle()
-                            .fill(Color(nsColor: .systemOrange))
-                            .frame(width: 6, height: 6)
-                        Text("Grant Input Monitoring")
-                            .font(.system(size: 11, weight: .medium))
+                if !appState.inputMonitoringPermissionManager.isTrusted {
+                    DependentGroup(enabled: appState.settings.isCopyOnSelectSmartPasteEnabled) {
+                        Button {
+                            appState.requestInputMonitoringAccess()
+                        } label: {
+                            HStack(spacing: 5) {
+                                Circle()
+                                    .fill(Color(nsColor: .systemOrange))
+                                    .frame(width: 6, height: 6)
+                                Text("Grant Input Monitoring")
+                                    .font(.system(size: 11, weight: .medium))
+                            }
+                        }
+                        .buttonStyle(.plain)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
                     }
                 }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-            }
 
-            if appState.settings.isCopyOnSelectEnabled && !appState.permissionManager.isTrusted {
-                Button {
-                    appState.refreshCopyOnSelectPermissions()
-                } label: {
-                    HStack(spacing: 5) {
-                        Circle()
-                            .fill(Color(nsColor: .systemOrange))
-                            .frame(width: 6, height: 6)
-                        Text("Grant Accessibility Access")
-                            .font(.system(size: 11, weight: .medium))
+                if !appState.permissionManager.isTrusted {
+                    Button {
+                        appState.refreshCopyOnSelectPermissions()
+                    } label: {
+                        HStack(spacing: 5) {
+                            Circle()
+                                .fill(Color(nsColor: .systemOrange))
+                                .frame(width: 6, height: 6)
+                            Text("Grant Accessibility Access")
+                                .font(.system(size: 11, weight: .medium))
+                        }
                     }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 4)
                 }
-                .buttonStyle(.plain)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 4)
-            }
 
-            settingMetric(title: "Minimum selection length", help: "Ignore selections shorter than this many characters to avoid capturing accidental clicks.") {
-                Stepper(
-                    "\(appState.settings.minimumSelectionLength)",
-                    value: Binding(
-                        get: { appState.settings.minimumSelectionLength },
-                        set: { appState.settings.minimumSelectionLength = max(1, $0) }
-                    ),
-                    in: 1...10
-                )
-                .font(.system(size: 11, weight: .medium))
-            }
+                settingMetric(title: "Minimum selection length", help: "Ignore selections shorter than this many characters to avoid capturing accidental clicks.") {
+                    Stepper(
+                        "\(appState.settings.minimumSelectionLength)",
+                        value: Binding(
+                            get: { appState.settings.minimumSelectionLength },
+                            set: { appState.settings.minimumSelectionLength = max(1, $0) }
+                        ),
+                        in: 1...10
+                    )
+                    .font(.system(size: 11, weight: .medium))
+                }
 
-            settingMetric(title: "Cooldown", help: "Wait this long after a selection changes before capturing it. Prevents flooding your history while you drag to select text.") {
-                optionPicker(
-                    selection: Binding(
-                        get: { appState.settings.copyOnSelectCooldownMilliseconds },
-                        set: { appState.settings.copyOnSelectCooldownMilliseconds = $0 }
-                    ),
-                    options: cooldownOptions,
-                    label: { "\($0) ms" }
-                )
-            }
+                settingMetric(title: "Cooldown", help: "Wait this long after a selection changes before capturing it. Prevents flooding your history while you drag to select text.") {
+                    optionPicker(
+                        selection: Binding(
+                            get: { appState.settings.copyOnSelectCooldownMilliseconds },
+                            set: { appState.settings.copyOnSelectCooldownMilliseconds = $0 }
+                        ),
+                        options: cooldownOptions,
+                        label: { "\($0) ms" }
+                    )
+                }
 
-            settingMetric(title: "Keep unused items", help: "How many copy-on-select items to keep if you never paste them. They are automatically removed once this limit is exceeded.") {
-                optionPicker(
-                    selection: Binding(
-                        get: { appState.settings.copyOnSelectBufferLimit },
-                        set: { appState.settings.copyOnSelectBufferLimit = $0 }
-                    ),
-                    options: selectionBufferOptions,
-                    label: { "\($0)" }
-                )
+                settingMetric(title: "Keep unused items", help: "How many copy-on-select items to keep if you never paste them. They are automatically removed once this limit is exceeded.") {
+                    optionPicker(
+                        selection: Binding(
+                            get: { appState.settings.copyOnSelectBufferLimit },
+                            set: { appState.settings.copyOnSelectBufferLimit = $0 }
+                        ),
+                        options: selectionBufferOptions,
+                        label: { "\($0)" }
+                    )
+                }
             }
         }
     }
 
     private var richTextSection: some View {
         settingsCard("Rich Text") {
-            settingsToggleRow(
+            settingsToggleWithDependents(
                 title: "Capture rich text (RTF/HTML)",
                 help: "When enabled, Clipiary also stores rich text formatting from the clipboard. Items with rich text show an RTF or HTML badge.",
                 isOn: Binding(
                     get: { appState.settings.isRichTextCaptureEnabled },
                     set: { appState.settings.isRichTextCaptureEnabled = $0 }
                 )
-            )
-
-            settingsToggleRow(
-                title: "Paste rich text by default",
-                help: "When pasting, use RTF/HTML formatting if available. Use the alternate paste shortcut to paste plain text instead.",
-                isOn: Binding(
-                    get: { appState.settings.richTextPasteDefault },
-                    set: { appState.settings.richTextPasteDefault = $0 }
+            ) {
+                settingsToggleRow(
+                    title: "Paste rich text by default",
+                    help: "When pasting, use RTF/HTML formatting if available. Use the alternate paste shortcut to paste plain text instead.",
+                    isOn: Binding(
+                        get: { appState.settings.richTextPasteDefault },
+                        set: { appState.settings.richTextPasteDefault = $0 }
+                    )
                 )
-            )
-            .disabled(!appState.settings.isRichTextCaptureEnabled)
+            }
         }
     }
 
@@ -430,6 +427,7 @@ struct SettingsView: View {
                     .font(.system(size: 12))
             }
             .toggleStyle(.checkbox)
+            .fixedSize(horizontal: false, vertical: true)
             if let extra {
                 extra
                     .padding(.leading, 6)
@@ -442,6 +440,48 @@ struct SettingsView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(.horizontal, 8)
         .padding(.vertical, 5)
+    }
+
+    /// Toggle row with dependent children. Uses a left-spine layout so the
+    /// L-bracket starts directly below the checkbox, not below the (possibly
+    /// wrapped) label text.
+    private func settingsToggleWithDependents<D: View>(
+        title: String,
+        help: String? = nil,
+        isOn: Binding<Bool>,
+        @ViewBuilder dependents: () -> D
+    ) -> some View {
+        HStack(alignment: .top, spacing: 0) {
+            // Left spine: checkbox on top, bracket extending down
+            VStack(spacing: 0) {
+                Toggle(isOn: isOn) { EmptyView() }
+                    .toggleStyle(.checkbox)
+                    .labelsHidden()
+                    .padding(.leading, 8)
+                    .padding(.vertical, 5)
+                BracketShape()
+                    .fill(Color.secondary.opacity(0.4))
+                    .frame(width: 6)
+                    .padding(.leading, 14)
+            }
+            .fixedSize(horizontal: true, vertical: false)
+            // Right body: label (may wrap) + dependent content
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(alignment: .firstTextBaseline, spacing: 0) {
+                    Text(title).font(.system(size: 12))
+                    if let help { helpIcon(help).padding(.leading, 6) }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, 5)
+                .padding(.trailing, 8)
+                DependentGroup(enabled: isOn.wrappedValue, showBracket: false) {
+                    dependents()
+                }
+                .padding(.bottom, 4)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .fixedSize(horizontal: false, vertical: true)
     }
 
     private func shortcutRow(title: String, help: String? = nil, value: String, isRecording: Bool, onToggle: @escaping () -> Void) -> some View {

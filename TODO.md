@@ -1,6 +1,10 @@
 ## Top/Soon
+- Full date in item details
 
 ## Theme Ideas
+
+- Pixel art effects
+- Font configuration
 
 ### Color manipulation
 - `.saturation(_:)` — 0 for grayscale, >1 for oversaturation; expose as theme option for hover/selection states
