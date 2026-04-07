@@ -8,7 +8,7 @@ final class ThemeManager {
     private(set) var activeTheme: Theme = .default
 
     private let fileManager: FileManager
-    private let themesDirectoryURL: URL
+    private(set) var themesDirectoryURL: URL
     private let encoder: JSONEncoder = {
         let e = JSONEncoder()
         e.outputFormatting = [.prettyPrinted, .sortedKeys]

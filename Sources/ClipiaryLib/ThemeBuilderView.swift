@@ -342,6 +342,14 @@ struct ThemeBuilderView: View {
                     Text("This theme will be permanently removed.")
                 }
             }
+
+            Button {
+                NSWorkspace.shared.open(appState.themeManager.themesDirectoryURL)
+            } label: {
+                Image(systemName: "folder")
+            }
+            .buttonStyle(.borderless)
+            .help("Open themes folder in Finder")
         }
     }
 
