@@ -119,7 +119,12 @@ struct Theme: Codable, Sendable, Equatable {
     var spacing: Spacing
 
     struct Options: Codable, Sendable, Equatable {
-        var useMaterial: Bool
+        /// macOS vibrancy material for the panel background.
+        /// Accepted values: `"ultraThin"`, `"thin"`, `"regular"`, `"thick"`, `"ultraThick"`.
+        /// `nil` (or omitted) = no material; panel uses `fills.panel` instead.
+        ///
+        /// Legacy JSON key `useMaterial: true` is read as `"regular"` during decoding.
+        var material: String?
         var useSystemAccent: Bool
         var appearance: String
         var animatedPanel: Bool
@@ -130,20 +135,37 @@ struct Theme: Codable, Sendable, Equatable {
         var overlayBlurRadius: Double?
 
         static let `default` = Options(
-            useMaterial: true,
+            material: "regular",
             useSystemAccent: true,
             appearance: "dark",
             animatedPanel: false
         )
 
-        init(useMaterial: Bool = Self.default.useMaterial,
+        init(material: String? = Self.default.material,
              useSystemAccent: Bool = Self.default.useSystemAccent,
              appearance: String = Self.default.appearance,
              animatedPanel: Bool = false,
              animatedPanelColor: String? = nil,
              animatedPanelPeriod: Double? = nil,
              overlayBlurRadius: Double? = nil) {
-            self.useMaterial = useMaterial
+            self.material = material
+            self.useSystemAccent = useSystemAccent
+            self.appearance = appearance
+            self.animatedPanel = animatedPanel
+            self.animatedPanelColor = animatedPanelColor
+            self.animatedPanelPeriod = animatedPanelPeriod
+            self.overlayBlurRadius = overlayBlurRadius
+        }
+
+        // Convenience init that accepts the legacy Bool for call sites that haven't migrated.
+        init(useMaterial: Bool,
+             useSystemAccent: Bool = Self.default.useSystemAccent,
+             appearance: String = Self.default.appearance,
+             animatedPanel: Bool = false,
+             animatedPanelColor: String? = nil,
+             animatedPanelPeriod: Double? = nil,
+             overlayBlurRadius: Double? = nil) {
+            self.material = useMaterial ? "regular" : nil
             self.useSystemAccent = useSystemAccent
             self.appearance = appearance
             self.animatedPanel = animatedPanel
@@ -155,13 +177,38 @@ struct Theme: Codable, Sendable, Equatable {
         init(from decoder: Decoder) throws {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             let d = Self.default
-            useMaterial = try container.decodeIfPresent(Bool.self, forKey: .useMaterial) ?? d.useMaterial
+            // New-style: material string takes precedence.
+            if let materialStr = try container.decodeIfPresent(String.self, forKey: .material) {
+                material = materialStr
+            } else if let legacyBool = try container.decodeIfPresent(Bool.self, forKey: .useMaterial) {
+                // Legacy `useMaterial: true/false` — map to "regular" or nil.
+                material = legacyBool ? "regular" : nil
+            } else {
+                material = d.material
+            }
             useSystemAccent = try container.decodeIfPresent(Bool.self, forKey: .useSystemAccent) ?? d.useSystemAccent
             appearance = try container.decodeIfPresent(String.self, forKey: .appearance) ?? d.appearance
             animatedPanel = try container.decodeIfPresent(Bool.self, forKey: .animatedPanel) ?? d.animatedPanel
             animatedPanelColor = try container.decodeIfPresent(String.self, forKey: .animatedPanelColor)
             animatedPanelPeriod = try container.decodeIfPresent(Double.self, forKey: .animatedPanelPeriod)
             overlayBlurRadius = try container.decodeIfPresent(Double.self, forKey: .overlayBlurRadius)
+        }
+
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.container(keyedBy: CodingKeys.self)
+            try container.encodeIfPresent(material, forKey: .material)
+            try container.encode(useSystemAccent, forKey: .useSystemAccent)
+            try container.encode(appearance, forKey: .appearance)
+            try container.encode(animatedPanel, forKey: .animatedPanel)
+            try container.encodeIfPresent(animatedPanelColor, forKey: .animatedPanelColor)
+            try container.encodeIfPresent(animatedPanelPeriod, forKey: .animatedPanelPeriod)
+            try container.encodeIfPresent(overlayBlurRadius, forKey: .overlayBlurRadius)
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case material, useMaterial, useSystemAccent, appearance
+            case animatedPanel, animatedPanelColor, animatedPanelPeriod
+            case overlayBlurRadius
         }
     }
 

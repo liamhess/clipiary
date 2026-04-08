@@ -550,62 +550,43 @@ struct PanelRootView: View {
     @ViewBuilder
     private var panelBackground: some View {
         let cornerRadius = theme.cornerRadii.panel
-        if theme.options.useMaterial {
-            ZStack {
+        ZStack {
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .fill(resolvedMaterialOrFill)
+            if theme.options.animatedPanel {
+                TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
+                    let period = theme.options.animatedPanelPeriod ?? 8.0
+                    let color = Color(hex: theme.options.animatedPanelColor) ?? theme.resolvedAccent
+                    let t = timeline.date.timeIntervalSinceReferenceDate / period
+                    let angle = t * .pi * 2
+                    let start = UnitPoint(x: 0.5 + 0.5 * cos(angle), y: 0.5 - 0.5 * sin(angle))
+                    let end = UnitPoint(x: 0.5 - 0.5 * cos(angle), y: 0.5 + 0.5 * sin(angle))
+                    LinearGradient(
+                        colors: [color.opacity(0.0), color.opacity(0.22), color.opacity(0.0)],
+                        startPoint: start,
+                        endPoint: end
+                    )
+                }
+            }
+        }
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+        .overlay {
+            let border = theme.resolvedPanelBorder
+            if border.isVisible {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(.regularMaterial)
-                if theme.options.animatedPanel {
-                    TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
-                        let period = theme.options.animatedPanelPeriod ?? 8.0
-                        let color = Color(hex: theme.options.animatedPanelColor) ?? theme.resolvedAccent
-                        let t = timeline.date.timeIntervalSinceReferenceDate / period
-                        let angle = t * .pi * 2
-                        let start = UnitPoint(x: 0.5 + 0.5 * cos(angle), y: 0.5 - 0.5 * sin(angle))
-                        let end = UnitPoint(x: 0.5 - 0.5 * cos(angle), y: 0.5 + 0.5 * sin(angle))
-                        LinearGradient(
-                            colors: [color.opacity(0.0), color.opacity(0.22), color.opacity(0.0)],
-                            startPoint: start,
-                            endPoint: end
-                        )
-                    }
-                }
+                    .stroke(border.color, style: border.strokeStyle)
             }
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            .overlay {
-                let border = theme.resolvedPanelBorder
-                if border.isVisible {
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .stroke(border.color, style: border.strokeStyle)
-                }
-            }
-        } else {
-            ZStack {
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(theme.resolvedPanelFill)
-                if theme.options.animatedPanel {
-                    TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
-                        let period = theme.options.animatedPanelPeriod ?? 8.0
-                        let color = Color(hex: theme.options.animatedPanelColor) ?? theme.resolvedAccent
-                        let t = timeline.date.timeIntervalSinceReferenceDate / period
-                        let angle = t * .pi * 2
-                        let start = UnitPoint(x: 0.5 + 0.5 * cos(angle), y: 0.5 - 0.5 * sin(angle))
-                        let end = UnitPoint(x: 0.5 - 0.5 * cos(angle), y: 0.5 + 0.5 * sin(angle))
-                        LinearGradient(
-                            colors: [color.opacity(0.0), color.opacity(0.22), color.opacity(0.0)],
-                            startPoint: start,
-                            endPoint: end
-                        )
-                    }
-                }
-            }
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            .overlay {
-                let border = theme.resolvedPanelBorder
-                if border.isVisible {
-                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                        .stroke(border.color, style: border.strokeStyle)
-                }
-            }
+        }
+    }
+
+    private var resolvedMaterialOrFill: AnyShapeStyle {
+        switch theme.options.material {
+        case "ultraThin":   return AnyShapeStyle(.ultraThinMaterial)
+        case "thin":        return AnyShapeStyle(.thinMaterial)
+        case "regular":     return AnyShapeStyle(.regularMaterial)
+        case "thick":       return AnyShapeStyle(.thickMaterial)
+        case "ultraThick":  return AnyShapeStyle(.ultraThickMaterial)
+        default:            return theme.resolvedPanelFill
         }
     }
 

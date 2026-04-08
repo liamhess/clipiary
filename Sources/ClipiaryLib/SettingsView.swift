@@ -28,10 +28,13 @@ struct SettingsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background {
-            if theme.options.useMaterial {
-                Rectangle().fill(.regularMaterial).ignoresSafeArea()
-            } else {
-                Rectangle().fill(theme.resolvedPanelFill).ignoresSafeArea()
+            switch theme.options.material {
+            case "ultraThin":  Rectangle().fill(.ultraThinMaterial).ignoresSafeArea()
+            case "thin":       Rectangle().fill(.thinMaterial).ignoresSafeArea()
+            case "regular":    Rectangle().fill(.regularMaterial).ignoresSafeArea()
+            case "thick":      Rectangle().fill(.thickMaterial).ignoresSafeArea()
+            case "ultraThick": Rectangle().fill(.ultraThickMaterial).ignoresSafeArea()
+            default:           Rectangle().fill(theme.resolvedPanelFill).ignoresSafeArea()
             }
         }
     }

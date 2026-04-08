@@ -238,10 +238,13 @@ struct ThemeBuilderView: View {
             }
         }
         .background {
-            if activeTheme.options.useMaterial {
-                Rectangle().fill(.regularMaterial).ignoresSafeArea()
-            } else {
-                Rectangle().fill(activeTheme.resolvedPanelFill).ignoresSafeArea()
+            switch activeTheme.options.material {
+            case "ultraThin":  Rectangle().fill(.ultraThinMaterial).ignoresSafeArea()
+            case "thin":       Rectangle().fill(.thinMaterial).ignoresSafeArea()
+            case "regular":    Rectangle().fill(.regularMaterial).ignoresSafeArea()
+            case "thick":      Rectangle().fill(.thickMaterial).ignoresSafeArea()
+            case "ultraThick": Rectangle().fill(.ultraThickMaterial).ignoresSafeArea()
+            default:           Rectangle().fill(activeTheme.resolvedPanelFill).ignoresSafeArea()
             }
         }
         .onChange(of: editorState.theme) {
@@ -457,7 +460,22 @@ struct ThemeBuilderView: View {
                 .pickerStyle(.menu)
                 .disabled(disabled)
             }
-            builderToggle("Use material background", isOn: $editorState.theme.options.useMaterial, disabled: disabled)
+            builderRow("Material background") {
+                Picker("", selection: Binding(
+                    get: { editorState.theme.options.material ?? "none" },
+                    set: { editorState.theme.options.material = $0 == "none" ? nil : $0 }
+                )) {
+                    Text("None").tag("none")
+                    Text("Ultra Thin").tag("ultraThin")
+                    Text("Thin").tag("thin")
+                    Text("Regular").tag("regular")
+                    Text("Thick").tag("thick")
+                    Text("Ultra Thick").tag("ultraThick")
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .disabled(disabled)
+            }
             builderToggle("Use system accent color", isOn: $editorState.theme.options.useSystemAccent, disabled: disabled)
             builderToggle("Animated panel border", isOn: $editorState.theme.options.animatedPanel, disabled: disabled)
 

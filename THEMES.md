@@ -22,7 +22,7 @@ Every section and field is optional. Omitted fields fall back to the default the
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `useMaterial` | bool | `true` | Use macOS vibrancy material for the panel background. When `false`, the panel uses the solid `fills.panel` value instead. |
+| `material` | string | `"regular"` | macOS vibrancy material for the panel background. Accepted values: `"ultraThin"`, `"thin"`, `"regular"`, `"thick"`, `"ultraThick"`. Omit (or `null`) to disable vibrancy and use `fills.panel` instead. The legacy boolean `useMaterial` is still accepted (`true` maps to `"regular"`, `false` maps to no material). |
 | `useSystemAccent` | bool | `true` | Use the system accent color (from System Settings). When `false`, uses `colors.accent`. |
 | `appearance` | string | `"dark"` | Color scheme: `"dark"`, `"light"`, or `"system"`. Controls how SwiftUI semantic colors (`.primary`, `.secondary`) resolve. |
 | `animatedPanel` | bool | `false` | Overlay a slowly orbiting gradient spotlight on the panel background. Works with both `useMaterial: true` and `false`. |

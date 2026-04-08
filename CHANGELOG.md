@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Added
 - Themes: configurable blur for the panel backdrop behind the favorites tab picker overlay (frosted-glass effect)
+- Themes: `material` option replaces the boolean `useMaterial` — choose from `ultraThin`, `thin`, `regular`, `thick`, or `ultraThick` vibrancy levels (legacy `useMaterial: true/false` still accepted)
 
 
 ## [1.5.0] - 2026-04-07
