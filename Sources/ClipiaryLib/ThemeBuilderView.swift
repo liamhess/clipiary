@@ -475,6 +475,14 @@ struct ThemeBuilderView: View {
                     disabled: disabled
                 )
             }
+
+            OptionalDoubleRow(
+                label: "Overlay blur radius",
+                value: $editorState.theme.options.overlayBlurRadius,
+                range: 1...20,
+                step: 1,
+                disabled: disabled
+            )
         }
     }
 

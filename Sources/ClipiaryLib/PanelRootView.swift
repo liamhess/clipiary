@@ -28,6 +28,8 @@ struct PanelRootView: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(theme.spacing.panelPadding)
         .frame(minWidth: 300, maxWidth: .infinity, minHeight: 400, maxHeight: .infinity)
+        .blur(radius: appState.showingFavoriteTabPicker ? (theme.options.overlayBlurRadius ?? 0) : 0)
+        .animation(.easeInOut(duration: 0.18), value: appState.showingFavoriteTabPicker)
         .background(panelBackground)
         .shadow(
             color: theme.resolvedPanelGlow?.color ?? .clear,

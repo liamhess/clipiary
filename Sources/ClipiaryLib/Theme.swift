@@ -125,6 +125,9 @@ struct Theme: Codable, Sendable, Equatable {
         var animatedPanel: Bool
         var animatedPanelColor: String?
         var animatedPanelPeriod: Double?
+        /// Gaussian blur radius applied to panel content behind the favorites picker overlay.
+        /// nil = no blur (plain darkened overlay).
+        var overlayBlurRadius: Double?
 
         static let `default` = Options(
             useMaterial: true,
@@ -138,13 +141,15 @@ struct Theme: Codable, Sendable, Equatable {
              appearance: String = Self.default.appearance,
              animatedPanel: Bool = false,
              animatedPanelColor: String? = nil,
-             animatedPanelPeriod: Double? = nil) {
+             animatedPanelPeriod: Double? = nil,
+             overlayBlurRadius: Double? = nil) {
             self.useMaterial = useMaterial
             self.useSystemAccent = useSystemAccent
             self.appearance = appearance
             self.animatedPanel = animatedPanel
             self.animatedPanelColor = animatedPanelColor
             self.animatedPanelPeriod = animatedPanelPeriod
+            self.overlayBlurRadius = overlayBlurRadius
         }
 
         init(from decoder: Decoder) throws {
@@ -156,6 +161,7 @@ struct Theme: Codable, Sendable, Equatable {
             animatedPanel = try container.decodeIfPresent(Bool.self, forKey: .animatedPanel) ?? d.animatedPanel
             animatedPanelColor = try container.decodeIfPresent(String.self, forKey: .animatedPanelColor)
             animatedPanelPeriod = try container.decodeIfPresent(Double.self, forKey: .animatedPanelPeriod)
+            overlayBlurRadius = try container.decodeIfPresent(Double.self, forKey: .overlayBlurRadius)
         }
     }
 

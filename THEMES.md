@@ -28,6 +28,7 @@ Every section and field is optional. Omitted fields fall back to the default the
 | `animatedPanel` | bool | `false` | Overlay a slowly orbiting gradient spotlight on the panel background. Works with both `useMaterial: true` and `false`. |
 | `animatedPanelColor` | string | accent | Hex color of the animated spotlight. Omit to use the resolved accent color. |
 | `animatedPanelPeriod` | number | `8.0` | Seconds per full orbit. Lower = faster. |
+| `overlayBlurRadius` | number | none | Gaussian blur radius (in points) applied to panel content when the favorites tab picker overlay is open. Omit (or `null`) for the default plain-darkened overlay. Values around `4`–`8` produce a readable frosted-glass effect. |
 
 ## `fills`
 

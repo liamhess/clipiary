@@ -1,6 +1,9 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- Themes: configurable blur for the panel backdrop behind the favorites tab picker overlay (frosted-glass effect)
+
 
 ## [1.5.0] - 2026-04-07
 ### Added
