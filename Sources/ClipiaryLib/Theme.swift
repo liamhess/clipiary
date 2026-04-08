@@ -117,6 +117,7 @@ struct Theme: Codable, Sendable, Equatable {
     var effects: Effects
     var cornerRadii: CornerRadii
     var spacing: Spacing
+    var fonts: Fonts
 
     struct Options: Codable, Sendable, Equatable {
         /// macOS vibrancy material for the panel background.
@@ -528,6 +529,50 @@ struct Theme: Codable, Sendable, Equatable {
         }
     }
 
+    struct FontSpec: Codable, Sendable, Equatable {
+        /// PostScript / family name. `nil` = use the system font.
+        var family: String?
+        /// Point size. `nil` = keep the built-in default.
+        var size: Double?
+        /// Weight string: `"regular"`, `"medium"`, `"semibold"`, `"bold"`. `nil` = built-in default.
+        var weight: String?
+
+        static let `default` = FontSpec()
+
+        init(family: String? = nil, size: Double? = nil, weight: String? = nil) {
+            self.family = family
+            self.size = size
+            self.weight = weight
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            family = try container.decodeIfPresent(String.self, forKey: .family)
+            size   = try container.decodeIfPresent(Double.self, forKey: .size)
+            weight = try container.decodeIfPresent(String.self, forKey: .weight)
+        }
+    }
+
+    struct Fonts: Codable, Sendable, Equatable {
+        /// Font for regular (non-monospace) clipboard rows.
+        var row: FontSpec
+        /// Font for monospace clipboard rows (items copied from terminals / IDEs).
+        var rowMono: FontSpec
+
+        static let `default` = Fonts(row: .default, rowMono: .default)
+
+        init(row: FontSpec = .default, rowMono: FontSpec = .default) {
+            self.row = row
+            self.rowMono = rowMono
+        }
+
+        init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            row     = try container.decodeIfPresent(FontSpec.self, forKey: .row)     ?? .default
+            rowMono = try container.decodeIfPresent(FontSpec.self, forKey: .rowMono) ?? .default
+        }
+    }
+
     // MARK: - Default + Built-in Themes
 
     static let `default` = Theme(
@@ -845,12 +890,14 @@ struct Theme: Codable, Sendable, Equatable {
         borders: Borders = .default,
         effects: Effects = .default,
         cornerRadii: CornerRadii = .default,
-        spacing: Spacing = .default
+        spacing: Spacing = .default,
+        fonts: Fonts = .default
     ) {
         self.id = id; self.name = name; self.options = options
         self.fills = fills; self.colors = colors
         self.borders = borders; self.effects = effects
         self.cornerRadii = cornerRadii; self.spacing = spacing
+        self.fonts = fonts
     }
 
     init(from decoder: Decoder) throws {
@@ -864,6 +911,35 @@ struct Theme: Codable, Sendable, Equatable {
         effects = try container.decodeIfPresent(Effects.self, forKey: .effects) ?? .default
         cornerRadii = try container.decodeIfPresent(CornerRadii.self, forKey: .cornerRadii) ?? .default
         spacing = try container.decodeIfPresent(Spacing.self, forKey: .spacing) ?? .default
+        fonts = try container.decodeIfPresent(Fonts.self, forKey: .fonts) ?? .default
+    }
+}
+
+// MARK: - Resolved Font Accessors
+
+extension Theme {
+    private func resolvedFont(_ spec: FontSpec, defaultSize: Double, defaultWeight: Font.Weight, defaultDesign: Font.Design) -> Font {
+        let size = spec.size ?? defaultSize
+        let weight: Font.Weight = switch spec.weight {
+        case "medium":   .medium
+        case "semibold": .semibold
+        case "bold":     .bold
+        default:         defaultWeight
+        }
+        if let family = spec.family, !family.isEmpty {
+            return .custom(family, size: size).weight(weight)
+        }
+        return .system(size: size, weight: weight, design: defaultDesign)
+    }
+
+    /// Font for regular (non-monospace) row text.
+    var resolvedRowFont: Font {
+        resolvedFont(fonts.row, defaultSize: 13, defaultWeight: .regular, defaultDesign: .default)
+    }
+
+    /// Font for monospace row text (items from terminals / IDEs).
+    var resolvedRowMonoFont: Font {
+        resolvedFont(fonts.rowMono, defaultSize: 12, defaultWeight: .regular, defaultDesign: .monospaced)
     }
 }
 

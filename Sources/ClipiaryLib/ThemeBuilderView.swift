@@ -65,9 +65,8 @@ final class ThemeBuilderWindowController {
     static let shared = ThemeBuilderWindowController()
 
     private var window: NSWindow?
-    // KVO token is set up at init time, which pre-warms NSColorPanel.shared before the
-    // user ever clicks the gear button (the singleton is first accessed when Settings opens).
     private var colorPanelKVO: NSKeyValueObservation?
+    private var fontPanelKVO: NSKeyValueObservation?
 
     init() {
         colorPanelKVO = NSColorPanel.shared.observe(\.isVisible, options: [.new]) { [weak self] _, change in
@@ -84,9 +83,24 @@ final class ThemeBuilderWindowController {
                 }
             }
         }
+        fontPanelKVO = NSFontPanel.shared.observe(\.isVisible, options: [.new]) { [weak self] _, change in
+            let isNowVisible = change.newValue == true
+            Task { @MainActor [weak self] in
+                guard let self, let win = self.window, self.isVisible else { return }
+                if isNowVisible {
+                    if NSFontPanel.shared.parent == nil {
+                        win.addChildWindow(NSFontPanel.shared, ordered: .above)
+                    }
+                    NSFontPanel.shared.makeKeyAndOrderFront(nil)
+                } else {
+                    win.removeChildWindow(NSFontPanel.shared)
+                }
+            }
+        }
     }
 
     var isVisible: Bool { window?.isVisible ?? false }
+    var windowFrame: NSRect? { window?.frame }
 
     func orderFront(adjacentTo panelFrame: NSRect? = nil) {
         guard let window else { return }
@@ -170,6 +184,7 @@ private enum BuilderSection: String, CaseIterable, Identifiable {
     case effects = "Effects"
     case cornerRadii = "Corner radii"
     case spacing = "Spacing"
+    case fonts = "Fonts"
 
     var id: Self { self }
 
@@ -182,6 +197,7 @@ private enum BuilderSection: String, CaseIterable, Identifiable {
         case .effects:     return "sparkles"
         case .cornerRadii: return "app"
         case .spacing:     return "ruler"
+        case .fonts:       return "textformat"
         }
     }
 }
@@ -270,6 +286,7 @@ struct ThemeBuilderView: View {
         case .effects:     effectsSection
         case .cornerRadii: cornerRadiiSection
         case .spacing:     spacingSection
+        case .fonts:       fontsSection
         }
     }
 
@@ -644,6 +661,25 @@ struct ThemeBuilderView: View {
             SpacingRow(label: "Row vertical padding", value: $editorState.theme.spacing.rowVerticalPadding, range: 2...20, defaultValue: d.rowVerticalPadding, disabled: disabled)
             SpacingRow(label: "Row spacing", value: $editorState.theme.spacing.rowSpacing, range: 0...10, defaultValue: d.rowSpacing, disabled: disabled)
             SpacingRow(label: "Separator thickness", value: $editorState.theme.spacing.separatorThickness, range: 1...8, defaultValue: d.separatorThickness, disabled: disabled)
+        }
+    }
+
+    // MARK: - Fonts Section
+
+    private var fontsSection: some View {
+        builderCard("Fonts") {
+            let disabled = editorState.isBuiltIn
+            Text("Row text")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            FontSpecRow(label: "Family", spec: $editorState.theme.fonts.row, defaultSize: 13, defaultWeight: "regular", disabled: disabled)
+            Divider().padding(.vertical, 2)
+            Text("Monospace row text")
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .frame(maxWidth: .infinity, alignment: .leading)
+            FontSpecRow(label: "Family", spec: $editorState.theme.fonts.rowMono, defaultSize: 12, defaultWeight: "regular", disabled: disabled)
         }
     }
 
@@ -1267,6 +1303,59 @@ private struct RadiusRow: View {
     }
 }
 
+private struct FontSpecRow: View {
+    let label: String
+    @Binding var spec: Theme.FontSpec
+    let defaultSize: Double
+    let defaultWeight: String
+    let disabled: Bool
+
+    private let weights = ["regular", "medium", "semibold", "bold"]
+
+    var body: some View {
+        VStack(spacing: 6) {
+            // Family swatch + weight picker in one row
+            HStack(spacing: 8) {
+                FontSwatch(spec: $spec, defaultSize: defaultSize)
+                    .disabled(disabled)
+                Picker("", selection: Binding(
+                    get: { spec.weight ?? defaultWeight },
+                    set: { spec.weight = $0 == defaultWeight ? nil : $0 }
+                )) {
+                    ForEach(weights, id: \.self) { w in
+                        Text(w.capitalized).tag(w)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+                .disabled(disabled)
+                if spec.family != nil || spec.weight != nil {
+                    changedBadge()
+                    if !disabled {
+                        resetButton(tooltip: "Reset to system font") { spec.family = nil; spec.weight = nil }
+                    }
+                }
+                Spacer()
+            }
+            // Size
+            LabeledSliderRow(
+                label: "Size",
+                value: Binding(
+                    get: { spec.size ?? defaultSize },
+                    set: { spec.size = $0 == defaultSize ? nil : $0 }
+                ),
+                range: 8...22, step: 0.5,
+                format: "%.1f",
+                disabled: disabled,
+                trailingReset: spec.size != nil && !disabled ? { spec.size = nil } : nil,
+                trailingResetTooltip: "Reset to default (\(Int(defaultSize))pt)",
+                showDefaultBadge: spec.size == nil
+            )
+        }
+        .padding(.vertical, 2)
+    }
+}
+
 private struct SpacingRow: View {
     let label: String
     @Binding var value: CGFloat
@@ -1342,7 +1431,7 @@ private struct ColorPickerRow: View {
     }
 }
 
-/// A 20×20 square color swatch that opens NSColorPanel when clicked.
+/// A color swatch that opens NSColorPanel when clicked.
 private struct ColorSwatch: View {
     @Binding var hex: String
 
@@ -1371,6 +1460,27 @@ private struct ColorSwatch: View {
     }
 }
 
+/// A font swatch that opens NSFontPanel when clicked.
+/// Shows the selected family name rendered in that font.
+private struct FontSwatch: View {
+    @Binding var spec: Theme.FontSpec
+    let defaultSize: Double
+
+    var body: some View {
+        let nsFont = spec.family.flatMap { NSFont(name: $0, size: 12) } ?? NSFont.systemFont(ofSize: 12)
+        Text(spec.family ?? "System")
+            .font(Font(nsFont))
+            .lineLimit(1)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(.secondary.opacity(0.12)))
+            .overlay(RoundedRectangle(cornerRadius: 4, style: .continuous).strokeBorder(.primary.opacity(0.2), lineWidth: 0.5))
+            .onTapGesture {
+                FontPanelReceiver.openFontPanel(spec: $spec, defaultSize: defaultSize)
+            }
+    }
+}
+
 /// Singleton AppKit target that bridges NSColorPanel color changes to the active swatch.
 @MainActor
 private final class ColorPanelReceiver: NSObject {
@@ -1380,6 +1490,57 @@ private final class ColorPanelReceiver: NSObject {
     @objc func colorChanged(_ sender: NSColorPanel) {
         let color = sender.color.usingColorSpace(.sRGB) ?? sender.color
         onColorChange?(color)
+    }
+}
+
+/// Singleton AppKit target that bridges NSFontManager font changes to the active font spec.
+@MainActor
+private final class FontPanelReceiver: NSObject {
+    static let shared = FontPanelReceiver()
+    var onFontChange: ((_ family: String?, _ weight: String) -> Void)?
+
+    @objc func changeFont(_ sender: NSFontManager?) {
+        guard let manager = sender else { return }
+        // Convert a neutral base font through the manager to obtain the user's selection.
+        let base = NSFont.systemFont(ofSize: NSFontManager.shared.selectedFont?.pointSize ?? 13)
+        let selected = manager.convert(base)
+        let family: String? = selected.familyName
+        let traits = manager.traits(of: selected)
+        let weight: String = traits.contains(.boldFontMask) ? "bold" : "regular"
+        onFontChange?(family, weight)
+    }
+
+    static func openFontPanel(spec: Binding<Theme.FontSpec>, defaultSize: Double) {
+        let manager = NSFontManager.shared
+        // Clear target/action first so the stale closure doesn't fire on font pre-selection.
+        manager.target = nil
+        manager.action = #selector(NSObject.doesNotRecognizeSelector(_:))  // no-op sentinel
+        // Pre-select the current font in the panel.
+        let size = CGFloat(spec.wrappedValue.size ?? defaultSize)
+        let nsFont: NSFont
+        if let family = spec.wrappedValue.family, !family.isEmpty,
+           let f = NSFont(name: family, size: size) {
+            nsFont = f
+        } else {
+            nsFont = .systemFont(ofSize: size)
+        }
+        manager.setSelectedFont(nsFont, isMultiple: false)
+        NSFontPanel.shared.makeKeyAndOrderFront(nil)
+        // Position the font panel centered on the theme builder window.
+        if let builderFrame = ThemeBuilderWindowController.shared.windowFrame,
+           let screen = NSScreen.screens.first(where: { $0.frame.intersects(builderFrame) }) ?? NSScreen.main {
+            let panelSize = NSFontPanel.shared.frame.size
+            let sv = screen.visibleFrame
+            let x = max(sv.minX, min(builderFrame.midX - panelSize.width / 2, sv.maxX - panelSize.width))
+            let y = max(sv.minY, min(builderFrame.midY - panelSize.height / 2, sv.maxY - panelSize.height))
+            NSFontPanel.shared.setFrameOrigin(NSPoint(x: x, y: y))
+        }
+        manager.target = FontPanelReceiver.shared
+        manager.action = #selector(FontPanelReceiver.changeFont(_:))
+        FontPanelReceiver.shared.onFontChange = { family, weight in
+            spec.wrappedValue.family = family
+            spec.wrappedValue.weight = weight
+        }
     }
 }
 

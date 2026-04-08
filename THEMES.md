@@ -224,6 +224,34 @@ Layout spacing values (in points).
 | `rowSpacing` | `2` | Vertical gap between rows. |
 | `separatorThickness` | `3` | Height in points of horizontal separators in favorites tabs. |
 
+## `fonts`
+
+Font configuration for clipboard row text. Each sub-object is a **font spec** with the fields below. All fields are optional — omit the entire `fonts` key to use built-in defaults.
+
+### Font spec fields
+
+| Field | Type | Description |
+|---|---|---|
+| `family` | string | PostScript or family name (e.g. `"Georgia"`, `"JetBrains Mono"`). Omit for the system font. Falls back gracefully to the system font if the named font is not installed. |
+| `size` | number | Point size. Omit for the built-in default. |
+| `weight` | string | `"regular"`, `"medium"`, `"semibold"`, or `"bold"`. Omit for the built-in default. |
+
+### Font slots
+
+| Field | Default size | Used for |
+|---|---|---|
+| `row` | `13` | Regular (non-monospace) clipboard row text. |
+| `rowMono` | `12` | Monospace clipboard row text (items copied from terminals / IDEs). |
+
+### Example
+
+```json
+"fonts": {
+  "row":     { "family": "Georgia", "size": 13, "weight": "regular" },
+  "rowMono": { "family": "Fira Code", "size": 12 }
+}
+```
+
 ## Example: minimal custom theme
 
 ```json

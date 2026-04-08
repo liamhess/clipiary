@@ -113,9 +113,7 @@ struct HistoryRowView: View, Equatable {
                                 background: theme.resolvedSearchHighlightBackground,
                                 textGlow: theme.resolvedSearchHighlightTextGlow
                             )
-                                .font(item.isMonospace
-                                    ? .system(size: 12, design: .monospaced)
-                                    : .system(size: 13))
+                                .font(item.isMonospace ? theme.resolvedRowMonoFont : theme.resolvedRowFont)
                                 .foregroundStyle(.primary)
                                 .lineLimit(itemLineLimit)
                                 .multilineTextAlignment(.leading)
