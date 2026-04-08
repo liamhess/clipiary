@@ -1330,12 +1330,15 @@ private struct ColorSwatch: View {
 
     static func openColorPanel(hex: Binding<String>) {
         let panel = NSColorPanel.shared
-        panel.color = NSColor(Color(hex: hex.wrappedValue) ?? .white)
+        // Clear the action before changing the color to prevent the stale
+        // callback from firing and writing the new initial color into the
+        // previously-active binding.
         panel.setTarget(nil)
         panel.setAction(nil)
+        panel.color = NSColor(Color(hex: hex.wrappedValue) ?? .white)
         panel.makeKeyAndOrderFront(nil)
-        NSColorPanel.shared.setAction(#selector(ColorPanelReceiver.colorChanged(_:)))
-        NSColorPanel.shared.setTarget(ColorPanelReceiver.shared)
+        panel.setAction(#selector(ColorPanelReceiver.colorChanged(_:)))
+        panel.setTarget(ColorPanelReceiver.shared)
         ColorPanelReceiver.shared.onColorChange = { color in
             hex.wrappedValue = color.hexString
         }
