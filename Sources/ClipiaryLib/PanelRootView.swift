@@ -29,7 +29,7 @@ struct PanelRootView: View {
         .padding(theme.spacing.panelPadding)
         .frame(minWidth: 300, maxWidth: .infinity, minHeight: 400, maxHeight: .infinity)
         .blur(radius: appState.showingFavoriteTabPicker ? (theme.options.overlayBlurRadius ?? 0) : 0)
-        .animation(.easeInOut(duration: 0.18), value: appState.showingFavoriteTabPicker)
+        .animation(.easeInOut(duration: 0.1), value: appState.showingFavoriteTabPicker)
         .background(panelBackground)
         .shadow(
             color: theme.resolvedPanelGlow?.color ?? .clear,
@@ -41,7 +41,7 @@ struct PanelRootView: View {
         .onChange(of: appState.popoverOpenRequestID) {
             shortcutsHelpPresented = false
         }
-        .animation(.easeInOut(duration: 0.18), value: UpdaterManager.shared.showOverlay)
+        .animation(.easeInOut(duration: 0.1), value: UpdaterManager.shared.showOverlay)
         .overlayPreferenceValue(SelectedRowAnchorKey.self) { anchor in
             if appState.showingFavoriteTabPicker {
                 favoriteTabPickerOverlay(anchor: anchor)
