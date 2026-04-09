@@ -460,7 +460,7 @@ struct SettingsView: View {
         isOn: Binding<Bool>,
         @ViewBuilder dependents: () -> D
     ) -> some View {
-        HStack(alignment: .top, spacing: 0) {
+        HStack(alignment: .top, spacing: 6) {
             // Left spine: checkbox on top, bracket extending down
             VStack(spacing: 0) {
                 Toggle(isOn: isOn) { EmptyView() }
@@ -469,7 +469,7 @@ struct SettingsView: View {
                     .padding(.leading, 8)
                     .padding(.vertical, 5)
                 BracketShape()
-                    .fill(Color.secondary.opacity(0.4))
+                    .stroke(Color.secondary.opacity(isOn.wrappedValue ? 0.4 : 0.15), lineWidth: 1.5)
                     .frame(width: 6)
                     .padding(.leading, 14)
             }
@@ -691,17 +691,17 @@ final class SettingsWindowController {
             .environment(AppState.shared)
 
         let hostingView = NSHostingView(rootView: settingsView)
-        hostingView.frame = NSRect(x: 0, y: 0, width: 720, height: 610)
+        hostingView.frame = NSRect(x: 0, y: 0, width: 800, height: 610)
 
         let window = SettingsPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 720, height: 610),
+            contentRect: NSRect(x: 0, y: 0, width: 800, height: 610),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.title = "Clipiary Settings"
         window.contentView = hostingView
-        window.minSize = NSSize(width: 460, height: 340)
+        window.minSize = NSSize(width: 540, height: 340)
         window.maxSize = NSSize(width: 700, height: 800)
         window.isReleasedWhenClosed = false
         window.center()
