@@ -105,6 +105,19 @@ struct ThemeGlow: Codable, Sendable, Equatable {
     var innerOpacity: Double?
 }
 
+struct ThemeInnerShadow: Codable, Sendable, Equatable {
+    /// Shadow color hex. Defaults to black.
+    var color: String?
+    /// Blur radius. Defaults to 4.
+    var radius: CGFloat?
+    /// Shadow opacity. Defaults to 0.4.
+    var opacity: Double?
+    /// Horizontal offset (positive = right). Defaults to 0.
+    var x: CGFloat?
+    /// Vertical offset (positive = down). Defaults to 0.
+    var y: CGFloat?
+}
+
 // MARK: - Theme
 
 struct Theme: Codable, Sendable, Equatable {
@@ -416,10 +429,12 @@ struct Theme: Codable, Sendable, Equatable {
         var hoveredRowTextGlow: ThemeGlow?
         var searchHighlightTextGlow: ThemeGlow?
         var separatorGlow: ThemeGlow?
+        var tabBarInnerShadow: ThemeInnerShadow?
+        var contentAreaInnerShadow: ThemeInnerShadow?
 
         static let `default` = Effects()
 
-        init(selectedRowGlow: ThemeGlow? = nil, hoveredRowGlow: ThemeGlow? = nil, panelGlow: ThemeGlow? = nil, selectedRowTextGlow: ThemeGlow? = nil, hoveredRowTextGlow: ThemeGlow? = nil, searchHighlightTextGlow: ThemeGlow? = nil, separatorGlow: ThemeGlow? = nil) {
+        init(selectedRowGlow: ThemeGlow? = nil, hoveredRowGlow: ThemeGlow? = nil, panelGlow: ThemeGlow? = nil, selectedRowTextGlow: ThemeGlow? = nil, hoveredRowTextGlow: ThemeGlow? = nil, searchHighlightTextGlow: ThemeGlow? = nil, separatorGlow: ThemeGlow? = nil, tabBarInnerShadow: ThemeInnerShadow? = nil, contentAreaInnerShadow: ThemeInnerShadow? = nil) {
             self.selectedRowGlow = selectedRowGlow
             self.hoveredRowGlow = hoveredRowGlow
             self.panelGlow = panelGlow
@@ -427,6 +442,8 @@ struct Theme: Codable, Sendable, Equatable {
             self.hoveredRowTextGlow = hoveredRowTextGlow
             self.searchHighlightTextGlow = searchHighlightTextGlow
             self.separatorGlow = separatorGlow
+            self.tabBarInnerShadow = tabBarInnerShadow
+            self.contentAreaInnerShadow = contentAreaInnerShadow
         }
 
         init(from decoder: Decoder) throws {
@@ -438,6 +455,8 @@ struct Theme: Codable, Sendable, Equatable {
             hoveredRowTextGlow = try container.decodeIfPresent(ThemeGlow.self, forKey: .hoveredRowTextGlow)
             searchHighlightTextGlow = try container.decodeIfPresent(ThemeGlow.self, forKey: .searchHighlightTextGlow)
             separatorGlow = try container.decodeIfPresent(ThemeGlow.self, forKey: .separatorGlow)
+            tabBarInnerShadow = try container.decodeIfPresent(ThemeInnerShadow.self, forKey: .tabBarInnerShadow)
+            contentAreaInnerShadow = try container.decodeIfPresent(ThemeInnerShadow.self, forKey: .contentAreaInnerShadow)
         }
     }
 
@@ -1166,4 +1185,29 @@ extension Theme {
     var resolvedHoveredRowTextGlow: ResolvedGlow? { resolvedGlow(effects.hoveredRowTextGlow) }
     var resolvedSearchHighlightTextGlow: ResolvedGlow? { resolvedGlow(effects.searchHighlightTextGlow) }
     var resolvedSeparatorGlow: ResolvedGlow? { resolvedGlow(effects.separatorGlow) }
+}
+
+// MARK: - Resolved Inner Shadow Accessors
+
+extension Theme {
+    struct ResolvedInnerShadow {
+        let color: Color
+        let radius: CGFloat
+        let x: CGFloat
+        let y: CGFloat
+    }
+
+    func resolvedInnerShadow(_ shadow: ThemeInnerShadow?) -> ResolvedInnerShadow? {
+        guard let shadow else { return nil }
+        let base = Color(hex: shadow.color) ?? .black
+        return ResolvedInnerShadow(
+            color: base.opacity(shadow.opacity ?? 0.4),
+            radius: shadow.radius ?? 4,
+            x: shadow.x ?? 0,
+            y: shadow.y ?? 0
+        )
+    }
+
+    var resolvedTabBarInnerShadow: ResolvedInnerShadow? { resolvedInnerShadow(effects.tabBarInnerShadow) }
+    var resolvedContentAreaInnerShadow: ResolvedInnerShadow? { resolvedInnerShadow(effects.contentAreaInnerShadow) }
 }

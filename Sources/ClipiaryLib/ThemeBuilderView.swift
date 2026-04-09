@@ -628,6 +628,9 @@ struct ThemeBuilderView: View {
             GlowEditorRow(label: "Hovered row text glow", glow: $editorState.theme.effects.hoveredRowTextGlow, disabled: disabled)
             GlowEditorRow(label: "Search highlight text glow", glow: $editorState.theme.effects.searchHighlightTextGlow, disabled: disabled)
             GlowEditorRow(label: "Separator glow", glow: $editorState.theme.effects.separatorGlow, disabled: disabled)
+            builderSubHeader("Inner Shadows")
+            InnerShadowEditorRow(label: "Tab bar inner shadow", shadow: $editorState.theme.effects.tabBarInnerShadow, disabled: disabled)
+            InnerShadowEditorRow(label: "Content area inner shadow", shadow: $editorState.theme.effects.contentAreaInnerShadow, disabled: disabled)
         }
     }
 
@@ -1278,6 +1281,83 @@ private struct GlowEditorRow: View {
                     }
                 }
                 .disabled(disabled)
+            }
+        }
+    }
+}
+
+// MARK: - Inner Shadow Editor
+
+private struct InnerShadowEditorRow: View {
+    let label: String
+    @Binding var shadow: ThemeInnerShadow?
+    let disabled: Bool
+
+    private var isDefault: Bool { shadow == nil }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack {
+                Toggle(isOn: Binding(
+                    get: { shadow != nil },
+                    set: { shadow = $0 ? ThemeInnerShadow(color: "#000000", radius: 4, opacity: 0.4) : nil }
+                )) {
+                    Text(label).font(.system(size: 12))
+                }
+                .toggleStyle(.checkbox)
+                .disabled(disabled)
+                if isDefault { defaultBadge("default") }
+                else {
+                    changedBadge()
+                    resetButton(tooltip: "Remove inner shadow") { shadow = nil }
+                        .disabled(disabled)
+                }
+                Spacer()
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 5)
+
+            DependentGroup(enabled: shadow != nil) {
+                VStack(alignment: .leading, spacing: 4) {
+                    ColorPickerRow(
+                        label: "Color",
+                        hex: Binding(
+                            get: { shadow?.color ?? "#000000" },
+                            set: { shadow?.color = $0 }
+                        )
+                    )
+                    OpacitySlider(value: Binding(
+                        get: { shadow?.opacity ?? 0.4 },
+                        set: { shadow?.opacity = $0 }
+                    ))
+                    LabeledSliderRow(
+                        label: "Radius",
+                        value: Binding(
+                            get: { Double(shadow?.radius ?? 4) },
+                            set: { shadow?.radius = CGFloat($0) }
+                        ),
+                        range: 1...20, step: 1,
+                        format: "%.0f"
+                    )
+                    LabeledSliderRow(
+                        label: "Offset X",
+                        value: Binding(
+                            get: { Double(shadow?.x ?? 0) },
+                            set: { shadow?.x = CGFloat($0) }
+                        ),
+                        range: -20...20, step: 1,
+                        format: "%.0f"
+                    )
+                    LabeledSliderRow(
+                        label: "Offset Y",
+                        value: Binding(
+                            get: { Double(shadow?.y ?? 0) },
+                            set: { shadow?.y = CGFloat($0) }
+                        ),
+                        range: -20...20, step: 1,
+                        format: "%.0f"
+                    )
+                }
             }
         }
     }

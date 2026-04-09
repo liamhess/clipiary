@@ -107,6 +107,7 @@ struct PanelRootView: View {
                     RoundedRectangle(cornerRadius: theme.cornerRadii.contentArea, style: .continuous)
                         .fill(panelFill)
                 )
+                .innerShadow(cornerRadius: theme.cornerRadii.contentArea, shadow: theme.resolvedContentAreaInnerShadow)
                 .overlay {
                     let border = theme.resolvedContentAreaBorder
                     if border.isVisible {
@@ -631,6 +632,7 @@ struct PanelRootView: View {
             RoundedRectangle(cornerRadius: theme.cornerRadii.tabBar, style: .continuous)
                 .fill(theme.resolvedTabBarFill)
         )
+        .innerShadow(cornerRadius: theme.cornerRadii.tabBar, shadow: theme.resolvedTabBarInnerShadow)
         .overlay {
             let border = theme.resolvedTabBarBorder
             if border.isVisible {
@@ -1191,5 +1193,27 @@ enum PasteCountBarScheme {
 
     static func colors(for schemeID: String) -> [Color] {
         allSchemes.first { $0.id == schemeID }?.colors ?? allSchemes[1].colors
+    }
+}
+
+// MARK: - Inner Shadow
+
+extension View {
+    /// Overlays an inner shadow (recessed-well effect) on a rounded rectangle.
+    /// Draws a thick blurred stroke clipped to the shape bounds.
+    /// Pass `shadow: nil` to skip the effect entirely.
+    @ViewBuilder
+    func innerShadow(cornerRadius: CGFloat, shadow: Theme.ResolvedInnerShadow?) -> some View {
+        if let shadow {
+            self.overlay {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .stroke(shadow.color, lineWidth: (shadow.radius * 2) + 2)
+                    .blur(radius: shadow.radius)
+                    .offset(x: shadow.x, y: shadow.y)
+                    .mask(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+            }
+        } else {
+            self
+        }
     }
 }
