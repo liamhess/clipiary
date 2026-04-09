@@ -528,7 +528,15 @@ struct ThemeBuilderView: View {
             let disabled = editorState.isBuiltIn
             let d = Theme.Fills.default
             let accentHex = editorState.theme.resolvedAccent.hexString
-            FillEditorRow(label: "Panel", fill: $editorState.theme.fills.panel, disabled: disabled, defaultFill: d.panel)
+            let hasMaterial = editorState.theme.options.material != nil
+            FillEditorRow(label: "Panel", fill: $editorState.theme.fills.panel, disabled: disabled || hasMaterial, defaultFill: d.panel)
+            if hasMaterial {
+                Text("Panel fill is replaced by the material background. Set Material to None in Options to use a solid fill.")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 8)
+                    .padding(.bottom, 4)
+            }
             FillEditorRow(label: "Content area", fill: $editorState.theme.fills.contentArea, disabled: disabled, defaultFill: d.contentArea)
             FillEditorRow(label: "Tab bar", fill: $editorState.theme.fills.tabBar, disabled: disabled, defaultFill: d.tabBar)
             OptionalFillEditorRow(label: "Tab button selected", fill: $editorState.theme.fills.tabButtonSelected, disabled: disabled, defaultValue: d.tabButtonSelected)

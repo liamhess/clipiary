@@ -37,7 +37,7 @@ struct SettingsView: View {
                     case "ultraThick": Rectangle().fill(.ultraThickMaterial).ignoresSafeArea()
                     default:           Rectangle().fill(.regularMaterial).ignoresSafeArea()
                     }
-                    Rectangle().fill(theme.resolvedPanelFill).ignoresSafeArea()
+                    // fills.panel not applied for material themes — see panelBackground comment.
                 }
             } else {
                 Rectangle().fill(theme.resolvedPanelFill).ignoresSafeArea()

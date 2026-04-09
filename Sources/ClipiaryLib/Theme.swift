@@ -193,7 +193,8 @@ struct Theme: Codable, Sendable, Equatable {
             let d = Self.default
             // New-style: material string takes precedence.
             if let materialStr = try container.decodeIfPresent(String.self, forKey: .material) {
-                material = materialStr
+                // "none" is the sentinel for an explicit "no material" choice.
+                material = materialStr == "none" ? nil : materialStr
             } else if let legacyBool = try container.decodeIfPresent(Bool.self, forKey: .useMaterial) {
                 // Legacy `useMaterial: true/false` — map to "regular" or nil.
                 material = legacyBool ? "regular" : nil
@@ -210,7 +211,9 @@ struct Theme: Codable, Sendable, Equatable {
 
         func encode(to encoder: Encoder) throws {
             var container = encoder.container(keyedBy: CodingKeys.self)
-            try container.encodeIfPresent(material, forKey: .material)
+            // Encode nil as "none" so a deliberate "no material" choice survives reload.
+            // Absent key would fall through to the default ("regular") on decode.
+            try container.encode(material ?? "none", forKey: .material)
             try container.encode(useSystemAccent, forKey: .useSystemAccent)
             try container.encode(appearance, forKey: .appearance)
             try container.encode(animatedPanel, forKey: .animatedPanel)
@@ -741,9 +744,8 @@ struct Theme: Codable, Sendable, Equatable {
         name: "macOS Light",
         options: Options(useMaterial: true, useSystemAccent: true, appearance: "light"),
         fills: Fills(
-            panel: .solid("#FFFFFF", opacity: 0.92),
-            contentArea: .solid("#FFFFFF", opacity: 0.92),
-            tabBar: .solid("#000000", opacity: 0.04),
+            panel: ThemeFill(opacity: 0),
+            contentArea: ThemeFill(opacity: 0),
             rowSelected: ThemeFill(opacity: 0.12),
             rowHovered: ThemeFill(opacity: 0.06),
             card: .solid("#000000", opacity: 0.04),
@@ -808,9 +810,8 @@ struct Theme: Codable, Sendable, Equatable {
         name: "Space",
         options: Options(useMaterial: true, useSystemAccent: true),
         fills: Fills(
-            panel: .solid("#1E1E1E", opacity: 0.85),
-            contentArea: .solid("#1E1E1E", opacity: 0.85),
-            tabBar: .solid("#000000", opacity: 0.05),
+            panel: ThemeFill(opacity: 0),
+            contentArea: ThemeFill(opacity: 0),
             rowSelected: ThemeFill(opacity: 0.18),
             rowHovered: ThemeFill(opacity: 0.09),
             card: .solid("#000000", opacity: 0.15),

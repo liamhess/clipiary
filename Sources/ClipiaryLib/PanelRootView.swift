@@ -553,11 +553,12 @@ struct PanelRootView: View {
         let cornerRadius = theme.cornerRadii.panel
         ZStack {
             if theme.options.material != nil {
-                // Material layer first, then panel fill as a tint on top.
+                // Material themes: the vibrancy material is the entire panel background.
+                // fills.panel is not applied as a tint here — old saved themes carry a
+                // fills.panel value that was the solid fallback for non-material mode,
+                // and layering it would make the outer ring nearly opaque.
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(resolvedMaterial)
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .fill(theme.resolvedPanelFill)
             } else {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(theme.resolvedPanelFill)
@@ -600,7 +601,17 @@ struct PanelRootView: View {
     }
 
     private var panelFill: AnyShapeStyle {
-        theme.resolvedContentAreaFill
+        // For material themes with no explicit contentArea color, use the same material
+        // as the outer shell so the content area matches and the scroll view's own
+        // system background doesn't show through. If contentArea has an explicit color
+        // it is applied as a tint/overlay over the panel material.
+        if theme.options.material != nil,
+           theme.fills.contentArea.color == nil,
+           theme.fills.contentArea.gradient == nil,
+           theme.fills.contentArea.mesh == nil {
+            return resolvedMaterial
+        }
+        return theme.resolvedContentAreaFill
     }
 
     private var emptyMessage: String {
