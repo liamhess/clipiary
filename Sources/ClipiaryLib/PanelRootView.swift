@@ -551,8 +551,16 @@ struct PanelRootView: View {
     private var panelBackground: some View {
         let cornerRadius = theme.cornerRadii.panel
         ZStack {
-            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                .fill(resolvedMaterialOrFill)
+            if theme.options.material != nil {
+                // Material layer first, then panel fill as a tint on top.
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(resolvedMaterial)
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(theme.resolvedPanelFill)
+            } else {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(theme.resolvedPanelFill)
+            }
             if theme.options.animatedPanel {
                 TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
                     let period = theme.options.animatedPanelPeriod ?? 8.0
@@ -579,19 +587,19 @@ struct PanelRootView: View {
         }
     }
 
-    private var resolvedMaterialOrFill: AnyShapeStyle {
+    private var resolvedMaterial: AnyShapeStyle {
         switch theme.options.material {
         case "ultraThin":   return AnyShapeStyle(.ultraThinMaterial)
         case "thin":        return AnyShapeStyle(.thinMaterial)
         case "regular":     return AnyShapeStyle(.regularMaterial)
         case "thick":       return AnyShapeStyle(.thickMaterial)
         case "ultraThick":  return AnyShapeStyle(.ultraThickMaterial)
-        default:            return theme.resolvedPanelFill
+        default:            return AnyShapeStyle(.regularMaterial)
         }
     }
 
     private var panelFill: AnyShapeStyle {
-        theme.resolvedPanelFill
+        theme.resolvedContentAreaFill
     }
 
     private var emptyMessage: String {

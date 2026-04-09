@@ -28,13 +28,19 @@ struct SettingsView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background {
-            switch theme.options.material {
-            case "ultraThin":  Rectangle().fill(.ultraThinMaterial).ignoresSafeArea()
-            case "thin":       Rectangle().fill(.thinMaterial).ignoresSafeArea()
-            case "regular":    Rectangle().fill(.regularMaterial).ignoresSafeArea()
-            case "thick":      Rectangle().fill(.thickMaterial).ignoresSafeArea()
-            case "ultraThick": Rectangle().fill(.ultraThickMaterial).ignoresSafeArea()
-            default:           Rectangle().fill(theme.resolvedPanelFill).ignoresSafeArea()
+            if theme.options.material != nil {
+                ZStack {
+                    switch theme.options.material {
+                    case "ultraThin":  Rectangle().fill(.ultraThinMaterial).ignoresSafeArea()
+                    case "thin":       Rectangle().fill(.thinMaterial).ignoresSafeArea()
+                    case "thick":      Rectangle().fill(.thickMaterial).ignoresSafeArea()
+                    case "ultraThick": Rectangle().fill(.ultraThickMaterial).ignoresSafeArea()
+                    default:           Rectangle().fill(.regularMaterial).ignoresSafeArea()
+                    }
+                    Rectangle().fill(theme.resolvedPanelFill).ignoresSafeArea()
+                }
+            } else {
+                Rectangle().fill(theme.resolvedPanelFill).ignoresSafeArea()
             }
         }
     }

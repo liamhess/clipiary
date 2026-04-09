@@ -215,6 +215,8 @@ struct Theme: Codable, Sendable, Equatable {
 
     struct Fills: Codable, Sendable, Equatable {
         var panel: ThemeFill
+        /// Fill for the outer panel shell background (same as `panel` by default, but can differ).
+        var contentArea: ThemeFill
         var tabBar: ThemeFill
         var tabButtonSelected: ThemeFill?
         var rowSelected: ThemeFill
@@ -224,6 +226,7 @@ struct Theme: Codable, Sendable, Equatable {
 
         static let `default` = Fills(
             panel: .solid("#1E1E1E", opacity: 0.85),
+            contentArea: .solid("#1E1E1E", opacity: 0.85),
             tabBar: .solid("#000000", opacity: 0.05),
             tabButtonSelected: nil,
             rowSelected: ThemeFill(opacity: 0.18),
@@ -234,6 +237,7 @@ struct Theme: Codable, Sendable, Equatable {
 
         init(
             panel: ThemeFill = Self.default.panel,
+            contentArea: ThemeFill? = nil,
             tabBar: ThemeFill = Self.default.tabBar,
             tabButtonSelected: ThemeFill? = nil,
             rowSelected: ThemeFill = Self.default.rowSelected,
@@ -242,6 +246,7 @@ struct Theme: Codable, Sendable, Equatable {
             overlay: ThemeFill = Self.default.overlay
         ) {
             self.panel = panel
+            self.contentArea = contentArea ?? panel
             self.tabBar = tabBar
             self.tabButtonSelected = tabButtonSelected
             self.rowSelected = rowSelected
@@ -254,6 +259,8 @@ struct Theme: Codable, Sendable, Equatable {
             let container = try decoder.container(keyedBy: CodingKeys.self)
             let d = Self.default
             panel = try container.decodeIfPresent(ThemeFill.self, forKey: .panel) ?? d.panel
+            // Legacy JSON without contentArea inherits from panel.
+            contentArea = try container.decodeIfPresent(ThemeFill.self, forKey: .contentArea) ?? panel
             tabBar = try container.decodeIfPresent(ThemeFill.self, forKey: .tabBar) ?? d.tabBar
             tabButtonSelected = try container.decodeIfPresent(ThemeFill.self, forKey: .tabButtonSelected)
             rowSelected = try container.decodeIfPresent(ThemeFill.self, forKey: .rowSelected) ?? d.rowSelected
@@ -592,7 +599,9 @@ struct Theme: Codable, Sendable, Equatable {
         name: "Rose",
         options: Options(useMaterial: false, useSystemAccent: false),
         fills: Fills(
-            panel: .solid("#2A2025"), tabBar: .solid("#231C20", opacity: 0.6),
+            panel: .solid("#2A2025"),
+            contentArea: .solid("#2A2025"),
+            tabBar: .solid("#231C20", opacity: 0.6),
             rowSelected: .solid("#E8A0BF", opacity: 0.16), rowHovered: .solid("#E8A0BF", opacity: 0.07),
             card: .solid("#231C20", opacity: 0.6), overlay: .solid("#1A1418", opacity: 0.5)
         ),
@@ -611,7 +620,9 @@ struct Theme: Codable, Sendable, Equatable {
         name: "Nord",
         options: Options(useMaterial: false, useSystemAccent: false),
         fills: Fills(
-            panel: .solid("#2E3440"), tabBar: .solid("#272C36", opacity: 0.6),
+            panel: .solid("#2E3440"),
+            contentArea: .solid("#2E3440"),
+            tabBar: .solid("#272C36", opacity: 0.6),
             rowSelected: .solid("#88C0D0", opacity: 0.16), rowHovered: .solid("#88C0D0", opacity: 0.07),
             card: .solid("#272C36", opacity: 0.6), overlay: .solid("#1D2128", opacity: 0.55)
         ),
@@ -636,6 +647,7 @@ struct Theme: Codable, Sendable, Equatable {
         options: Options(useMaterial: false, useSystemAccent: false),
         fills: Fills(
             panel: .linearGradient(["#0D0D12", "#080810"], from: "top", to: "bottom"),
+            contentArea: .linearGradient(["#0D0D12", "#080810"], from: "top", to: "bottom"),
             tabBar: .solid("#08080C", opacity: 0.7),
             tabButtonSelected: .solid("#FF2D6F", opacity: 0.22),
             rowSelected: .solid("#FF2D6F", opacity: 0.18),
@@ -677,6 +689,7 @@ struct Theme: Codable, Sendable, Equatable {
         options: Options(useMaterial: false, useSystemAccent: false, animatedPanel: true),
         fills: Fills(
             panel: .linearGradient(["#1A1028", "#220E38"], from: "top", to: "bottom"),
+            contentArea: .linearGradient(["#1A1028", "#220E38"], from: "top", to: "bottom"),
             tabBar: .solid("#140C22", opacity: 0.6),
             tabButtonSelected: .linearGradient(["#FF71CE", "#B967FF"], from: "leading", to: "trailing", opacity: 0.3),
             rowSelected: .linearGradient(["#FF71CE", "#B967FF"], from: "leading", to: "trailing", opacity: 0.15),
@@ -710,6 +723,7 @@ struct Theme: Codable, Sendable, Equatable {
         options: Options(useMaterial: true, useSystemAccent: true, appearance: "light"),
         fills: Fills(
             panel: .solid("#FFFFFF", opacity: 0.92),
+            contentArea: .solid("#FFFFFF", opacity: 0.92),
             tabBar: .solid("#000000", opacity: 0.04),
             rowSelected: ThemeFill(opacity: 0.12),
             rowHovered: ThemeFill(opacity: 0.06),
@@ -730,6 +744,7 @@ struct Theme: Codable, Sendable, Equatable {
         options: Options(useMaterial: false, useSystemAccent: false),
         fills: Fills(
             panel: .linearGradient(["#2F2F2F", "#12100A"], from: "top", to: "bottom", opacity: 0.9),
+            contentArea: .linearGradient(["#2F2F2F", "#12100A"], from: "top", to: "bottom", opacity: 0.9),
             tabBar: .solid("#0A0800", opacity: 0.1),
             tabButtonSelected: .solid("#FF6A00", opacity: 0.18),
             rowSelected: .solid("#FF6A00", opacity: 0.14),
@@ -775,6 +790,7 @@ struct Theme: Codable, Sendable, Equatable {
         options: Options(useMaterial: true, useSystemAccent: true),
         fills: Fills(
             panel: .solid("#1E1E1E", opacity: 0.85),
+            contentArea: .solid("#1E1E1E", opacity: 0.85),
             tabBar: .solid("#000000", opacity: 0.05),
             rowSelected: ThemeFill(opacity: 0.18),
             rowHovered: ThemeFill(opacity: 0.09),
@@ -813,6 +829,12 @@ struct Theme: Codable, Sendable, Equatable {
                  "#100010", "#080C28", "#041818"],
                 columns: 3, rows: 3
             ),
+            contentArea: .meshGradient(
+                ["#200010", "#100030", "#001020",
+                 "#280020", "#0C1840", "#003030",
+                 "#100010", "#080C28", "#041818"],
+                columns: 3, rows: 3
+            ),
             tabBar: .solid("#000000", opacity: 0.05),
             tabButtonSelected: .solid("#FFFFFF", opacity: 0.1),
             rowSelected: ThemeFill(opacity: 0.18),
@@ -842,6 +864,12 @@ struct Theme: Codable, Sendable, Equatable {
         fills: Fills(
             // 3×3 MeshGradient: violet → ocean blue → teal, top to bottom
             panel: .meshGradient(
+                ["#120030", "#0A1A40", "#003030",
+                 "#1E0048", "#0C1E48", "#004040",
+                 "#0A0818", "#081428", "#041818"],
+                columns: 3, rows: 3
+            ),
+            contentArea: .meshGradient(
                 ["#120030", "#0A1A40", "#003030",
                  "#1E0048", "#0C1E48", "#004040",
                  "#0A0818", "#081428", "#041818"],
@@ -991,6 +1019,10 @@ extension Theme {
 extension Theme {
     var resolvedPanelFill: AnyShapeStyle {
         fills.panel.resolved(fallback: Color(nsColor: .controlBackgroundColor), defaultOpacity: 0.85)
+    }
+
+    var resolvedContentAreaFill: AnyShapeStyle {
+        fills.contentArea.resolved(fallback: Color(nsColor: .controlBackgroundColor), defaultOpacity: 0.85)
     }
 
     var resolvedTabBarFill: AnyShapeStyle {

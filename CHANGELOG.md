@@ -5,6 +5,7 @@
 - Themes: configurable blur for the panel backdrop behind the favorites tab picker overlay (frosted-glass effect)
 - Themes: `material` option now supports `ultraThin`, `thin`, `regular`, `thick`, or `ultraThick` vibrancy levels
 - Themes: `fonts` section — configure family, size, and weight separately for regular and monospace row text
+- Themes: `fills.contentArea` — dedicated fill slot for the scrollable area and search field, independent of `fills.panel` (the outer panel shell)
 
 
 ## [1.5.0] - 2026-04-07

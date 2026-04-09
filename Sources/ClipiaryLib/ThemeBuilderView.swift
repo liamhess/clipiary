@@ -529,6 +529,7 @@ struct ThemeBuilderView: View {
             let d = Theme.Fills.default
             let accentHex = editorState.theme.resolvedAccent.hexString
             FillEditorRow(label: "Panel", fill: $editorState.theme.fills.panel, disabled: disabled, defaultFill: d.panel)
+            FillEditorRow(label: "Content area", fill: $editorState.theme.fills.contentArea, disabled: disabled, defaultFill: d.contentArea)
             FillEditorRow(label: "Tab bar", fill: $editorState.theme.fills.tabBar, disabled: disabled, defaultFill: d.tabBar)
             OptionalFillEditorRow(label: "Tab button selected", fill: $editorState.theme.fills.tabButtonSelected, disabled: disabled, defaultValue: d.tabButtonSelected)
             FillEditorRow(label: "Selected row", fill: $editorState.theme.fills.rowSelected, disabled: disabled, defaultFill: d.rowSelected, accentHex: accentHex)
@@ -1027,6 +1028,7 @@ private struct OptionalFillEditorRow: View {
     @Binding var fill: ThemeFill?
     let disabled: Bool
     var defaultValue: ThemeFill? = nil
+    var defaultLabel: String = "default"
 
     private var isDefault: Bool { fill == defaultValue }
 
@@ -1041,7 +1043,7 @@ private struct OptionalFillEditorRow: View {
                 }
                 .toggleStyle(.checkbox)
                 .disabled(disabled)
-                if isDefault { defaultBadge("default") }
+                if isDefault { defaultBadge(defaultLabel) }
                 else {
                     changedBadge()
                     resetButton(tooltip: "Reset to default") { fill = defaultValue }
