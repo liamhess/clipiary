@@ -1899,6 +1899,10 @@ private extension NSColor {
         let r = Int((c.redComponent * 255).rounded())
         let g = Int((c.greenComponent * 255).rounded())
         let b = Int((c.blueComponent * 255).rounded())
+        let a = Int((c.alphaComponent * 255).rounded())
+        if a < 255 {
+            return String(format: "#%02X%02X%02X%02X", r, g, b, a)
+        }
         return String(format: "#%02X%02X%02X", r, g, b)
     }
 }
