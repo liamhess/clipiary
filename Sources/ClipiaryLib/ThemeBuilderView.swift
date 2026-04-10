@@ -1515,7 +1515,7 @@ private struct ColorPickerRow: View {
             TextField("", text: $hex)
                 .textFieldStyle(.roundedBorder)
                 .font(.system(size: 10, design: .monospaced))
-                .frame(width: 58)
+                .frame(width: 68)
         }
         .padding(.horizontal, 8)
         .padding(.vertical, 3)
