@@ -197,6 +197,12 @@ public final class UpdaterManager: NSObject, SPUUpdaterDelegate {
         }
     }
 
+    @available(*, deprecated)
+    private func _makeFakeAppcastItemDeprecated(props: [String: Any]) -> SUAppcastItem? {
+        var reason: NSString?
+        return SUAppcastItem(dictionary: props, relativeTo: nil, failureReason: &reason)
+    }
+
     private func debugFakeAppcastItem() -> SUAppcastItem? {
         let props: [String: Any] = [
             "title": "Version 99.0.0",
@@ -204,8 +210,7 @@ public final class UpdaterManager: NSObject, SPUUpdaterDelegate {
             "sparkle:shortVersionString": "99.0.0",
             "enclosure": ["url": "https://example.com/Clipiary-99.0.0.zip", "length": "0"],
         ]
-        var reason: NSString?
-        return SUAppcastItem(dictionary: props, relativeTo: nil, failureReason: &reason)
+        return _makeFakeAppcastItemDeprecated(props: props)
     }
 
     private let debugReleaseNotesHTML = """

@@ -293,7 +293,7 @@ struct ThemeBuilderView: View {
     private func findAndStoreSidebarTableView() {
         DispatchQueue.main.async {
             guard let root = NSApp.keyWindow?.contentView else { return }
-            func findTableView(_ view: NSView) -> NSTableView? {
+            @MainActor func findTableView(_ view: NSView) -> NSTableView? {
                 if let tv = view as? NSTableView { return tv }
                 for sub in view.subviews { if let found = findTableView(sub) { return found } }
                 return nil
@@ -1488,7 +1488,7 @@ private func changedBadge() -> some View {
         .background(RoundedRectangle(cornerRadius: 4, style: .continuous).fill(.orange.opacity(0.12)))
 }
 
-private func resetButton(tooltip: String = "Reset to default", action: @escaping () -> Void) -> some View {
+@MainActor private func resetButton(tooltip: String = "Reset to default", action: @escaping () -> Void) -> some View {
     Button(action: action) {
         Image(systemName: "arrow.counterclockwise")
             .font(.system(size: 10))
@@ -1915,7 +1915,7 @@ private struct ThemeBuilderScrollConfigurator: NSViewRepresentable {
     func updateNSView(_ nsView: NSView, context: Context) {
         DispatchQueue.main.async {
             guard let root = nsView.window?.contentView else { return }
-            func apply(_ view: NSView) {
+            @MainActor func apply(_ view: NSView) {
                 if let sv = view as? NSScrollView { sv.scrollerStyle = .overlay; sv.tile() }
                 view.subviews.forEach { apply($0) }
             }
