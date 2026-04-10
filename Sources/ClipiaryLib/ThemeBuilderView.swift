@@ -672,6 +672,7 @@ struct ThemeBuilderView: View {
             SpacingRow(label: "Row horizontal padding", value: $editorState.theme.spacing.rowHorizontalPadding, range: 2...20, defaultValue: d.rowHorizontalPadding, disabled: disabled)
             SpacingRow(label: "Row vertical padding", value: $editorState.theme.spacing.rowVerticalPadding, range: 2...20, defaultValue: d.rowVerticalPadding, disabled: disabled)
             SpacingRow(label: "Row spacing", value: $editorState.theme.spacing.rowSpacing, range: 0...10, defaultValue: d.rowSpacing, disabled: disabled)
+            SpacingRow(label: "Row details spacing", value: $editorState.theme.spacing.rowDetailsSpacing, range: 0...16, defaultValue: d.rowDetailsSpacing, disabled: disabled)
             SpacingRow(label: "Separator thickness", value: $editorState.theme.spacing.separatorThickness, range: 1...8, defaultValue: d.separatorThickness, disabled: disabled)
         }
     }

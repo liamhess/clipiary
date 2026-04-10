@@ -223,6 +223,7 @@ Layout spacing values (in points).
 | `rowVerticalPadding` | `8` | Vertical padding inside each row. |
 | `contentAreaPadding` | `10` | Padding inside the scroll area. |
 | `rowSpacing` | `2` | Vertical gap between rows. |
+| `rowDetailsSpacing` | `3` | Vertical gap between the main row text and its detail lines (snippet description, app name / timestamp). Only visible when item details are enabled in Settings. |
 | `separatorThickness` | `3` | Height in points of horizontal separators in favorites tabs. |
 
 ## `fonts`

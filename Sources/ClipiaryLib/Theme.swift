@@ -521,12 +521,14 @@ struct Theme: Codable, Sendable, Equatable {
         var rowVerticalPadding: CGFloat
         var contentAreaPadding: CGFloat
         var rowSpacing: CGFloat
+        var rowDetailsSpacing: CGFloat
         var separatorThickness: CGFloat
 
         static let `default` = Spacing(
             panelPadding: 12, sectionSpacing: 12,
             rowHorizontalPadding: 8, rowVerticalPadding: 8,
             contentAreaPadding: 10, rowSpacing: 2,
+            rowDetailsSpacing: 3,
             separatorThickness: 3
         )
 
@@ -537,12 +539,13 @@ struct Theme: Codable, Sendable, Equatable {
             rowVerticalPadding: CGFloat = Self.default.rowVerticalPadding,
             contentAreaPadding: CGFloat = Self.default.contentAreaPadding,
             rowSpacing: CGFloat = Self.default.rowSpacing,
+            rowDetailsSpacing: CGFloat = Self.default.rowDetailsSpacing,
             separatorThickness: CGFloat = Self.default.separatorThickness
         ) {
             self.panelPadding = panelPadding; self.sectionSpacing = sectionSpacing
             self.rowHorizontalPadding = rowHorizontalPadding; self.rowVerticalPadding = rowVerticalPadding
             self.contentAreaPadding = contentAreaPadding; self.rowSpacing = rowSpacing
-            self.separatorThickness = separatorThickness
+            self.rowDetailsSpacing = rowDetailsSpacing; self.separatorThickness = separatorThickness
         }
 
         init(from decoder: Decoder) throws {
@@ -554,6 +557,7 @@ struct Theme: Codable, Sendable, Equatable {
             rowVerticalPadding = try container.decodeIfPresent(CGFloat.self, forKey: .rowVerticalPadding) ?? d.rowVerticalPadding
             contentAreaPadding = try container.decodeIfPresent(CGFloat.self, forKey: .contentAreaPadding) ?? d.contentAreaPadding
             rowSpacing = try container.decodeIfPresent(CGFloat.self, forKey: .rowSpacing) ?? d.rowSpacing
+            rowDetailsSpacing = try container.decodeIfPresent(CGFloat.self, forKey: .rowDetailsSpacing) ?? d.rowDetailsSpacing
             separatorThickness = try container.decodeIfPresent(CGFloat.self, forKey: .separatorThickness) ?? d.separatorThickness
         }
     }

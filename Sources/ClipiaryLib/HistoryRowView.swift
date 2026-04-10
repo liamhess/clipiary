@@ -70,7 +70,7 @@ struct HistoryRowView: View, Equatable {
     @State private var sweepStartDate: Date? = nil
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
+        VStack(alignment: .leading, spacing: theme.spacing.rowDetailsSpacing) {
             HStack(alignment: .top, spacing: 8) {
                 Button {
                     appState.selectedHistoryItemID = item.id

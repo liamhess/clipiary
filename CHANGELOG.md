@@ -6,6 +6,7 @@
 - Themes: `material` option now supports `ultraThin`, `thin`, `regular`, `thick`, or `ultraThick` vibrancy levels
 - Themes: `fonts` section — configure family, size, and weight separately for regular and monospace row text
 - Themes: `fills.contentArea` — dedicated fill slot for the scrollable area and search field, independent of `fills.panel` (the outer panel shell)
+- Themes: `rowDetailsSpacing` — configure spacing between row entry and its details
 
 
 ## [1.5.0] - 2026-04-07
