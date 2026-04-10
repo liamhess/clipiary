@@ -210,6 +210,7 @@ struct PanelRootView: View {
         }
         .buttonStyle(.plain)
         .font(.system(size: 11, weight: .medium))
+        .foregroundStyle(theme.resolvedTextSecondary)
         .padding(.horizontal, 2)
     }
 
@@ -298,7 +299,7 @@ struct PanelRootView: View {
                     .font(.system(size: 11, weight: .medium))
             }
         }
-        .foregroundStyle(.secondary)
+        .foregroundStyle(theme.resolvedTextSecondary)
     }
 
     private var searchField: some View {
@@ -694,7 +695,7 @@ struct PanelRootView: View {
             HStack(spacing: 6) {
                 Text(tab.displayName)
                 Text("\(count)")
-                    .foregroundStyle(isSelected ? Color.primary.opacity(0.7) : Color.secondary)
+                    .foregroundStyle(isSelected ? theme.resolvedTextPrimary.opacity(0.7) : theme.resolvedTextSecondary)
             }
             .font(.system(size: 11, weight: .semibold))
             .padding(.horizontal, 10)
@@ -708,7 +709,7 @@ struct PanelRootView: View {
         }
         .frame(maxWidth: .infinity)
         .buttonStyle(.plain)
-        .foregroundStyle(isSelected ? .primary : .secondary)
+        .foregroundStyle(isSelected ? theme.resolvedTextPrimary : theme.resolvedTextSecondary)
         .contextMenu {
             Button("Add New Tab...") {
                 if let name = Self.showTextInputAlert(title: "Add New Tab", message: "Enter a name for the new tab:", defaultValue: "") {

@@ -85,7 +85,7 @@ struct HistoryRowView: View, Equatable {
                             } else {
                                 Image(systemName: item.isImage ? "photo" : item.source == .copyOnSelect ? "cursorarrow.rays" : "doc.on.doc")
                                     .font(.system(size: 11, weight: .semibold))
-                                    .foregroundStyle(item.isImage ? theme.resolvedImageIndicator : item.source == .copyOnSelect ? theme.resolvedAccent : .secondary)
+                                    .foregroundStyle(item.isImage ? theme.resolvedImageIndicator : item.source == .copyOnSelect ? theme.resolvedAccent : theme.resolvedTextSecondary)
                                     .frame(width: 16, height: 16, alignment: .center)
                             }
                             if showAppIcons, item.source == .copyOnSelect {
@@ -103,7 +103,7 @@ struct HistoryRowView: View, Equatable {
                                     .foregroundStyle(theme.resolvedImageIndicator)
                                 Text(item.text)
                                     .font(.system(size: 11, weight: .medium))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(theme.resolvedTextSecondary)
                             }
                         } else {
                             highlightedText(
@@ -114,7 +114,7 @@ struct HistoryRowView: View, Equatable {
                                 textGlow: theme.resolvedSearchHighlightTextGlow
                             )
                                 .font(item.isMonospace ? theme.resolvedRowMonoFont : theme.resolvedRowFont)
-                                .foregroundStyle(.primary)
+                                .foregroundStyle(theme.resolvedTextPrimary)
                                 .lineLimit(itemLineLimit)
                                 .multilineTextAlignment(.leading)
                                 .shadow(color: activeTextGlow?.color ?? .clear, radius: activeTextGlow?.radius ?? 0)
@@ -130,7 +130,7 @@ struct HistoryRowView: View, Equatable {
                     ForEach(favoriteTabNames, id: \.self) { name in
                         Text(name)
                             .font(.system(size: 9, weight: .semibold))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(theme.resolvedTextSecondary)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 2)
                             .background(
@@ -142,7 +142,7 @@ struct HistoryRowView: View, Equatable {
                     if let richLabel = item.rtfData != nil ? "RTF" : (item.htmlData != nil ? "HTML" : nil) {
                         Text(richLabel)
                             .font(.system(size: 9, weight: .semibold))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(theme.resolvedTextSecondary)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 2)
                             .background(
@@ -154,7 +154,7 @@ struct HistoryRowView: View, Equatable {
                     if let shortcut = item.globalShortcut {
                         Text(shortcut.displayString)
                             .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(theme.resolvedTextSecondary)
                             .padding(.horizontal, 5)
                             .padding(.vertical, 2)
                             .background(
@@ -178,7 +178,7 @@ struct HistoryRowView: View, Equatable {
                             .font(.system(size: 10, weight: .bold))
                     }
                     .buttonStyle(.plain)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(theme.resolvedTextSecondary)
                     .opacity(isHovered ? 1 : 0.45)
                 }
             }
@@ -186,7 +186,7 @@ struct HistoryRowView: View, Equatable {
             if let description = item.snippetDescription, !description.isEmpty {
                 highlightedText(description, terms: searchTerms, foreground: theme.resolvedSearchHighlight, background: theme.resolvedSearchHighlightBackground, textGlow: theme.resolvedSearchHighlightTextGlow)
                     .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(theme.resolvedTextSecondary)
                     .lineLimit(1)
                     .padding(.leading, 22)
             }
@@ -200,7 +200,7 @@ struct HistoryRowView: View, Equatable {
                         : item.createdAt.formatted(date: .abbreviated, time: .shortened))
                 }
                 .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(theme.resolvedTextTertiary)
                 .padding(.leading, 22)
             }
         }
