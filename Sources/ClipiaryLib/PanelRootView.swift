@@ -10,6 +10,7 @@ struct PanelRootView: View {
     @State private var dropTargetIndex: Int?
     @State private var shortcutsHelpPresented = false
     @State private var selectedRowRect: CGRect = .zero
+    @State private var scrollViewHeight: CGFloat = 0
     @State private var snippetDescriptionText: String = ""
     @FocusState private var isDescriptionFieldFocused: Bool
     @State private var itemEditText: String = ""
@@ -81,13 +82,46 @@ struct PanelRootView: View {
                             historyGroup(title: "", items: items)
                         }
                     }
-                    .padding(theme.spacing.contentAreaPadding)
                 }
+                .contentMargins(theme.spacing.contentAreaPadding, for: .scrollContent)
                 .scrollIndicators(.hidden)
                 .onAppear { overrideScrollerStyle() }
                 .coordinateSpace(name: "scrollArea")
+                .background {
+                    GeometryReader { geo in
+                        Color.clear.onAppear { scrollViewHeight = geo.size.height }
+                            .onChange(of: geo.size.height) { scrollViewHeight = $1 }
+                    }
+                }
                 .onPreferenceChange(SelectedRowRectKey.self) { rect in
                     selectedRowRect = rect
+                }
+                .onChange(of: appState.selectedHistoryItemID) { oldID, newID in
+                    guard let newID else { return }
+                    let items = appState.activeItems
+                    guard let newIdx = items.firstIndex(where: { $0.id == newID }) else { return }
+                    let oldIdx = oldID.flatMap { id in items.firstIndex(where: { $0.id == id }) }
+                    let movingDown = oldIdx.map { newIdx >= $0 } ?? false
+
+                    // Defer one run-loop tick so onPreferenceChange has had a chance
+                    // to update selectedRowRect with the newly selected item's rect.
+                    DispatchQueue.main.async {
+                        let rect = selectedRowRect
+                        let anchor: UnitPoint
+                        if rect == .zero {
+                            // Item not yet rendered by LazyVStack — definitely off-screen.
+                            anchor = movingDown ? .bottom : .top
+                        } else if rect.maxY > scrollViewHeight {
+                            anchor = .bottom  // below fold
+                        } else if rect.minY < 0 {
+                            anchor = .top     // above fold
+                        } else {
+                            return            // already fully visible, no scroll needed
+                        }
+                        withAnimation(.easeInOut(duration: 0.12)) {
+                            proxy.scrollTo(newID, anchor: anchor)
+                        }
+                    }
                 }
                 .overlay {
                     if appState.isPreviewVisible, let item = appState.selectedItem {
@@ -113,15 +147,6 @@ struct PanelRootView: View {
                     if border.isVisible {
                         RoundedRectangle(cornerRadius: theme.cornerRadii.contentArea, style: .continuous)
                             .stroke(border.color, style: border.strokeStyle)
-                    }
-                }
-                .onChange(of: appState.selectedHistoryItemID) {
-                    guard let selectedID = appState.selectedHistoryItemID else {
-                        return
-                    }
-
-                    withAnimation(.easeInOut(duration: 0.12)) {
-                        proxy.scrollTo(selectedID, anchor: .center)
                     }
                 }
             }
