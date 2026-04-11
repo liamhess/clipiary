@@ -2,11 +2,13 @@
 
 ## [Unreleased]
 ### Added
-- Themes: configurable blur for the panel backdrop behind the favorites tab picker overlay (frosted-glass effect)
-- Themes: `material` option now supports `ultraThin`, `thin`, `regular`, `thick`, or `ultraThick` vibrancy levels
-- Themes: `fonts` section — configure family, size, and weight separately for regular and monospace row text
-- Themes: `fills.contentArea` — dedicated fill slot for the scrollable area and search field, independent of `fills.panel` (the outer panel shell)
-- Themes: `rowDetailsSpacing` — configure spacing between row entry and its details
+- New "paste raw source" shortcut (default ⌥↩, configurable in Settings): pastes the literal HTML or RTF markup of a rich text item as plain text
+- Themes:
+  - configurable blur for the panel backdrop behind the favorites tab picker overlay (frosted-glass effect)
+  - `material` option now supports `ultraThin`, `thin`, `regular`, `thick`, or `ultraThick` vibrancy levels
+  - `fonts` section — configure family, size, and weight separately for regular and monospace row text
+  - `fills.contentArea` — dedicated fill slot for the scrollable area and search field, independent of `fills.panel` (the outer panel shell)
+  - `rowDetailsSpacing` — configure spacing between row entry and its details
 
 
 ## [1.5.0] - 2026-04-07

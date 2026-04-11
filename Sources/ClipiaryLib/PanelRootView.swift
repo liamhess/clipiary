@@ -563,6 +563,7 @@ struct PanelRootView: View {
                 shortcutRow("Switch tabs", "Left / Right")
                 shortcutRow("Restore selected item", "Return")
                 shortcutRow("Alternate paste format", appState.settings.localAltPasteShortcut.displayString)
+                shortcutRow("Paste raw source (RTF/HTML)", appState.settings.localRawSourcePasteShortcut.displayString)
                 shortcutRow("Preview selected item", "Space")
                 shortcutRow("Delete selected item", "Delete / ⌫")
                 shortcutRow("Reload theme", "Ctrl R")

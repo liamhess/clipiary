@@ -296,6 +296,16 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             return suppressKeyUp(for: event)
         }
 
+        if appState.isRecordingLocalRawSourcePasteShortcut {
+            switch event.keyCode {
+            case 53:
+                appState.isRecordingLocalRawSourcePasteShortcut = false
+            default:
+                appState.updateRawSourcePasteShortcut(from: event)
+            }
+            return suppressKeyUp(for: event)
+        }
+
         if appState.isRecordingGlobalAltPasteShortcut {
             switch event.keyCode {
             case 53:
@@ -309,6 +319,12 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         let localAlt = appState.settings.localAltPasteShortcut
         if UInt32(event.keyCode) == localAlt.keyCode && modifiers == localAlt.modifiers {
             appState.requestAltPaste()
+            return suppressKeyUp(for: event)
+        }
+
+        let localRawSource = appState.settings.localRawSourcePasteShortcut
+        if UInt32(event.keyCode) == localRawSource.keyCode && modifiers == localRawSource.modifiers {
+            appState.requestRawSourcePaste()
             return suppressKeyUp(for: event)
         }
 

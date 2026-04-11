@@ -2,4 +2,5 @@
 
 ## Theme Ideas
 
+- Textures
 - Pixel art effects

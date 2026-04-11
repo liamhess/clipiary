@@ -49,6 +49,7 @@ final class AppState {
     var isRecordingQuickPasteShortcut = false
     var isRecordingLocalAltPasteShortcut = false
     var isRecordingGlobalAltPasteShortcut = false
+    var isRecordingLocalRawSourcePasteShortcut = false
     var isPreviewVisible = false
     var showingFavoriteTabPicker = false
     var favoriteTabPickerIndex = 0
@@ -144,6 +145,10 @@ final class AppState {
 
     func restore(_ item: HistoryItem, plainTextOnly: Bool = false) {
         captureCoordinator.restore(item, plainTextOnly: plainTextOnly)
+    }
+
+    private func restoreRawSource(_ item: HistoryItem) {
+        captureCoordinator.restoreRawSource(item)
     }
 
     func didOpenPopover() {
@@ -540,6 +545,15 @@ final class AppState {
         isRecordingGlobalAltPasteShortcut = false
     }
 
+    func updateRawSourcePasteShortcut(from event: NSEvent) {
+        guard let shortcut = GlobalShortcut(event: event) else {
+            return
+        }
+
+        settings.updateLocalRawSourcePasteShortcut(shortcut)
+        isRecordingLocalRawSourcePasteShortcut = false
+    }
+
     func requestSearchFocus() {
         searchFocusRequestID &+= 1
     }
@@ -554,6 +568,19 @@ final class AppState {
     func requestAltPaste() {
         // Pastes the opposite of the default format (panel must be open)
         requestPasteSelected(plainTextOnly: settings.richTextPasteDefault)
+    }
+
+    func requestRawSourcePaste() {
+        guard let item = selectedItem, !item.isSeparator else { return }
+        guard item.rtfData != nil || item.htmlData != nil else { return }
+        history.markAsPasted(item)
+        restoreRawSource(item)
+        if settings.moveToTopOnPaste && !(settings.moveToTopSkipFavorites && item.isFavorite) {
+            history.moveToTop(item)
+        }
+        searchQuery = ""
+        isPreviewVisible = false
+        pasteSelectedRequestID &+= 1
     }
 
     func requestGlobalAltPaste() {

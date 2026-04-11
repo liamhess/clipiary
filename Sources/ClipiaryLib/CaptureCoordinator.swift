@@ -166,6 +166,26 @@ final class CaptureCoordinator {
         suppressNextClipboardChange = true
     }
 
+    func restoreRawSource(_ item: HistoryItem) {
+        let rawText: String
+        if let html = item.htmlData {
+            rawText = html
+        } else if let rtf = item.rtfData,
+                  let str = String(data: rtf, encoding: .isoLatin1) {
+            rawText = str
+        } else {
+            rawText = item.text
+        }
+
+        let pasteboard = NSPasteboard.general
+        clearCopyOnSelectClipboardOwnership()
+        pasteboard.clearContents()
+        let pasteboardItem = NSPasteboardItem()
+        pasteboardItem.setString(rawText, forType: .string)
+        pasteboard.writeObjects([pasteboardItem])
+        suppressNextClipboardChange = true
+    }
+
     private func registerCopyOnSelect(text: String, snapshot: SelectionSnapshot, writeToPasteboard: Bool) {
         guard !settings.ignores(bundleID: snapshot.bundleID) else {
             return

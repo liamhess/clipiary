@@ -373,6 +373,15 @@ struct SettingsView: View {
             }
 
             shortcutRow(
+                title: "Paste raw source (in panel)",
+                help: "While Clipiary is open, pastes the raw HTML or RTF markup of the selected rich text item as plain text.",
+                value: appState.isRecordingLocalRawSourcePasteShortcut ? "Press keys..." : appState.settings.localRawSourcePasteShortcut.displayString,
+                isRecording: appState.isRecordingLocalRawSourcePasteShortcut
+            ) {
+                appState.isRecordingLocalRawSourcePasteShortcut.toggle()
+            }
+
+            shortcutRow(
                 title: "Alt paste (global)",
                 help: "Pastes the most-recent clipboard item in the opposite of your default format, without opening Clipiary.",
                 value: appState.isRecordingGlobalAltPasteShortcut ? "Press keys..." : appState.settings.globalAltPasteShortcut.displayString,
