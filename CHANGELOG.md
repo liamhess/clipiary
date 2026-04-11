@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Added
 - New "paste raw source" shortcut (default ⌥↩, configurable in Settings): pastes the literal HTML or RTF markup of a rich text item as plain text
+- New "paste as Markdown" shortcut (default ⌥⇧↩, configurable in Settings): converts HTML or RTF items to Markdown (best-effort, preserving headings, lists, bold, italic, links, code) and pastes the result as plain text
 - Themes:
   - configurable blur for the panel backdrop behind the favorites tab picker overlay (frosted-glass effect)
   - `material` option now supports `ultraThin`, `thin`, `regular`, `thick`, or `ultraThick` vibrancy levels

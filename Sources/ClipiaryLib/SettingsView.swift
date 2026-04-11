@@ -382,6 +382,15 @@ struct SettingsView: View {
             }
 
             shortcutRow(
+                title: "Paste as Markdown (in panel)",
+                help: "While Clipiary is open, converts the selected HTML or RTF item to Markdown and pastes it as plain text.",
+                value: appState.isRecordingLocalMarkdownPasteShortcut ? "Press keys..." : appState.settings.localMarkdownPasteShortcut.displayString,
+                isRecording: appState.isRecordingLocalMarkdownPasteShortcut
+            ) {
+                appState.isRecordingLocalMarkdownPasteShortcut.toggle()
+            }
+
+            shortcutRow(
                 title: "Alt paste (global)",
                 help: "Pastes the most-recent clipboard item in the opposite of your default format, without opening Clipiary.",
                 value: appState.isRecordingGlobalAltPasteShortcut ? "Press keys..." : appState.settings.globalAltPasteShortcut.displayString,
@@ -700,10 +709,10 @@ final class SettingsWindowController {
             .environment(AppState.shared)
 
         let hostingView = NSHostingView(rootView: settingsView)
-        hostingView.frame = NSRect(x: 0, y: 0, width: 800, height: 610)
+        hostingView.frame = NSRect(x: 0, y: 0, width: 800, height: 640)
 
         let window = SettingsPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 800, height: 610),
+            contentRect: NSRect(x: 0, y: 0, width: 800, height: 640),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false

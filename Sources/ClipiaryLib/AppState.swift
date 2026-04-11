@@ -50,6 +50,7 @@ final class AppState {
     var isRecordingLocalAltPasteShortcut = false
     var isRecordingGlobalAltPasteShortcut = false
     var isRecordingLocalRawSourcePasteShortcut = false
+    var isRecordingLocalMarkdownPasteShortcut = false
     var isPreviewVisible = false
     var showingFavoriteTabPicker = false
     var favoriteTabPickerIndex = 0
@@ -149,6 +150,10 @@ final class AppState {
 
     private func restoreRawSource(_ item: HistoryItem) {
         captureCoordinator.restoreRawSource(item)
+    }
+
+    private func restoreAsMarkdown(_ item: HistoryItem) {
+        captureCoordinator.restoreAsMarkdown(item)
     }
 
     func didOpenPopover() {
@@ -554,6 +559,15 @@ final class AppState {
         isRecordingLocalRawSourcePasteShortcut = false
     }
 
+    func updateMarkdownPasteShortcut(from event: NSEvent) {
+        guard let shortcut = GlobalShortcut(event: event) else {
+            return
+        }
+
+        settings.updateLocalMarkdownPasteShortcut(shortcut)
+        isRecordingLocalMarkdownPasteShortcut = false
+    }
+
     func requestSearchFocus() {
         searchFocusRequestID &+= 1
     }
@@ -575,6 +589,19 @@ final class AppState {
         guard item.rtfData != nil || item.htmlData != nil else { return }
         history.markAsPasted(item)
         restoreRawSource(item)
+        if settings.moveToTopOnPaste && !(settings.moveToTopSkipFavorites && item.isFavorite) {
+            history.moveToTop(item)
+        }
+        searchQuery = ""
+        isPreviewVisible = false
+        pasteSelectedRequestID &+= 1
+    }
+
+    func requestMarkdownPaste() {
+        guard let item = selectedItem, !item.isSeparator else { return }
+        guard item.rtfData != nil || item.htmlData != nil else { return }
+        history.markAsPasted(item)
+        restoreAsMarkdown(item)
         if settings.moveToTopOnPaste && !(settings.moveToTopSkipFavorites && item.isFavorite) {
             history.moveToTop(item)
         }

@@ -21,6 +21,8 @@ final class AppSettings {
         static let localAltPasteHotKeyModifiers = "localAltPasteHotKeyModifiers"
         static let localRawSourcePasteHotKeyKeyCode = "localRawSourcePasteHotKeyKeyCode"
         static let localRawSourcePasteHotKeyModifiers = "localRawSourcePasteHotKeyModifiers"
+        static let localMarkdownPasteHotKeyKeyCode = "localMarkdownPasteHotKeyKeyCode"
+        static let localMarkdownPasteHotKeyModifiers = "localMarkdownPasteHotKeyModifiers"
         static let globalAltPasteHotKeyKeyCode = "globalAltPasteHotKeyKeyCode"
         static let globalAltPasteHotKeyModifiers = "globalAltPasteHotKeyModifiers"
         static let panelWidth = "panelWidth"
@@ -169,6 +171,14 @@ final class AppSettings {
         didSet { defaults.set(localRawSourcePasteHotKeyModifiers, forKey: Keys.localRawSourcePasteHotKeyModifiers) }
     }
 
+    var localMarkdownPasteHotKeyKeyCode: Int {
+        didSet { defaults.set(localMarkdownPasteHotKeyKeyCode, forKey: Keys.localMarkdownPasteHotKeyKeyCode) }
+    }
+
+    var localMarkdownPasteHotKeyModifiers: Int {
+        didSet { defaults.set(localMarkdownPasteHotKeyModifiers, forKey: Keys.localMarkdownPasteHotKeyModifiers) }
+    }
+
     var globalAltPasteHotKeyKeyCode: Int {
         didSet { defaults.set(globalAltPasteHotKeyKeyCode, forKey: Keys.globalAltPasteHotKeyKeyCode) }
     }
@@ -211,6 +221,8 @@ final class AppSettings {
             Keys.localAltPasteHotKeyModifiers: Int(NSEvent.ModifierFlags.shift.rawValue),
             Keys.localRawSourcePasteHotKeyKeyCode: 36, // Return
             Keys.localRawSourcePasteHotKeyModifiers: Int(NSEvent.ModifierFlags.option.rawValue),
+            Keys.localMarkdownPasteHotKeyKeyCode: 36, // Return
+            Keys.localMarkdownPasteHotKeyModifiers: Int(NSEvent.ModifierFlags.option.union(.shift).rawValue),
             Keys.globalAltPasteHotKeyKeyCode: 9,  // V
             Keys.globalAltPasteHotKeyModifiers: Int(NSEvent.ModifierFlags.control.union(.option).union(.command).rawValue),
         ])
@@ -246,6 +258,8 @@ final class AppSettings {
         localAltPasteHotKeyModifiers = defaults.integer(forKey: Keys.localAltPasteHotKeyModifiers)
         localRawSourcePasteHotKeyKeyCode = defaults.integer(forKey: Keys.localRawSourcePasteHotKeyKeyCode)
         localRawSourcePasteHotKeyModifiers = defaults.integer(forKey: Keys.localRawSourcePasteHotKeyModifiers)
+        localMarkdownPasteHotKeyKeyCode = defaults.integer(forKey: Keys.localMarkdownPasteHotKeyKeyCode)
+        localMarkdownPasteHotKeyModifiers = defaults.integer(forKey: Keys.localMarkdownPasteHotKeyModifiers)
         globalAltPasteHotKeyKeyCode = defaults.integer(forKey: Keys.globalAltPasteHotKeyKeyCode)
         globalAltPasteHotKeyModifiers = defaults.integer(forKey: Keys.globalAltPasteHotKeyModifiers)
     }
@@ -296,6 +310,18 @@ final class AppSettings {
     func updateLocalRawSourcePasteShortcut(_ shortcut: GlobalShortcut) {
         localRawSourcePasteHotKeyKeyCode = Int(shortcut.keyCode)
         localRawSourcePasteHotKeyModifiers = Int(shortcut.modifiers.rawValue)
+    }
+
+    var localMarkdownPasteShortcut: GlobalShortcut {
+        GlobalShortcut(
+            keyCode: UInt32(localMarkdownPasteHotKeyKeyCode),
+            modifiers: NSEvent.ModifierFlags(rawValue: UInt(localMarkdownPasteHotKeyModifiers))
+        )
+    }
+
+    func updateLocalMarkdownPasteShortcut(_ shortcut: GlobalShortcut) {
+        localMarkdownPasteHotKeyKeyCode = Int(shortcut.keyCode)
+        localMarkdownPasteHotKeyModifiers = Int(shortcut.modifiers.rawValue)
     }
 
     var globalAltPasteShortcut: GlobalShortcut {
