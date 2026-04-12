@@ -32,6 +32,8 @@ private final class HTMLConverter {
     private var hrefs: [String] = []   // href stack for nested/malformed <a>
     private var lists: [(ordered: Bool, counter: Int)] = []
     private var afterListMarker = false // suppress \n\n from <p> right after a list marker
+    private var tableFirstRowDone = false
+    private var tableCurrentCellCount = 0
 
     init(_ src: String) {
         self.src = src
@@ -167,9 +169,9 @@ private final class HTMLConverter {
             }
             afterListMarker = true
         case "blockquote": out += "\n\n> "
-        case "table":      out += "\n\n"
+        case "table":      out += "\n\n"; tableFirstRowDone = false; tableCurrentCellCount = 0
         case "tr":         out += "\n"
-        case "th", "td":   out += "| "
+        case "th", "td":   out += "| "; if !tableFirstRowDone { tableCurrentCellCount += 1 }
         default: break
         }
     }
@@ -197,7 +199,13 @@ private final class HTMLConverter {
         case "li":
             afterListMarker = false
         case "th", "td": out += " "
-        case "tr":       out += "|"
+        case "tr":
+            out += "|"
+            if !tableFirstRowDone && tableCurrentCellCount > 0 {
+                let sep = Array(repeating: " --- ", count: tableCurrentCellCount).joined(separator: "|")
+                out += "\n|\(sep)|"
+                tableFirstRowDone = true
+            }
         default: break
         }
     }
