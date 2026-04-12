@@ -230,9 +230,9 @@ final class AppSettings {
             Keys.localAltPasteHotKeyKeyCode: 36, // Return
             Keys.localAltPasteHotKeyModifiers: Int(NSEvent.ModifierFlags.shift.rawValue),
             Keys.localRawSourcePasteHotKeyKeyCode: 36, // Return
-            Keys.localRawSourcePasteHotKeyModifiers: Int(NSEvent.ModifierFlags.option.rawValue),
+            Keys.localRawSourcePasteHotKeyModifiers: Int(NSEvent.ModifierFlags.option.union(.shift).rawValue),
             Keys.localMarkdownPasteHotKeyKeyCode: 36, // Return
-            Keys.localMarkdownPasteHotKeyModifiers: Int(NSEvent.ModifierFlags.option.union(.shift).rawValue),
+            Keys.localMarkdownPasteHotKeyModifiers: Int(NSEvent.ModifierFlags.option.rawValue),
             Keys.globalAltPasteHotKeyKeyCode: 9,  // V
             Keys.globalAltPasteHotKeyModifiers: Int(NSEvent.ModifierFlags.control.union(.option).union(.command).rawValue),
             Keys.localContextMenuHotKeyKeyCode: 36, // Return
