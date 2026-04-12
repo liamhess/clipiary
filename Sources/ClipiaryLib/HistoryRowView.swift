@@ -445,22 +445,26 @@ final class ContextMenuHandler: NSObject {
 func buildMenu(item: HistoryItem, appState: AppState) -> NSMenu {
     let menu = NSMenu()
 
-    func add(_ title: String, tag: String) {
-        let mi = NSMenuItem(title: title, action: #selector(ContextMenuHandler.handleItem(_:)), keyEquivalent: "")
+    func add(_ title: String, tag: String, key: String = "") {
+        let mi = NSMenuItem(title: title, action: #selector(ContextMenuHandler.handleItem(_:)), keyEquivalent: key)
+        mi.keyEquivalentModifierMask = []   // single letter, no modifier
         mi.representedObject = tag
         mi.isEnabled = true
         menu.addItem(mi)
     }
 
-    let pasteTitle = appState.settings.richTextPasteDefault ? "Paste (Rich Text)" : "Paste (Plain Text)"
-    add(pasteTitle, tag: "paste")
-    add("Paste as Plain Text", tag: "plain")
+    let isRichDefault = appState.settings.richTextPasteDefault
+    let pasteTitle = isRichDefault ? "Paste (Rich Text)" : "Paste (Plain Text)"
+    // "r" for the rich-text default paste; when plain is the default the item
+    // already sits at the top of the menu so it needs no extra mnemonic.
+    add(pasteTitle, tag: "paste", key: isRichDefault ? "r" : "")
+    add("Paste as Plain Text", tag: "plain", key: "p")
     if item.rtfData != nil || item.htmlData != nil {
-        add("Paste as Markdown", tag: "markdown")
-        add("Paste Raw Source", tag: "raw")
+        add("Paste as Markdown", tag: "markdown", key: "m")
+        add("Paste Raw Source", tag: "raw", key: "s")
     }
     menu.addItem(.separator())
-    add(item.isFavorite ? "Remove from Favorites" : "Add to Favorites", tag: "favorite")
+    add(item.isFavorite ? "Remove from Favorites" : "Add to Favorites", tag: "favorite", key: "f")
 
     return menu
 }
