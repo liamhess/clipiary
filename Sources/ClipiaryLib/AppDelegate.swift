@@ -7,6 +7,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusSyncTimer: Timer?
     private var localKeyMonitor: Any?
     private var suppressedKeyUps = Set<UInt16>()
+    private var consumeNextMenuDismissalKey = false
     private var panel: FloatingPanel?
     private var previousApp: NSRunningApplication?
     private let hotKeyManager = GlobalHotKeyManager(id: 1)
@@ -226,6 +227,14 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func handleMonitoredEvent(_ event: NSEvent) -> NSEvent? {
+        // NSMenu re-posts the dismissal key (Escape, Return, arrows) after popUp returns.
+        // The re-posted event arrives in the next run-loop iteration. Consume exactly one
+        // keyDown per menu open so it never reaches NSApp.noResponderFor → NSBeep().
+        if event.type == .keyDown, consumeNextMenuDismissalKey, isPanelVisible {
+            consumeNextMenuDismissalKey = false
+            return nil
+        }
+
         let isSettingsWindow = SettingsWindowController.shared.isVisible && event.window == SettingsWindowController.shared.window
         guard event.window == panel || isSettingsWindow else {
             return event
@@ -487,8 +496,15 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.autoenablesItems = false
         for mi in menu.items where !mi.isSeparatorItem { mi.target = handler }
         // y=0 is the top of the row in a flipped NSHostingView; menu drops down from there
+        consumeNextMenuDismissalKey = true
         _ = withExtendedLifetime(handler) {
             menu.popUp(positioning: nil, at: .zero, in: anchor)
+        }
+        // Do NOT reset consumeNextMenuDismissalKey here. The monitor resets it when it
+        // consumes the key event re-posted by NSMenu (next run-loop iteration). If the
+        // menu was dismissed by mouse (no key re-posted), the async fallback clears it.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+            self?.consumeNextMenuDismissalKey = false
         }
     }
 

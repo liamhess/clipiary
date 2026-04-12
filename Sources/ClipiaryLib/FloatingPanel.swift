@@ -237,6 +237,18 @@ final class FloatingPanel: NSPanel {
         true
     }
 
+    override func keyDown(with event: NSEvent) {
+        // Silence unhandled key events. All shortcuts are handled by the local monitor
+        // or sendEvent override before reaching here. Without this, keys re-posted by
+        // NSMenu after context-menu dismissal (Escape, Return, etc.) cause a beep.
+    }
+
+    // When NSMenu dismisses, the Text Services Manager sends moveDown:/moveUp: action
+    // selectors independently of keyDown. Without these no-ops they bubble to
+    // NSApplication.noResponderFor which calls NSBeep().
+    override func moveDown(_ sender: Any?) {}
+    override func moveUp(_ sender: Any?) {}
+
     @objc private func windowDidResize(_ notification: Notification) {
         guard !isSuppressingPersistence else { return }
         let settings = appState.settings
@@ -295,6 +307,16 @@ private final class PanelHostingView: NSHostingView<AnyView> {
 
         let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         let normalizedCharacters = event.charactersIgnoringModifiers?.lowercased()
+
+        // After NSMenu dismisses, it re-dispatches the original activation key equivalent
+        // directly via performKeyEquivalent, bypassing the local monitor. The context menu
+        // shortcut (default Cmd+Return) has no performKeyEquivalent handler, so it would
+        // fall through to NSApp.noResponderFor → NSBeep(). Consume it silently here.
+        let contextMenuShortcut = appState.settings.localContextMenuShortcut
+        if UInt32(event.keyCode) == contextMenuShortcut.keyCode,
+           modifiers == contextMenuShortcut.modifiers {
+            return true
+        }
 
         // When a text field/editor in the picker is active, forward standard editing key equivalents
         // directly via the responder chain so they reach the focused NSTextField / NSTextView.
