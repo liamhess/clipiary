@@ -25,6 +25,8 @@ final class AppSettings {
         static let localMarkdownPasteHotKeyModifiers = "localMarkdownPasteHotKeyModifiers"
         static let globalAltPasteHotKeyKeyCode = "globalAltPasteHotKeyKeyCode"
         static let globalAltPasteHotKeyModifiers = "globalAltPasteHotKeyModifiers"
+        static let localContextMenuHotKeyKeyCode = "localContextMenuHotKeyKeyCode"
+        static let localContextMenuHotKeyModifiers = "localContextMenuHotKeyModifiers"
         static let panelWidth = "panelWidth"
         static let panelHeight = "panelHeight"
         static let moveToTopOnPaste = "moveToTopOnPaste"
@@ -187,6 +189,14 @@ final class AppSettings {
         didSet { defaults.set(globalAltPasteHotKeyModifiers, forKey: Keys.globalAltPasteHotKeyModifiers) }
     }
 
+    var localContextMenuHotKeyKeyCode: Int {
+        didSet { defaults.set(localContextMenuHotKeyKeyCode, forKey: Keys.localContextMenuHotKeyKeyCode) }
+    }
+
+    var localContextMenuHotKeyModifiers: Int {
+        didSet { defaults.set(localContextMenuHotKeyModifiers, forKey: Keys.localContextMenuHotKeyModifiers) }
+    }
+
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         defaults.register(defaults: [
@@ -225,6 +235,8 @@ final class AppSettings {
             Keys.localMarkdownPasteHotKeyModifiers: Int(NSEvent.ModifierFlags.option.union(.shift).rawValue),
             Keys.globalAltPasteHotKeyKeyCode: 9,  // V
             Keys.globalAltPasteHotKeyModifiers: Int(NSEvent.ModifierFlags.control.union(.option).union(.command).rawValue),
+            Keys.localContextMenuHotKeyKeyCode: 36, // Return
+            Keys.localContextMenuHotKeyModifiers: Int(NSEvent.ModifierFlags.command.rawValue),
         ])
 
         isClipboardMonitoringEnabled = defaults.bool(forKey: Keys.clipboardMonitoringEnabled)
@@ -262,6 +274,8 @@ final class AppSettings {
         localMarkdownPasteHotKeyModifiers = defaults.integer(forKey: Keys.localMarkdownPasteHotKeyModifiers)
         globalAltPasteHotKeyKeyCode = defaults.integer(forKey: Keys.globalAltPasteHotKeyKeyCode)
         globalAltPasteHotKeyModifiers = defaults.integer(forKey: Keys.globalAltPasteHotKeyModifiers)
+        localContextMenuHotKeyKeyCode = defaults.integer(forKey: Keys.localContextMenuHotKeyKeyCode)
+        localContextMenuHotKeyModifiers = defaults.integer(forKey: Keys.localContextMenuHotKeyModifiers)
     }
 
     var globalShortcut: GlobalShortcut {
@@ -334,6 +348,18 @@ final class AppSettings {
     func updateGlobalAltPasteShortcut(_ shortcut: GlobalShortcut) {
         globalAltPasteHotKeyKeyCode = Int(shortcut.keyCode)
         globalAltPasteHotKeyModifiers = Int(shortcut.modifiers.rawValue)
+    }
+
+    var localContextMenuShortcut: GlobalShortcut {
+        GlobalShortcut(
+            keyCode: UInt32(localContextMenuHotKeyKeyCode),
+            modifiers: NSEvent.ModifierFlags(rawValue: UInt(localContextMenuHotKeyModifiers))
+        )
+    }
+
+    func updateLocalContextMenuShortcut(_ shortcut: GlobalShortcut) {
+        localContextMenuHotKeyKeyCode = Int(shortcut.keyCode)
+        localContextMenuHotKeyModifiers = Int(shortcut.modifiers.rawValue)
     }
 
     func ignores(bundleID: String?) -> Bool {

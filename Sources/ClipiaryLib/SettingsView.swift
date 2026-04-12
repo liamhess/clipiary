@@ -391,6 +391,15 @@ struct SettingsView: View {
             }
 
             shortcutRow(
+                title: "Context menu (in panel)",
+                help: "While Clipiary is open, opens the context menu for the selected item.",
+                value: appState.isRecordingLocalContextMenuShortcut ? "Press keys..." : appState.settings.localContextMenuShortcut.displayString,
+                isRecording: appState.isRecordingLocalContextMenuShortcut
+            ) {
+                appState.isRecordingLocalContextMenuShortcut.toggle()
+            }
+
+            shortcutRow(
                 title: "Alt paste (global)",
                 help: "Pastes the most-recent clipboard item in the opposite of your default format, without opening Clipiary.",
                 value: appState.isRecordingGlobalAltPasteShortcut ? "Press keys..." : appState.settings.globalAltPasteShortcut.displayString,

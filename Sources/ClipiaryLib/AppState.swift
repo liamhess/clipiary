@@ -51,6 +51,7 @@ final class AppState {
     var isRecordingGlobalAltPasteShortcut = false
     var isRecordingLocalRawSourcePasteShortcut = false
     var isRecordingLocalMarkdownPasteShortcut = false
+    var isRecordingLocalContextMenuShortcut = false
     var isPreviewVisible = false
     var showingFavoriteTabPicker = false
     var favoriteTabPickerIndex = 0
@@ -64,6 +65,8 @@ final class AppState {
     private(set) var pasteSelectedRequestID = 0
     private(set) var quickPasteRequestID = 0
     private(set) var altPasteRequestID = 0
+    private(set) var showContextMenuRequestID = 0
+    @ObservationIgnored var selectedRowAnchorView: NSView?
 
     @ObservationIgnored private let captureCoordinator: CaptureCoordinator
     @ObservationIgnored private let clipboardMonitor: ClipboardMonitor
@@ -566,6 +569,19 @@ final class AppState {
 
         settings.updateLocalMarkdownPasteShortcut(shortcut)
         isRecordingLocalMarkdownPasteShortcut = false
+    }
+
+    func updateContextMenuShortcut(from event: NSEvent) {
+        guard let shortcut = GlobalShortcut(event: event) else {
+            return
+        }
+
+        settings.updateLocalContextMenuShortcut(shortcut)
+        isRecordingLocalContextMenuShortcut = false
+    }
+
+    func requestShowContextMenu() {
+        showContextMenuRequestID &+= 1
     }
 
     func requestSearchFocus() {

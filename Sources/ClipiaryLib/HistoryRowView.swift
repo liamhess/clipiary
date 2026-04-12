@@ -68,6 +68,7 @@ struct HistoryRowView: View, Equatable {
     @State private var isHovered = false
     @State private var borderFlash: Double = 0
     @State private var sweepStartDate: Date? = nil
+    @State private var rowNSView: NSView?
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacing.rowDetailsSpacing) {
@@ -208,6 +209,7 @@ struct HistoryRowView: View, Equatable {
         .padding(.vertical, theme.spacing.rowVerticalPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .id(item.id)
+        .background(RowNSViewCapture { rowNSView = $0 })
         .anchorPreference(key: SelectedRowAnchorKey.self, value: .bounds) { anchor in
             isSelected ? anchor : nil
         }
@@ -257,9 +259,14 @@ struct HistoryRowView: View, Equatable {
         }
         .onChange(of: isSelected) { _, selected in
             let border = theme.resolvedSelectedRowBorder
-            guard selected, border.animation == "flash" else { return }
-            borderFlash = 1.0
-            withAnimation(.easeOut(duration: border.animationDuration).delay(0.05)) { borderFlash = 0 }
+            if selected, border.animation == "flash" {
+                borderFlash = 1.0
+                withAnimation(.easeOut(duration: border.animationDuration).delay(0.05)) { borderFlash = 0 }
+            }
+            if selected { appState.selectedRowAnchorView = rowNSView }
+        }
+        .onAppear {
+            if isSelected { appState.selectedRowAnchorView = rowNSView }
         }
         .compositingGroup()
         .overlay {
@@ -283,6 +290,9 @@ struct HistoryRowView: View, Equatable {
         }
         .onHover { hovering in
             isHovered = hovering
+        }
+        .contextMenu {
+            contextMenuItems
         }
     }
 
@@ -346,8 +356,7 @@ struct HistoryRowView: View, Equatable {
     }
 
     @ViewBuilder
-    private var favoriteButton: some View {
-        if singleFavoriteTab, let tabName = singleFavoriteTabName {
+    private var favoriteButton: some View {        if singleFavoriteTab, let tabName = singleFavoriteTabName {
             Button {
                 appState.selectedHistoryItemID = item.id
                 appState.toggleFavoriteTab(item, tabName: tabName)
@@ -372,6 +381,98 @@ struct HistoryRowView: View, Equatable {
             .opacity(isHovered || item.isFavorite ? 1 : 0.55)
         }
     }
+
+    @ViewBuilder
+    private var contextMenuItems: some View {
+        Button("Paste") {
+            appState.selectedHistoryItemID = item.id
+            appState.requestPasteSelected(plainTextOnly: !appState.settings.richTextPasteDefault)
+        }
+        Button("Paste as Plain Text") {
+            appState.selectedHistoryItemID = item.id
+            appState.requestPasteSelected(plainTextOnly: true)
+        }
+        if item.rtfData != nil || item.htmlData != nil {
+            Button("Paste as Markdown") {
+                appState.selectedHistoryItemID = item.id
+                appState.requestMarkdownPaste()
+            }
+            Button("Paste Raw Source") {
+                appState.selectedHistoryItemID = item.id
+                appState.requestRawSourcePaste()
+            }
+        }
+        Divider()
+        Button(item.isFavorite ? "Remove from Favorites" : "Add to Favorites") {
+            appState.selectedHistoryItemID = item.id
+            appState.toggleFavoriteSelectedItem()
+        }
+    }
+
+}
+
+@MainActor
+final class ContextMenuHandler: NSObject {
+    let item: HistoryItem
+    let appState: AppState
+
+    init(item: HistoryItem, appState: AppState) {
+        self.item = item
+        self.appState = appState
+    }
+
+    @objc func handleItem(_ sender: NSMenuItem) {
+        guard let tag = sender.representedObject as? String else { return }
+        appState.selectedHistoryItemID = item.id
+        switch tag {
+        case "paste":
+            appState.requestPasteSelected(plainTextOnly: !appState.settings.richTextPasteDefault)
+        case "plain":
+            appState.requestPasteSelected(plainTextOnly: true)
+        case "markdown":
+            appState.requestMarkdownPaste()
+        case "raw":
+            appState.requestRawSourcePaste()
+        case "favorite":
+            appState.toggleFavoriteSelectedItem()
+        default:
+            break
+        }
+    }
+}
+
+@MainActor
+func buildMenu(item: HistoryItem, appState: AppState) -> NSMenu {
+    let menu = NSMenu()
+
+    func add(_ title: String, tag: String) {
+        let mi = NSMenuItem(title: title, action: #selector(ContextMenuHandler.handleItem(_:)), keyEquivalent: "")
+        mi.representedObject = tag
+        mi.isEnabled = true
+        menu.addItem(mi)
+    }
+
+    let pasteTitle = appState.settings.richTextPasteDefault ? "Paste (Rich Text)" : "Paste (Plain Text)"
+    add(pasteTitle, tag: "paste")
+    add("Paste as Plain Text", tag: "plain")
+    if item.rtfData != nil || item.htmlData != nil {
+        add("Paste as Markdown", tag: "markdown")
+        add("Paste Raw Source", tag: "raw")
+    }
+    menu.addItem(.separator())
+    add(item.isFavorite ? "Remove from Favorites" : "Add to Favorites", tag: "favorite")
+
+    return menu
+}
+
+private struct RowNSViewCapture: NSViewRepresentable {
+    let onReady: (NSView) -> Void
+    func makeNSView(context: Context) -> NSView {
+        let v = NSView()
+        DispatchQueue.main.async { onReady(v) }
+        return v
+    }
+    func updateNSView(_ nsView: NSView, context: Context) { onReady(nsView) }
 }
 
 private func buildHighlightAttrs(

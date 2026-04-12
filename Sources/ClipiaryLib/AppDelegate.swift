@@ -241,7 +241,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // When recording shortcuts from the settings window, only handle recording events
         if isSettingsWindow {
-            let anyRecording = appState.isRecordingShortcut || appState.isRecordingQuickPasteShortcut || appState.isRecordingLocalAltPasteShortcut || appState.isRecordingGlobalAltPasteShortcut
+            let anyRecording = appState.isRecordingShortcut || appState.isRecordingQuickPasteShortcut || appState.isRecordingLocalAltPasteShortcut || appState.isRecordingGlobalAltPasteShortcut || appState.isRecordingLocalContextMenuShortcut
             guard anyRecording else { return event }
         }
 
@@ -316,6 +316,16 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             return suppressKeyUp(for: event)
         }
 
+        if appState.isRecordingLocalContextMenuShortcut {
+            switch event.keyCode {
+            case 53:
+                appState.isRecordingLocalContextMenuShortcut = false
+            default:
+                appState.updateContextMenuShortcut(from: event)
+            }
+            return suppressKeyUp(for: event)
+        }
+
         if appState.isRecordingGlobalAltPasteShortcut {
             switch event.keyCode {
             case 53:
@@ -341,6 +351,12 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         let localMarkdown = appState.settings.localMarkdownPasteShortcut
         if UInt32(event.keyCode) == localMarkdown.keyCode && modifiers == localMarkdown.modifiers {
             appState.requestMarkdownPaste()
+            return suppressKeyUp(for: event)
+        }
+
+        let localContextMenu = appState.settings.localContextMenuShortcut
+        if UInt32(event.keyCode) == localContextMenu.keyCode && modifiers == localContextMenu.modifiers {
+            showContextMenuForSelectedItem()
             return suppressKeyUp(for: event)
         }
 
@@ -458,6 +474,21 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             showStatusItemMenu()
         } else {
             togglePopover()
+        }
+    }
+
+    private func showContextMenuForSelectedItem() {
+        guard let selectedID = appState.selectedHistoryItemID,
+              let item = appState.history.items.first(where: { $0.id == selectedID }) else { return }
+        let anchor = appState.selectedRowAnchorView ?? panel?.contentView
+        guard let anchor else { return }
+        let menu = buildMenu(item: item, appState: appState)
+        let handler = ContextMenuHandler(item: item, appState: appState)
+        menu.autoenablesItems = false
+        for mi in menu.items where !mi.isSeparatorItem { mi.target = handler }
+        // y=0 is the top of the row in a flipped NSHostingView; menu drops down from there
+        _ = withExtendedLifetime(handler) {
+            menu.popUp(positioning: nil, at: .zero, in: anchor)
         }
     }
 
