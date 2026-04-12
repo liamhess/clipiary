@@ -274,6 +274,10 @@ struct HistoryRowView: View, Equatable {
         .shadow(color: rowGlowColor, radius: rowGlowRadius)
         .shadow(color: rowInnerGlowColor, radius: rowInnerGlowRadius)
         .contentShape(Rectangle())
+        .onTapGesture(count: 2) {
+            appState.selectedHistoryItemID = item.id
+            appState.requestPasteSelected(plainTextOnly: !appState.settings.richTextPasteDefault)
+        }
         .onTapGesture {
             appState.selectedHistoryItemID = item.id
         }
