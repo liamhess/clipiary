@@ -316,6 +316,7 @@ func makeCaptureCoordinator(
 
         let store1 = HistoryStore(storageDirectory: dir)
         store1.add(makeItem(text: "persisted"), limit: 100)
+        store1.flush()
 
         let store2 = HistoryStore(storageDirectory: dir)
         store2.load()

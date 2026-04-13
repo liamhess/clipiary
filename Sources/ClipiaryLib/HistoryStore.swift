@@ -2,17 +2,21 @@ import AppKit
 import Foundation
 import Observation
 
+private let historyPersistQueue = DispatchQueue(label: "com.clipiary.persist", qos: .utility)
+
 @MainActor
 @Observable
 final class HistoryStore {
     private(set) var items: [HistoryItem] = []
     var searchQuery = ""
+    private(set) var mutationGeneration: Int = 0
 
     private let fileManager: FileManager
     private let storageURL: URL
     private let imagesDirectoryURL: URL
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
+    private var persistTimer: Timer?
 
     init(fileManager: FileManager = .default, storageDirectory: URL? = nil) {
         self.fileManager = fileManager
@@ -50,6 +54,7 @@ final class HistoryStore {
 
         let decodedItems = (try? decoder.decode([HistoryItem].self, from: data)) ?? []
         items = recencyOrderedItems(decodedItems)
+        mutationGeneration &+= 1
     }
 
     func saveImageData(_ data: Data, fileName: String) {
@@ -237,9 +242,14 @@ final class HistoryStore {
 
         // Freeze favorite tab positions before bumping createdAt so the item
         // (and its neighbors) keep their custom order in every favorites tab.
-        for tabName in items[index].favoriteTabs {
-            let tabItemIDs = Set(items.filter { $0.favoriteTabs.contains(tabName) }.map(\.id))
-            assignSortIndices(to: tabItemIDs)
+        let tabs = items[index].favoriteTabs
+        if !tabs.isEmpty {
+            // Single pass: collect IDs of all items sharing any of the same tabs.
+            var relevantIDs = Set<UUID>()
+            for item in items where !item.favoriteTabs.isDisjoint(with: tabs) {
+                relevantIDs.insert(item.id)
+            }
+            assignSortIndices(to: relevantIDs)
         }
 
         items[index].createdAt = Date()
@@ -411,12 +421,32 @@ final class HistoryStore {
     }
 
     private func persist() {
+        mutationGeneration &+= 1
+        persistTimer?.invalidate()
+        persistTimer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: false) { [weak self] _ in
+            Task { @MainActor [weak self] in
+                self?.writeToDisk()
+            }
+        }
+    }
+
+    private func writeToDisk() {
         let directory = storageURL.deletingLastPathComponent()
         try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
-        guard let data = try? encoder.encode(items) else {
-            return
+        guard let data = try? encoder.encode(items) else { return }
+        let url = storageURL
+        historyPersistQueue.async {
+            try? data.write(to: url, options: .atomic)
         }
+    }
 
+    /// Immediately writes any pending changes to disk. Used by tests.
+    func flush() {
+        persistTimer?.invalidate()
+        persistTimer = nil
+        let directory = storageURL.deletingLastPathComponent()
+        try? fileManager.createDirectory(at: directory, withIntermediateDirectories: true)
+        guard let data = try? encoder.encode(items) else { return }
         try? data.write(to: storageURL, options: .atomic)
     }
 }

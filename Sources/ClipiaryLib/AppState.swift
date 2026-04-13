@@ -67,6 +67,9 @@ final class AppState {
     private(set) var altPasteRequestID = 0
     private(set) var showContextMenuRequestID = 0
     @ObservationIgnored var selectedRowAnchorView: NSView?
+    @ObservationIgnored private var cachedBaseFilterResult: [HistoryItem]?
+    @ObservationIgnored private var cachedBaseFilterQuery: String?
+    @ObservationIgnored private var cachedBaseFilterGeneration: Int = -1
 
     @ObservationIgnored private let captureCoordinator: CaptureCoordinator
     @ObservationIgnored private let clipboardMonitor: ClipboardMonitor
@@ -230,21 +233,38 @@ final class AppState {
     }
 
     func filteredItems() -> [HistoryItem] {
-        let terms = searchQuery.split(separator: " ", omittingEmptySubsequences: true)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-        guard !terms.isEmpty else {
-            return history.items
+        let currentQuery = searchQuery
+        let currentGeneration = history.mutationGeneration
+
+        if let cached = cachedBaseFilterResult,
+           cachedBaseFilterQuery == currentQuery,
+           cachedBaseFilterGeneration == currentGeneration {
+            return cached
         }
 
-        return history.items.filter { item in
-            terms.allSatisfy { term in
-                item.text.localizedCaseInsensitiveContains(term) ||
-                item.appName.localizedCaseInsensitiveContains(term) ||
-                (item.bundleID?.localizedCaseInsensitiveContains(term) ?? false) ||
-                (item.snippetDescription?.localizedCaseInsensitiveContains(term) ?? false)
+        let terms = currentQuery.split(separator: " ", omittingEmptySubsequences: true)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+
+        let result: [HistoryItem]
+        if terms.isEmpty {
+            result = history.items
+        } else {
+            result = history.items.filter { item in
+                terms.allSatisfy { term in
+                    item.text.localizedCaseInsensitiveContains(term) ||
+                    item.appName.localizedCaseInsensitiveContains(term) ||
+                    (item.bundleID?.localizedCaseInsensitiveContains(term) ?? false) ||
+                    (item.snippetDescription?.localizedCaseInsensitiveContains(term) ?? false)
+                }
             }
         }
+
+        cachedBaseFilterResult = result
+        cachedBaseFilterQuery = currentQuery
+        cachedBaseFilterGeneration = currentGeneration
+
+        return result
     }
 
     func setSelectedTab(_ tab: PopoverTab) {
