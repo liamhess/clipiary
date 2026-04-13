@@ -364,6 +364,15 @@ struct SettingsView: View {
             }
 
             shortcutRow(
+                title: "Alt paste (global)",
+                help: "Pastes the most-recent clipboard item in the opposite of your default format, without opening Clipiary.",
+                value: appState.isRecordingGlobalAltPasteShortcut ? "Press keys..." : appState.settings.globalAltPasteShortcut.displayString,
+                isRecording: appState.isRecordingGlobalAltPasteShortcut
+            ) {
+                appState.isRecordingGlobalAltPasteShortcut.toggle()
+            }
+
+            shortcutRow(
                 title: "Alt paste (in panel)",
                 help: "While Clipiary is open, pastes the opposite of your default format (rich text ↔ plain text).",
                 value: appState.isRecordingLocalAltPasteShortcut ? "Press keys..." : appState.settings.localAltPasteShortcut.displayString,
@@ -397,15 +406,6 @@ struct SettingsView: View {
                 isRecording: appState.isRecordingLocalContextMenuShortcut
             ) {
                 appState.isRecordingLocalContextMenuShortcut.toggle()
-            }
-
-            shortcutRow(
-                title: "Alt paste (global)",
-                help: "Pastes the most-recent clipboard item in the opposite of your default format, without opening Clipiary.",
-                value: appState.isRecordingGlobalAltPasteShortcut ? "Press keys..." : appState.settings.globalAltPasteShortcut.displayString,
-                isRecording: appState.isRecordingGlobalAltPasteShortcut
-            ) {
-                appState.isRecordingGlobalAltPasteShortcut.toggle()
             }
         }
     }
@@ -718,10 +718,10 @@ final class SettingsWindowController {
             .environment(AppState.shared)
 
         let hostingView = NSHostingView(rootView: settingsView)
-        hostingView.frame = NSRect(x: 0, y: 0, width: 800, height: 640)
+        hostingView.frame = NSRect(x: 0, y: 0, width: 800, height: 700)
 
         let window = SettingsPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 800, height: 640),
+            contentRect: NSRect(x: 0, y: 0, width: 800, height: 700),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false
