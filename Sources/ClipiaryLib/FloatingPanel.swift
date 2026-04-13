@@ -318,12 +318,11 @@ private final class PanelHostingView: NSHostingView<AnyView> {
             return true
         }
 
-        // When a text field/editor in the picker is active, forward standard editing key equivalents
-        // directly via the responder chain so they reach the focused NSTextField / NSTextView.
+        // When a text field/editor is active (search field, picker description, or item text editor),
+        // forward standard editing key equivalents via the responder chain so they reach the focused control.
         if modifiers == .command,
            let chars = normalizedCharacters,
-           ["v", "a", "x", "c", "z", "y"].contains(chars),
-           appState.isEditingSnippetDescription || appState.isEditingItemText {
+           ["v", "a", "x", "c", "z", "y"].contains(chars) {
             let selector: Selector? = switch chars {
             case "v": #selector(NSText.paste(_:))
             case "a": #selector(NSText.selectAll(_:))
@@ -333,8 +332,7 @@ private final class PanelHostingView: NSHostingView<AnyView> {
             case "y": #selector(UndoManager.redo)
             default: nil
             }
-            if let selector {
-                NSApp.sendAction(selector, to: nil, from: self)
+            if let selector, NSApp.sendAction(selector, to: nil, from: self) {
                 return true
             }
         }
