@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+
+## [1.6.0] - 2026-04-13
 ### Added
 - Context menu on history items: right-click the row, or press the configurable shortcut (default ⌘↩) to open a menu with all paste options and Add to Favorites
 - New "paste raw source" shortcut (default ⌥⇧↩, configurable in Settings): pastes the literal HTML or RTF markup of a rich text item as plain text

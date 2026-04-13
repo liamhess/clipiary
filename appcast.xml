@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss xmlns:ns0="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><title>Clipiary</title><item><title>Version 1.5.0</title><ns0:version>1.5.0</ns0:version><ns0:shortVersionString>1.5.0</ns0:shortVersionString><description ns0:format="markdown">### Added
-- Added a Theme Builder UI
-- Settings window now aligns to some UX patterns of the theme builder
-- Full date in item details
-
-### Fixed
-- Settings panel title bar longer bleeds through content
-- Separators in favorites tabs no longer reduce the effective history limit
-</description><pubDate>Tue, 07 Apr 2026 17:34:43 +0000</pubDate><enclosure url="https://github.com/liamhess/clipiary/releases/download/v1.5.0/Clipiary-1.5.0.zip" ns0:edSignature="viFu0LbLntfdEuABOvtaet/ce3X02GDBqVY2VqRVmRi+KlLzw4/72L67IFXKoR62HQfNbNZOlCtuynRA4HIwCw==" length="3606873" type="application/octet-stream" /></item></channel></rss>
+<rss xmlns:ns0="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><title>Clipiary</title><item><title>Version 1.6.0</title><ns0:version>1.6.0</ns0:version><ns0:shortVersionString>1.6.0</ns0:shortVersionString><description ns0:format="markdown">### Added
+- Context menu on history items: right-click the row, or press the configurable shortcut (default ⌘↩) to open a menu with all paste options and Add to Favorites
+- New "paste raw source" shortcut (default ⌥⇧↩, configurable in Settings): pastes the literal HTML or RTF markup of a rich text item as plain text
+- New "paste as Markdown" shortcut (default ⌥↩, configurable in Settings): converts HTML or RTF items to Markdown (best-effort, preserving headings, lists, bold, italic, links, code) and pastes the result as plain text
+- Performance improvements
+- Support cmd+a/x/c/v in search field
+- Themes:
+  - configurable blur for the panel backdrop behind the favorites tab picker overlay (frosted-glass effect)
+  - `material` option now supports `ultraThin`, `thin`, `regular`, `thick`, or `ultraThick` vibrancy levels
+  - `fonts` section — configure family, size, and weight separately for regular and monospace row text
+  - `fills.contentArea` — dedicated fill slot for the scrollable area and search field, independent of `fills.panel` (the outer panel shell)
+  - `rowDetailsSpacing` — configure spacing between row entry and its details
+</description><pubDate>Mon, 13 Apr 2026 19:05:11 +0000</pubDate><enclosure url="https://github.com/liamhess/clipiary/releases/download/v1.6.0/Clipiary-1.6.0.zip" ns0:edSignature="C8y6uip210YEL4YjFN/C40bdwI+bZV0TC+jSsdkOwMTvwXCCOilsE1sN0/lgIQExW/ZlkUpf3nEePzCzD6M5BQ==" length="3759674" type="application/octet-stream" /></item></channel></rss>
