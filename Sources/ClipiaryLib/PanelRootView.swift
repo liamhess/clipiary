@@ -396,8 +396,34 @@ struct PanelRootView: View {
                         }
                     }
                     .contextMenu {
+                        if !item.isSeparator {
+                            Button("Paste") {
+                                appState.selectedHistoryItemID = item.id
+                                appState.requestPasteSelected(plainTextOnly: !appState.settings.richTextPasteDefault)
+                            }
+                            Button("Paste as Plain Text") {
+                                appState.selectedHistoryItemID = item.id
+                                appState.requestPasteSelected(plainTextOnly: true)
+                            }
+                            if item.rtfData != nil || item.htmlData != nil {
+                                Button("Paste as Markdown") {
+                                    appState.selectedHistoryItemID = item.id
+                                    appState.requestMarkdownPaste()
+                                }
+                                Button("Paste Raw Source") {
+                                    appState.selectedHistoryItemID = item.id
+                                    appState.requestRawSourcePaste()
+                                }
+                            }
+                            Divider()
+                            Button(item.isFavorite ? "Remove from Favorites" : "Add to Favorites") {
+                                appState.selectedHistoryItemID = item.id
+                                appState.toggleFavoriteSelectedItem()
+                            }
+                        }
                         if case .favorites(let tabName) = appState.selectedTab.kind {
                             if !item.isSeparator {
+                                Divider()
                                 Button("Insert Separator Below") {
                                     appState.insertSeparator(after: item, inTab: tabName)
                                 }

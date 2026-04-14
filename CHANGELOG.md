@@ -1,6 +1,7 @@
 # Changelog
 
 ## [Unreleased]
+- Fixed missing "Add Separator" context menu entry
 
 ## [1.6.0] - 2026-04-13
 ### Added
