@@ -838,7 +838,7 @@ struct PanelRootView: View {
                 .padding(.vertical, 6)
                 .background(
                     RoundedRectangle(cornerRadius: theme.cornerRadii.pickerRow, style: .continuous)
-                        .fill(isFocused ? theme.resolvedRowSelectedFill : AnyShapeStyle(Color.clear))
+                        .fill(isFocused ? AnyShapeStyle(theme.resolvedAccent.opacity(0.3)) : AnyShapeStyle(Color.clear))
                 )
                 .contentShape(Rectangle())
                 .onTapGesture {
