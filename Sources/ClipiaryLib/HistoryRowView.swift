@@ -69,6 +69,7 @@ struct HistoryRowView: View, Equatable {
     @State private var borderFlash: Double = 0
     @State private var sweepStartDate: Date? = nil
     @State private var rowNSView: NSView?
+    @State private var lastTapDate: Date? = nil
 
     var body: some View {
         VStack(alignment: .leading, spacing: theme.spacing.rowDetailsSpacing) {
@@ -281,13 +282,19 @@ struct HistoryRowView: View, Equatable {
         .shadow(color: rowGlowColor, radius: rowGlowRadius)
         .shadow(color: rowInnerGlowColor, radius: rowInnerGlowRadius)
         .contentShape(Rectangle())
-        .onTapGesture(count: 2) {
+        .simultaneousGesture(TapGesture(count: 2).onEnded {
             appState.selectedHistoryItemID = item.id
             appState.requestPasteSelected(plainTextOnly: !appState.settings.richTextPasteDefault)
-        }
-        .onTapGesture {
+        })
+        .simultaneousGesture(TapGesture().onEnded {
+            let now = Date()
+            let isDouble = lastTapDate.map { now.timeIntervalSince($0) < NSEvent.doubleClickInterval } ?? false
+            lastTapDate = now
             appState.selectedHistoryItemID = item.id
-        }
+            if isDouble {
+                appState.requestPasteSelected(plainTextOnly: !appState.settings.richTextPasteDefault)
+            }
+        })
         .onHover { hovering in
             isHovered = hovering
         }

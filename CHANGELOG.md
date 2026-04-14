@@ -3,6 +3,7 @@
 ## [Unreleased]
 ### Changed
 - Search performance improvements
+- Left-click in history list no longer has a delay
 
 ## [1.6.1] - 2026-04-14
 - Fixed missing "Add Separator" context menu entry
