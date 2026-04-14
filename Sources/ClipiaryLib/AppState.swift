@@ -243,20 +243,28 @@ final class AppState {
         }
 
         let terms = currentQuery.split(separator: " ", omittingEmptySubsequences: true)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
             .filter { !$0.isEmpty }
 
         let result: [HistoryItem]
         if terms.isEmpty {
             result = history.items
         } else {
-            result = history.items.filter { item in
-                terms.allSatisfy { term in
-                    item.text.localizedCaseInsensitiveContains(term) ||
-                    item.appName.localizedCaseInsensitiveContains(term) ||
-                    (item.bundleID?.localizedCaseInsensitiveContains(term) ?? false) ||
-                    (item.snippetDescription?.localizedCaseInsensitiveContains(term) ?? false)
-                }
+            // Incremental narrowing: if the new query extends the previous one and the
+            // item set hasn't changed, the result can only be a subset of the prior
+            // result — no need to scan all items again.
+            let searchBase: [HistoryItem]
+            if let cached = cachedBaseFilterResult,
+               cachedBaseFilterGeneration == currentGeneration,
+               let oldQuery = cachedBaseFilterQuery,
+               !oldQuery.isEmpty,
+               currentQuery.hasPrefix(oldQuery) {
+                searchBase = cached
+            } else {
+                searchBase = history.items
+            }
+            result = searchBase.filter { item in
+                terms.allSatisfy { item.searchCorpus.contains($0) }
             }
         }
 

@@ -1,6 +1,8 @@
 # Changelog
 
 ## [Unreleased]
+### Changed
+- Search performance improvements
 
 ## [1.6.1] - 2026-04-14
 - Fixed missing "Add Separator" context menu entry

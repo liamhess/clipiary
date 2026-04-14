@@ -197,6 +197,7 @@ final class HistoryStore {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
         let trimmed = description?.trimmingCharacters(in: .whitespacesAndNewlines)
         items[index].snippetDescription = (trimmed?.isEmpty ?? true) ? nil : trimmed
+        items[index].rebuildDerivedFields()
         persist()
     }
 
@@ -205,6 +206,7 @@ final class HistoryStore {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         items[index].text = trimmed
+        items[index].rebuildDerivedFields()
         persist()
     }
 

@@ -27,7 +27,9 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     var isSeparator: Bool
     var rtfData: Data?
     var htmlData: String?
-    let displayText: String
+    var displayText: String
+    /// Lowercased concatenation of all searchable fields, computed once at init.
+    var searchCorpus: String
 
     init(
         id: UUID = UUID(),
@@ -72,6 +74,9 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         self.displayText = text
             .replacingOccurrences(of: "\n", with: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)
+        let desc = snippetDescription ?? ""
+        let bun = bundleID ?? ""
+        self.searchCorpus = "\(text)\n\(appName)\n\(bun)\n\(desc)".lowercased()
     }
 
     var isImage: Bool {
@@ -80,6 +85,15 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
 
     var isFavorite: Bool {
         !favoriteTabs.isEmpty
+    }
+
+    mutating func rebuildDerivedFields() {
+        displayText = text
+            .replacingOccurrences(of: "\n", with: " ")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+        let desc = snippetDescription ?? ""
+        let bun = bundleID ?? ""
+        searchCorpus = "\(text)\n\(appName)\n\(bun)\n\(desc)".lowercased()
     }
 
     var globalShortcut: GlobalShortcut? {
@@ -137,6 +151,9 @@ extension HistoryItem: Codable {
         displayText = text
             .replacingOccurrences(of: "\n", with: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)
+        let desc = snippetDescription ?? ""
+        let bun = bundleID ?? ""
+        searchCorpus = "\(text)\n\(appName)\n\(bun)\n\(desc)".lowercased()
     }
 
     func encode(to encoder: Encoder) throws {
