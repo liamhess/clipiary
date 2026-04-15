@@ -16,6 +16,7 @@ final class FloatingPanel: NSPanel {
     private let statusBarButton: NSStatusBarButton?
     private let appState: AppState
     private var isSuppressingPersistence = false
+    private var displayChangedWhileHidden = false
     var onClose: (() -> Void)?
 
     init(
@@ -58,6 +59,18 @@ final class FloatingPanel: NSPanel {
             selector: #selector(windowDidResize(_:)),
             name: NSWindow.didResizeNotification,
             object: self
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(screenParametersChanged),
+            name: NSApplication.didChangeScreenParametersNotification,
+            object: nil
+        )
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(screenParametersChanged),
+            name: NSWorkspace.didWakeNotification,
+            object: nil
         )
     }
 
@@ -105,9 +118,25 @@ final class FloatingPanel: NSPanel {
         isSuppressingPersistence = true
         setFrame(NSRect(origin: targetOrigin, size: size), display: true)
         isSuppressingPersistence = false
+        // After sleep/wake or display reconfiguration, SwiftUI's LazyVStack can
+        // leave some cells with stale layer transforms, making them render
+        // upside-down. Replacing the root view with a new identity forces SwiftUI
+        // to tear down and recreate the entire view hierarchy before the panel
+        // becomes visible. Important state lives in AppState (not @State), so
+        // nothing meaningful is lost.
+        if displayChangedWhileHidden {
+            displayChangedWhileHidden = false
+            (contentView as? PanelHostingView)?.rebuildViewHierarchy()
+        }
         orderFrontRegardless()
         makeKey()
         statusBarButton?.isHighlighted = true
+    }
+
+    @objc private func screenParametersChanged() {
+        if !isVisible {
+            displayChangedWhileHidden = true
+        }
     }
 
     override func resignKey() {
@@ -267,27 +296,13 @@ private final class PanelHostingView: NSHostingView<AnyView> {
         self.onClose = onClose
         super.init(rootView: rootView)
         sizingOptions = []
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(backingPropertiesDidChange),
-            name: NSWindow.didChangeBackingPropertiesNotification,
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(backingPropertiesDidChange),
-            name: NSApplication.didChangeScreenParametersNotification,
-            object: nil
-        )
     }
 
-    // When the display configuration changes (sleep/wake, monitor attach/detach,
-    // resolution change), SwiftUI's LazyVStack can leave some cells with an
-    // incorrect transform, causing them to render upside-down. Force a full
-    // layout pass to reset any stale cell geometry.
-    @objc private func backingPropertiesDidChange() {
-        needsLayout = true
-        layoutSubtreeIfNeeded()
+    // Forces SwiftUI to destroy and recreate the entire view hierarchy by
+    // changing the root view's identity. Used to recover from stale layer
+    // transforms after sleep/wake. All meaningful state lives in AppState.
+    func rebuildViewHierarchy() {
+        rootView = AnyView(ThemedRootView().environment(appState).id(UUID()))
     }
 
     @available(*, unavailable)

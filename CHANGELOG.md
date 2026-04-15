@@ -1,9 +1,12 @@
 # Changelog
 
 ## [Unreleased]
-### Changed
+### Improvements
 - Search performance improvements
 - Left-click in history list no longer has a delay
+
+### Fixed
+- Attempt to fix a rare bug showing some items mirrored upside-down after wake-up
 
 ## [1.6.1] - 2026-04-14
 - Fixed missing "Add Separator" context menu entry
