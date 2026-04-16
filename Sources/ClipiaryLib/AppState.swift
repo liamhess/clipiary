@@ -2,6 +2,8 @@ import AppKit
 import Foundation
 import Observation
 
+@MainActor var debugPerfEnabled = false
+
 @MainActor
 @Observable
 final class AppState {
@@ -214,7 +216,13 @@ final class AppState {
     }
 
     var activeItems: [HistoryItem] {
-        filteredItems(for: selectedTab)
+        let t0 = CFAbsoluteTimeGetCurrent()
+        let result = filteredItems(for: selectedTab)
+        if debugPerfEnabled {
+            let ms = (CFAbsoluteTimeGetCurrent() - t0) * 1000
+            if ms > 1 { print("[PERF] activeItems: \(String(format: "%.1f", ms))ms, \(result.count) items") }
+        }
+        return result
     }
 
     var selectedHistoryItemID: HistoryItem.ID? {
@@ -233,6 +241,7 @@ final class AppState {
     }
 
     func filteredItems() -> [HistoryItem] {
+        let t0 = CFAbsoluteTimeGetCurrent()
         let currentQuery = searchQuery
         let currentGeneration = history.mutationGeneration
 
@@ -270,6 +279,11 @@ final class AppState {
         cachedBaseFilterResult = result
         cachedBaseFilterQuery = currentQuery
         cachedBaseFilterGeneration = currentGeneration
+
+        if debugPerfEnabled {
+            let ms = (CFAbsoluteTimeGetCurrent() - t0) * 1000
+            if ms > 1 { print("[PERF] filteredItems(): \(String(format: "%.1f", ms))ms, query=\"\(currentQuery)\", \(result.count) results") }
+        }
 
         return result
     }

@@ -376,6 +376,12 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         #endif
 
+        if event.keyCode == 2 && modifiers == .control { // Ctrl+D — toggle perf logging
+            debugPerfEnabled.toggle()
+            print("[PERF] debug output \(debugPerfEnabled ? "ON" : "OFF")")
+            return suppressKeyUp(for: event)
+        }
+
         if !modifiers.isDisjoint(with: [.command, .option, .control]) {
             return event
         }

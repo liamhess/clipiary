@@ -35,6 +35,21 @@ struct SelectedRowRectKey: PreferenceKey {
 }
 
 struct HistoryRowView: View, Equatable {
+    @MainActor private static var bodyEvalCount = 0
+    @MainActor private static var bodyEvalStart: CFAbsoluteTime = 0
+
+    @MainActor static func trackBodyEval() {
+        guard debugPerfEnabled else { return }
+        if bodyEvalCount == 0 { bodyEvalStart = CFAbsoluteTimeGetCurrent() }
+        bodyEvalCount += 1
+        DispatchQueue.main.async {
+            guard bodyEvalCount > 0 else { return }
+            let ms = (CFAbsoluteTimeGetCurrent() - bodyEvalStart) * 1000
+            print("[PERF] HistoryRowView.body: \(bodyEvalCount) rows in \(String(format: "%.1f", ms))ms")
+            bodyEvalCount = 0
+        }
+    }
+
     let item: HistoryItem
     let maxPasteCount: Int
     let isSelected: Bool
@@ -72,6 +87,7 @@ struct HistoryRowView: View, Equatable {
     @State private var lastTapDate: Date? = nil
 
     var body: some View {
+        let _ = Self.trackBodyEval()
         VStack(alignment: .leading, spacing: theme.spacing.rowDetailsSpacing) {
             HStack(alignment: .top, spacing: 8) {
                 Button {
