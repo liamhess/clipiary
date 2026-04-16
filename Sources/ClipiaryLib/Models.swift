@@ -31,6 +31,8 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     /// Lowercased concatenation of all searchable fields, computed once at init.
     var searchCorpus: String
 
+    private static let displayTextCap = 300
+
     init(
         id: UUID = UUID(),
         text: String,
@@ -71,7 +73,7 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         self.isSeparator = isSeparator
         self.rtfData = rtfData
         self.htmlData = htmlData
-        self.displayText = text
+        self.displayText = String(text.prefix(Self.displayTextCap))
             .replacingOccurrences(of: "\n", with: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let desc = snippetDescription ?? ""

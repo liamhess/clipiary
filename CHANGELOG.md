@@ -2,7 +2,8 @@
 
 ## [Unreleased]
 ### Improvements
-- Search performance improvements
+- Search is significantly faster: pre-indexed search corpus, incremental narrowing, faster string matching, and highlights debounced to avoid blocking typing
+- History persistence no longer blocks the main thread (debounced background writes)
 - Left-click in history list no longer has a delay
 
 ### Fixed

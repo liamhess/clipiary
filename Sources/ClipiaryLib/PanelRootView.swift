@@ -12,6 +12,9 @@ struct PanelRootView: View {
     @State private var selectedRowRect: CGRect = .zero
     @State private var scrollViewHeight: CGFloat = 0
     @State private var snippetDescriptionText: String = ""
+    @State private var searchFieldText: String = ""
+    @State private var highlightTerms: [String] = []
+    @State private var highlightDebounceTask: Task<Void, Never>?
     @FocusState private var isDescriptionFieldFocused: Bool
     @State private var itemEditText: String = ""
     @FocusState private var isItemTextEditorFocused: Bool
@@ -70,7 +73,7 @@ struct PanelRootView: View {
 
         return VStack(alignment: .leading, spacing: 10) {
             searchField
-                .frame(height: appState.settings.alwaysShowSearch || !appState.searchQuery.isEmpty ? nil : 0)
+                .frame(height: appState.settings.alwaysShowSearch || !searchFieldText.isEmpty ? nil : 0)
                 .clipped()
 
             ScrollViewReader { proxy in
@@ -308,25 +311,37 @@ struct PanelRootView: View {
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(.secondary)
             TextField("Search clipboard history", text: Binding(
-                get: { appState.searchQuery },
-                set: {
-                    if $0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        appState.searchQuery = ""
-                    } else {
-                        appState.searchQuery = $0
-                    }
+                get: { searchFieldText },
+                set: { newValue in
+                    searchFieldText = newValue
+                    appState.searchQuery = newValue
+                    scheduleHighlightUpdate(for: newValue)
                 }
             ))
                 .textFieldStyle(.plain)
                 .focused($searchFocused)
                 .onKeyPress(keys: [.upArrow, .downArrow]) { _ in .handled }
-                .onKeyPress(.space) { appState.searchQuery.isEmpty ? .handled : .ignored }
+                .onKeyPress(.space) { searchFieldText.isEmpty ? .handled : .ignored }
                 .onChange(of: appState.searchQuery) {
                     appState.ensureSelection()
+                    // Sync back when searchQuery is cleared externally (e.g. paste actions)
+                    if appState.searchQuery.isEmpty && !searchFieldText.isEmpty {
+                        searchFieldText = ""
+                        highlightDebounceTask?.cancel()
+                        highlightTerms = []
+                    }
                 }
-            if !appState.searchQuery.isEmpty {
+                .onChange(of: appState.popoverOpenRequestID) {
+                    searchFieldText = ""
+                    highlightDebounceTask?.cancel()
+                    highlightTerms = []
+                }
+            if !searchFieldText.isEmpty {
                 Button {
+                    searchFieldText = ""
                     appState.searchQuery = ""
+                    highlightDebounceTask?.cancel()
+                    highlightTerms = []
                     appState.requestSearchFocus()
                     appState.ensureSelection()
                 } label: {
@@ -362,10 +377,7 @@ struct PanelRootView: View {
         let selectedID = appState.selectedHistoryItemID
         let showingPicker = appState.showingFavoriteTabPicker
         let showFavoriteTabBadges = appState.settings.showFavoriteTabBadges && appState.selectedTab.kind == .history
-        let searchTerms = appState.searchQuery
-            .split(separator: " ", omittingEmptySubsequences: true)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
+        let searchTerms = highlightTerms
 
         return LazyVStack(spacing: theme.spacing.rowSpacing) {
             ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
@@ -674,6 +686,23 @@ struct PanelRootView: View {
             return "Copy something, or enable copy-on-select to capture highlighted text."
         case .favorites(let name):
             return "Mark items as \(name) so they stay separate from the stream."
+        }
+    }
+
+    private func scheduleHighlightUpdate(for query: String) {
+        highlightDebounceTask?.cancel()
+        let terms = query
+            .split(separator: " ", omittingEmptySubsequences: true)
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { $0.count >= 2 }
+        guard !terms.isEmpty else {
+            highlightTerms = []
+            return
+        }
+        highlightDebounceTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(300))
+            guard !Task.isCancelled else { return }
+            highlightTerms = terms
         }
     }
 

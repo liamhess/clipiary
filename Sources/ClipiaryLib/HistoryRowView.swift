@@ -459,12 +459,24 @@ private struct RowNSViewCapture: NSViewRepresentable {
 private func buildHighlightAttrs(
     _ string: String, terms: [String], foreground: Color, background: Color?, glowColor: Color?
 ) -> (main: AttributedString, glow: AttributedString?) {
+    // Fast pre-check: if no term matches at all, skip AttributedString work entirely.
+    let lowered = string.lowercased()
+    let hasMatch = terms.contains { lowered.range(of: $0, options: .literal) != nil }
+    guard hasMatch else {
+        return (AttributedString(string), glowColor != nil ? {
+            var a = AttributedString(string); a.foregroundColor = .clear; return a
+        }() : nil)
+    }
+
     var mainAttr = AttributedString(string)
     var glowAttr: AttributedString? = glowColor != nil ? AttributedString(string) : nil
     if glowColor != nil { glowAttr!.foregroundColor = .clear }
+    let maxHighlights = 10
+    var totalHighlights = 0
     for term in terms {
         var start = string.startIndex
         while let range = string.range(of: term, options: [.caseInsensitive], range: start..<string.endIndex) {
+            if totalHighlights >= maxHighlights { break }
             if let attrStart = AttributedString.Index(range.lowerBound, within: mainAttr),
                let attrEnd = AttributedString.Index(range.upperBound, within: mainAttr) {
                 mainAttr[attrStart..<attrEnd].foregroundColor = foreground
@@ -472,9 +484,11 @@ private func buildHighlightAttrs(
                 mainAttr[attrStart..<attrEnd].inlinePresentationIntent = .stronglyEmphasized
                 glowAttr?[attrStart..<attrEnd].foregroundColor = glowColor
                 glowAttr?[attrStart..<attrEnd].inlinePresentationIntent = .stronglyEmphasized
+                totalHighlights += 1
             }
             start = range.upperBound
         }
+        if totalHighlights >= maxHighlights { break }
     }
     return (mainAttr, glowAttr)
 }

@@ -1,4 +1,5 @@
 ## Top/Soon
+- option: launch on startup
 
 ## Theme Ideas
 

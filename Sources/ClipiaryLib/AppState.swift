@@ -250,9 +250,8 @@ final class AppState {
         if terms.isEmpty {
             result = history.items
         } else {
-            // Incremental narrowing: if the new query extends the previous one and the
-            // item set hasn't changed, the result can only be a subset of the prior
-            // result — no need to scan all items again.
+            // Incremental narrowing: if the query extends the previous one and items
+            // haven't changed, scan only the prior result set.
             let searchBase: [HistoryItem]
             if let cached = cachedBaseFilterResult,
                cachedBaseFilterGeneration == currentGeneration,
@@ -264,7 +263,7 @@ final class AppState {
                 searchBase = history.items
             }
             result = searchBase.filter { item in
-                terms.allSatisfy { item.searchCorpus.contains($0) }
+                terms.allSatisfy { item.searchCorpus.range(of: $0, options: .literal) != nil }
             }
         }
 
