@@ -233,9 +233,13 @@ final class FloatingPanel: NSPanel {
             ThemeBuilderWindowController.shared.open(themeID: appState.settings.selectedThemeID, appState: appState, adjacentTo: frame)
             return
         }
-        // Escape: close preview first, then close panel
+        // Escape: clear search first, then close preview, then close panel
         if event.type == .keyDown, event.keyCode == 53,
            event.modifierFlags.intersection(.deviceIndependentFlagsMask).isDisjoint(with: [.command, .option, .control]) {
+            if !appState.searchQuery.isEmpty {
+                appState.searchQuery = ""
+                return
+            }
             if appState.isPreviewVisible {
                 appState.isPreviewVisible = false
                 return
@@ -378,6 +382,10 @@ private final class PanelHostingView: NSHostingView<AnyView> {
     }
 
     override func cancelOperation(_ sender: Any?) {
+        if !appState.searchQuery.isEmpty {
+            appState.searchQuery = ""
+            return
+        }
         onClose()
     }
 }
