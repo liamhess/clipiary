@@ -706,7 +706,7 @@ struct PanelRootView: View {
             return
         }
         highlightDebounceTask = Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(50))
+            try? await Task.sleep(for: .milliseconds(10))
             guard !Task.isCancelled else { return }
             highlightTerms = terms
         }

@@ -490,8 +490,9 @@ private func buildHighlightAttrs(
     let maxHighlights = 10
     var totalHighlights = 0
     for term in terms {
-        // Shorter terms match far more often → tighter per-term cap to bound AttributedString runs.
-        let termCap = term.count == 1 ? 2 : (term.count == 2 ? 4 : maxHighlights)
+        // Single-char terms get a tighter per-term cap so they don't monopolise the
+        // budget in multi-word queries (e.g. "k an" → "k" gets 3, "an" gets the rest).
+        let termCap = term.count == 1 ? 3 : maxHighlights
         var termHighlights = 0
         var start = string.startIndex
         while let range = string.range(of: term, options: [.caseInsensitive], range: start..<string.endIndex) {

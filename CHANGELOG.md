@@ -1,4 +1,6 @@
 # Changelog
+### Improvements
+- Even more search/highlighting performance increases 😅
 
 ## [Unreleased]
 

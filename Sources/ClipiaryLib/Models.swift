@@ -90,7 +90,7 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     }
 
     mutating func rebuildDerivedFields() {
-        displayText = text
+        displayText = String(text.prefix(Self.displayTextCap))
             .replacingOccurrences(of: "\n", with: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let desc = snippetDescription ?? ""
@@ -150,7 +150,7 @@ extension HistoryItem: Codable {
         } else {
             favoriteTabs = []
         }
-        displayText = text
+        displayText = String(text.prefix(Self.displayTextCap))
             .replacingOccurrences(of: "\n", with: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let desc = snippetDescription ?? ""
