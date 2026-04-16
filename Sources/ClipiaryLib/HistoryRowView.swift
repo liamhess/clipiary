@@ -490,9 +490,12 @@ private func buildHighlightAttrs(
     let maxHighlights = 10
     var totalHighlights = 0
     for term in terms {
+        // Shorter terms match far more often → tighter per-term cap to bound AttributedString runs.
+        let termCap = term.count == 1 ? 2 : (term.count == 2 ? 4 : maxHighlights)
+        var termHighlights = 0
         var start = string.startIndex
         while let range = string.range(of: term, options: [.caseInsensitive], range: start..<string.endIndex) {
-            if totalHighlights >= maxHighlights { break }
+            if totalHighlights >= maxHighlights || termHighlights >= termCap { break }
             if let attrStart = AttributedString.Index(range.lowerBound, within: mainAttr),
                let attrEnd = AttributedString.Index(range.upperBound, within: mainAttr) {
                 mainAttr[attrStart..<attrEnd].foregroundColor = foreground
@@ -501,6 +504,7 @@ private func buildHighlightAttrs(
                 glowAttr?[attrStart..<attrEnd].foregroundColor = glowColor
                 glowAttr?[attrStart..<attrEnd].inlinePresentationIntent = .stronglyEmphasized
                 totalHighlights += 1
+                termHighlights += 1
             }
             start = range.upperBound
         }

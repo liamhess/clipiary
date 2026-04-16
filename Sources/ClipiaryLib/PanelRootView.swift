@@ -694,16 +694,19 @@ struct PanelRootView: View {
 
     private func scheduleHighlightUpdate(for query: String) {
         highlightDebounceTask?.cancel()
-        let terms = query
+        let allTerms = query
             .split(separator: " ", omittingEmptySubsequences: true)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { $0.count >= 2 }
+            .filter { !$0.isEmpty }
+        // Single-char terms are noise for a lone token (e.g. just "k"),
+        // but meaningful alongside others (e.g. "k an" → highlight both).
+        let terms = allTerms.count > 1 ? allTerms : allTerms.filter { $0.count >= 2 }
         guard !terms.isEmpty else {
             highlightTerms = []
             return
         }
         highlightDebounceTask = Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(10))
+            try? await Task.sleep(for: .milliseconds(50))
             guard !Task.isCancelled else { return }
             highlightTerms = terms
         }
