@@ -227,10 +227,12 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func handleMonitoredEvent(_ event: NSEvent) -> NSEvent? {
-        // NSMenu re-posts the dismissal key (Escape, Return, arrows) after popUp returns.
-        // The re-posted event arrives in the next run-loop iteration. Consume exactly one
-        // keyDown per menu open so it never reaches NSApp.noResponderFor → NSBeep().
-        if event.type == .keyDown, consumeNextMenuDismissalKey, isPanelVisible {
+        // NSMenu re-posts the dismissal key after popUp returns (next run-loop iteration).
+        // Only suppress Escape and Return re-posts — those would cause a NSBeep() or an
+        // unintended paste. Arrow keys must pass through so that quickly pressing Up/Down
+        // right after closing the menu still moves the selection.
+        if event.type == .keyDown, consumeNextMenuDismissalKey, isPanelVisible,
+           event.keyCode == 53 || event.keyCode == 36 { // Escape or Return
             consumeNextMenuDismissalKey = false
             return nil
         }
