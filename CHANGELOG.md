@@ -1,5 +1,7 @@
 # Changelog
 ## [Unreleased]
+
+## [1.7.1] - 2026-04-16
 ### Improvements
 - Search highlight now appears after just 10ms and applies to all terms including single characters
 - Multi-word search highlights every token (e.g. "k an" highlights both "k" and "an")
