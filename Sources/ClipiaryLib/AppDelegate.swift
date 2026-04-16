@@ -555,8 +555,8 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             previousApp = NSWorkspace.shared.frontmostApplication
             NSApp.activate(ignoringOtherApps: true)
-            appState.didOpenPopover()
             panel.open()
+            appState.didOpenPopover()
             let panelFrame = panel.frame
             if ThemeBuilderWindowController.shared.isVisible {
                 DispatchQueue.main.async {
