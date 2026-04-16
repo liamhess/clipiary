@@ -240,15 +240,22 @@ struct Theme: Codable, Sendable, Equatable {
         var card: ThemeFill
         var overlay: ThemeFill
 
+        static let panelDefaultOpacity = 0.85
+        static let tabBarDefaultOpacity = 0.05
+        static let rowSelectedDefaultOpacity = 0.18
+        static let rowHoveredDefaultOpacity = 0.09
+        static let cardDefaultOpacity = 0.15
+        static let overlayDefaultOpacity = 0.15
+
         static let `default` = Fills(
-            panel: .solid("#1E1E1E", opacity: 0.85),
-            contentArea: .solid("#1E1E1E", opacity: 0.85),
-            tabBar: .solid("#000000", opacity: 0.05),
+            panel: .solid("#1E1E1E", opacity: panelDefaultOpacity),
+            contentArea: .solid("#1E1E1E", opacity: panelDefaultOpacity),
+            tabBar: .solid("#000000", opacity: tabBarDefaultOpacity),
             tabButtonSelected: nil,
-            rowSelected: ThemeFill(opacity: 0.18),
-            rowHovered: ThemeFill(opacity: 0.09),
-            card: .solid("#000000", opacity: 0.15),
-            overlay: .solid("#000000", opacity: 0.15)
+            rowSelected: ThemeFill(opacity: rowSelectedDefaultOpacity),
+            rowHovered: ThemeFill(opacity: rowHoveredDefaultOpacity),
+            card: .solid("#000000", opacity: cardDefaultOpacity),
+            overlay: .solid("#000000", opacity: overlayDefaultOpacity)
         )
 
         init(
@@ -1042,15 +1049,15 @@ extension Theme {
 
 extension Theme {
     var resolvedPanelFill: AnyShapeStyle {
-        fills.panel.resolved(fallback: Color(nsColor: .controlBackgroundColor), defaultOpacity: 0.85)
+        fills.panel.resolved(fallback: Color(nsColor: .controlBackgroundColor), defaultOpacity: Fills.panelDefaultOpacity)
     }
 
     var resolvedContentAreaFill: AnyShapeStyle {
-        fills.contentArea.resolved(fallback: Color(nsColor: .controlBackgroundColor), defaultOpacity: 0.85)
+        fills.contentArea.resolved(fallback: Color(nsColor: .controlBackgroundColor), defaultOpacity: Fills.panelDefaultOpacity)
     }
 
     var resolvedTabBarFill: AnyShapeStyle {
-        fills.tabBar.resolved(fallback: .black, defaultOpacity: 0.05)
+        fills.tabBar.resolved(fallback: .black, defaultOpacity: Fills.tabBarDefaultOpacity)
     }
 
     var resolvedTabButtonSelectedFill: AnyShapeStyle {
@@ -1061,19 +1068,19 @@ extension Theme {
     }
 
     var resolvedRowSelectedFill: AnyShapeStyle {
-        fills.rowSelected.resolved(fallback: resolvedAccent, defaultOpacity: 0.18)
+        fills.rowSelected.resolved(fallback: resolvedAccent, defaultOpacity: Fills.rowSelectedDefaultOpacity)
     }
 
     var resolvedRowHoveredFill: AnyShapeStyle {
-        fills.rowHovered.resolved(fallback: resolvedAccent, defaultOpacity: 0.09)
+        fills.rowHovered.resolved(fallback: resolvedAccent, defaultOpacity: Fills.rowHoveredDefaultOpacity)
     }
 
     var resolvedCardFill: AnyShapeStyle {
-        fills.card.resolved(fallback: .black, defaultOpacity: 0.15)
+        fills.card.resolved(fallback: .black, defaultOpacity: Fills.cardDefaultOpacity)
     }
 
     var resolvedOverlayFill: AnyShapeStyle {
-        fills.overlay.resolved(fallback: .black, defaultOpacity: 0.15)
+        fills.overlay.resolved(fallback: .black, defaultOpacity: Fills.overlayDefaultOpacity)
     }
 }
 

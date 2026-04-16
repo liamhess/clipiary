@@ -529,7 +529,7 @@ struct ThemeBuilderView: View {
             let d = Theme.Fills.default
             let accentHex = editorState.theme.resolvedAccent.hexString
             let hasMaterial = editorState.theme.options.material != nil
-            FillEditorRow(label: "Panel", fill: $editorState.theme.fills.panel, disabled: disabled || hasMaterial, defaultFill: d.panel)
+            FillEditorRow(label: "Panel", fill: $editorState.theme.fills.panel, disabled: disabled || hasMaterial, defaultFill: d.panel, displayDefaultOpacity: Theme.Fills.panelDefaultOpacity)
             if hasMaterial {
                 Text("Panel fill is replaced by the material background. Set Material to None in Options to use a solid fill.")
                     .font(.system(size: 10))
@@ -537,13 +537,13 @@ struct ThemeBuilderView: View {
                     .padding(.horizontal, 8)
                     .padding(.bottom, 4)
             }
-            FillEditorRow(label: "Content area", fill: $editorState.theme.fills.contentArea, disabled: disabled, defaultFill: d.contentArea)
-            FillEditorRow(label: "Tab bar", fill: $editorState.theme.fills.tabBar, disabled: disabled, defaultFill: d.tabBar)
+            FillEditorRow(label: "Content area", fill: $editorState.theme.fills.contentArea, disabled: disabled, defaultFill: d.contentArea, displayDefaultOpacity: Theme.Fills.panelDefaultOpacity)
+            FillEditorRow(label: "Tab bar", fill: $editorState.theme.fills.tabBar, disabled: disabled, defaultFill: d.tabBar, displayDefaultOpacity: Theme.Fills.tabBarDefaultOpacity)
             OptionalFillEditorRow(label: "Tab button selected", fill: $editorState.theme.fills.tabButtonSelected, disabled: disabled, defaultValue: d.tabButtonSelected)
-            FillEditorRow(label: "Selected row", fill: $editorState.theme.fills.rowSelected, disabled: disabled, defaultFill: d.rowSelected, accentHex: accentHex)
-            FillEditorRow(label: "Hovered row", fill: $editorState.theme.fills.rowHovered, disabled: disabled, defaultFill: d.rowHovered, accentHex: accentHex)
-            FillEditorRow(label: "Card", fill: $editorState.theme.fills.card, disabled: disabled, defaultFill: d.card)
-            FillEditorRow(label: "Overlay", fill: $editorState.theme.fills.overlay, disabled: disabled, defaultFill: d.overlay)
+            FillEditorRow(label: "Selected row", fill: $editorState.theme.fills.rowSelected, disabled: disabled, defaultFill: d.rowSelected, accentHex: accentHex, displayDefaultOpacity: Theme.Fills.rowSelectedDefaultOpacity)
+            FillEditorRow(label: "Hovered row", fill: $editorState.theme.fills.rowHovered, disabled: disabled, defaultFill: d.rowHovered, accentHex: accentHex, displayDefaultOpacity: Theme.Fills.rowHoveredDefaultOpacity)
+            FillEditorRow(label: "Card", fill: $editorState.theme.fills.card, disabled: disabled, defaultFill: d.card, displayDefaultOpacity: Theme.Fills.cardDefaultOpacity)
+            FillEditorRow(label: "Overlay", fill: $editorState.theme.fills.overlay, disabled: disabled, defaultFill: d.overlay, displayDefaultOpacity: Theme.Fills.overlayDefaultOpacity)
         }
     }
 
@@ -774,6 +774,7 @@ private struct FillEditorRow: View {
     let disabled: Bool
     var defaultFill: ThemeFill? = nil
     var accentHex: String = "#FFFFFF"
+    var displayDefaultOpacity: Double = 1.0
 
     private var isDefault: Bool { defaultFill.map { fill == $0 } ?? false }
 
@@ -841,7 +842,7 @@ private struct FillEditorRow: View {
                 set: { fill.color = $0; fill.gradient = nil; fill.mesh = nil }
             ))
             OpacitySlider(value: Binding(
-                get: { fill.opacity ?? 1.0 },
+                get: { fill.opacity ?? displayDefaultOpacity },
                 set: { fill.opacity = $0 }
             ))
         }
@@ -915,7 +916,7 @@ private struct FillEditorRow: View {
                 .pickerStyle(.menu)
             }
             OpacitySlider(value: Binding(
-                get: { fill.opacity ?? 1.0 },
+                get: { fill.opacity ?? displayDefaultOpacity },
                 set: { fill.opacity = $0 }
             ), horizontalPadding: 0)
         }
@@ -979,7 +980,7 @@ private struct FillEditorRow: View {
             }
 
             OpacitySlider(value: Binding(
-                get: { fill.opacity ?? 1.0 },
+                get: { fill.opacity ?? displayDefaultOpacity },
                 set: { fill.opacity = $0 }
             ))
 

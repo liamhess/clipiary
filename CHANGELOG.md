@@ -3,6 +3,9 @@
 ### Added
 - History limit setting now has a help tooltip explaining that higher limits mostly affect search performance, and shows the current history file size
 
+### Fixed
+- Theme builder partially showed wrong values for defaulted properties
+
 ## [1.7.1] - 2026-04-16
 ### Improvements
 - Search highlight now appears after just 10ms and applies to all terms including single characters
