@@ -1,3 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss xmlns:ns0="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><title>Clipiary</title><item><title>Version 1.6.1</title><ns0:version>1.6.1</ns0:version><ns0:shortVersionString>1.6.1</ns0:shortVersionString><description ns0:format="markdown">- Fixed missing "Add Separator" context menu entry
-</description><pubDate>Tue, 14 Apr 2026 05:33:45 +0000</pubDate><enclosure url="https://github.com/liamhess/clipiary/releases/download/v1.6.1/Clipiary-1.6.1.zip" ns0:edSignature="K/1AJOzmVpnqKSyVLLXVN/rVVM/bZ77YUJc6szEmEmFR17xplOuzrIT5t/kkLlu2mP5hNLjsH9BJgja9K03LDA==" length="3761942" type="application/octet-stream" /></item></channel></rss>
+<rss xmlns:ns0="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><title>Clipiary</title><item><title>Version 1.7.0</title><ns0:version>1.7.0</ns0:version><ns0:shortVersionString>1.7.0</ns0:shortVersionString><description ns0:format="markdown">### Improvements
+- Search is significantly faster: pre-indexed search corpus, incremental narrowing, faster string matching, and highlights debounced to avoid blocking typing
+- History persistence no longer blocks the main thread (debounced background writes)
+
+### Fixed
+- Fixed a rare bug showing some items mirrored upside-down after wake-up
+- Left-click in history list no longer has a delay
+- Added missing shortcuts to the keyboard shortcuts cheatsheet
+- Favorites dialog was missing a theme's accent color
+</description><pubDate>Thu, 16 Apr 2026 13:58:55 +0000</pubDate><enclosure url="https://github.com/liamhess/clipiary/releases/download/v1.7.0/Clipiary-1.7.0.zip" ns0:edSignature="OU/pnDcrp17nXU/N4LWNPTxrv5u6E6vRJMt/ZTVT5OTgwfQEcYrE4JITj2enW4xVM3Z4W/4qkgEiN5MqnvyiBQ==" length="3775181" type="application/octet-stream" /></item></channel></rss>
