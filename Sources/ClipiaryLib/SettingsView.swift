@@ -10,6 +10,14 @@ struct SettingsView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.theme) private var theme
 
+    private var historyLimitHelp: String {
+        var text = "The maximum number of items to keep. Higher limits mostly affect search performance."
+        if let size = appState.history.fileSizeString {
+            text += "\n\nCurrent history file size: \(size)"
+        }
+        return text
+    }
+
     var body: some View {
         ScrollView {
             VStack(spacing: 16) {
@@ -75,7 +83,7 @@ struct SettingsView: View {
                 )
             }
 
-            settingMetric(title: "History limit") {
+            settingMetric(title: "History limit", help: historyLimitHelp) {
                 optionPicker(
                     selection: Binding(
                         get: { appState.settings.historyLimit },
@@ -566,13 +574,13 @@ struct SettingsView: View {
         .pickerStyle(.menu)
     }
 
-    private func helpIcon(_ text: String) -> some View {
-        HelpIconView(text: text)
+    private func helpIcon(_ text: @autoclosure @escaping () -> String) -> some View {
+        HelpIconView(makeText: text)
     }
 }
 
 private struct HelpIconView: View {
-    let text: String
+    let makeText: () -> String
     @State private var isShowingHelp = false
 
     var body: some View {
@@ -585,7 +593,7 @@ private struct HelpIconView: View {
         }
         .buttonStyle(.plain)
         .popover(isPresented: $isShowingHelp, arrowEdge: .trailing) {
-            Text(text)
+            Text(makeText())
                 .font(.system(size: 11))
                 .padding(10)
                 .frame(width: 200)

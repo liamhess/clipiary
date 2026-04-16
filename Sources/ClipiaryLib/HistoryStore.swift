@@ -34,6 +34,14 @@ final class HistoryStore {
         decoder.dateDecodingStrategy = .iso8601
     }
 
+    var fileSizeString: String? {
+        guard let attrs = try? fileManager.attributesOfItem(atPath: storageURL.path),
+              let bytes = attrs[.size] as? Int64 else { return nil }
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        return formatter.string(fromByteCount: bytes)
+    }
+
     var filteredItems: [HistoryItem] {
         let normalizedQuery = searchQuery.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalizedQuery.isEmpty else {

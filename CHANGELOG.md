@@ -1,5 +1,7 @@
 # Changelog
 ## [Unreleased]
+### Added
+- History limit setting now has a help tooltip explaining that higher limits mostly affect search performance, and shows the current history file size
 
 ## [1.7.1] - 2026-04-16
 ### Improvements
