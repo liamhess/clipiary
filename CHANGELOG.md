@@ -1,8 +1,11 @@
 # Changelog
-### Improvements
-- Even more search/highlighting performance increases 😅
-
 ## [Unreleased]
+### Improvements
+- Search highlight now appears after just 10ms and applies to all terms including single characters
+- Multi-word search highlights every token (e.g. "k an" highlights both "k" and "an")
+
+### Fixed
+- Fixed search highlight rendering being extremely slow for clipboard items with large text bodies (display text was not being capped when items were loaded from disk)
 
 ## [1.7.0] - 2026-04-16
 ### Improvements
