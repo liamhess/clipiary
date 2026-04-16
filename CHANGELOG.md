@@ -4,6 +4,7 @@
 - History limit setting now has a help tooltip explaining that higher limits mostly affect search performance, and shows the current history file size
 
 ### Changed
+- Themes: reworked/polished built-in themes
 - Escape now clears the search field first when search text is present, instead of closing Clipiary immediately
 
 ### Fixed

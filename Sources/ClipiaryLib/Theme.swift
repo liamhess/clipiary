@@ -618,23 +618,26 @@ struct Theme: Codable, Sendable, Equatable {
     static let `default` = Theme(
         id: "default",
         name: "Default",
-        options: .default,
-        fills: .default,
-        colors: .default,
-        borders: .default,
-        effects: .default,
-        cornerRadii: .default,
-        spacing: .default
+        options: Options(overlayBlurRadius: 1),
+        fills: Fills(
+            rowSelected: ThemeFill(opacity: 0.30)
+        ),
+        colors: Colors(
+            searchHighlightBackground: "#007AFF", searchHighlightBackgroundOpacity: 0
+        ),
+        effects: Effects(
+            searchHighlightTextGlow: ThemeGlow(color: "#0096FF", radius: 8, opacity: 0.8)
+        )
     )
 
     static let rose = Theme(
         id: "rose",
         name: "Rose",
-        options: Options(useMaterial: false, useSystemAccent: false),
+        options: Options(useMaterial: false, useSystemAccent: false, overlayBlurRadius: 1),
         fills: Fills(
-            panel: .solid("#2A2025"),
-            contentArea: .solid("#2A2025"),
-            tabBar: .solid("#231C20", opacity: 0.6),
+            panel: .solid("#4B3943", opacity: 0.98),
+            contentArea: .solid("#2A2025", opacity: 0.84),
+            tabBar: .solid("#2F262C", opacity: 0.78),
             rowSelected: .solid("#E8A0BF", opacity: 0.16), rowHovered: .solid("#E8A0BF", opacity: 0.07),
             card: .solid("#231C20", opacity: 0.6), overlay: .solid("#1A1418", opacity: 0.5)
         ),
@@ -644,16 +647,17 @@ struct Theme: Codable, Sendable, Equatable {
             shortcutKeyBackground: "#3A2A30", shortcutKeyBackgroundOpacity: 0.5,
             cardStroke: "#E8A0BF", cardStrokeOpacity: 0.08,
             imageIndicator: "#F0C987", statusReady: "#A8D8A8", statusWarning: "#F0C987",
-            gaugeUnfilled: "#8A7580", gaugeUnfilledOpacity: 0.15
+            gaugeUnfilled: "#8A7580", gaugeUnfilledOpacity: 0.15,
+            searchHighlight: "#FAACCE", searchHighlightBackground: "#E8A0BF", searchHighlightBackgroundOpacity: 0
         )
     )
 
     static let nord = Theme(
         id: "nord",
         name: "Nord",
-        options: Options(useMaterial: false, useSystemAccent: false),
+        options: Options(useMaterial: false, useSystemAccent: false, overlayBlurRadius: 1),
         fills: Fills(
-            panel: .solid("#2E3440"),
+            panel: .solid("#475164", opacity: 1.0),
             contentArea: .solid("#2E3440"),
             tabBar: .solid("#272C36", opacity: 0.6),
             rowSelected: .solid("#88C0D0", opacity: 0.16), rowHovered: .solid("#88C0D0", opacity: 0.07),
@@ -665,7 +669,11 @@ struct Theme: Codable, Sendable, Equatable {
             shortcutKeyBackground: "#272C36", shortcutKeyBackgroundOpacity: 0.5,
             cardStroke: "#88C0D0", cardStrokeOpacity: 0.06,
             imageIndicator: "#EBCB8B", statusReady: "#A3BE8C", statusWarning: "#EBCB8B",
-            gaugeUnfilled: "#616E88", gaugeUnfilledOpacity: 0.2
+            gaugeUnfilled: "#616E88", gaugeUnfilledOpacity: 0.2,
+            searchHighlight: "#AEE35F", searchHighlightBackground: "#88C0D0", searchHighlightBackgroundOpacity: 0
+        ),
+        effects: Effects(
+            searchHighlightTextGlow: ThemeGlow(color: "#AEE35F", radius: 5, opacity: 0.67)
         ),
         cornerRadii: CornerRadii(
             panel: 12, contentArea: 10, card: 8, tabBar: 8,
@@ -677,12 +685,12 @@ struct Theme: Codable, Sendable, Equatable {
     static let neonNoir = Theme(
         id: "neon-noir",
         name: "Neon Noir",
-        options: Options(useMaterial: false, useSystemAccent: false),
+        options: Options(useMaterial: false, useSystemAccent: false, overlayBlurRadius: 1),
         fills: Fills(
-            panel: .linearGradient(["#0D0D12", "#080810"], from: "top", to: "bottom"),
-            contentArea: .linearGradient(["#0D0D12", "#080810"], from: "top", to: "bottom"),
+            panel: .linearGradient(["#0D0D12", "#080810"], from: "top", to: "bottom", opacity: 0.95),
+            contentArea: .linearGradient(["#0D0D12", "#080810"], from: "top", to: "bottom", opacity: 0.95),
             tabBar: .solid("#08080C", opacity: 0.7),
-            tabButtonSelected: .solid("#FF2D6F", opacity: 0.22),
+            tabButtonSelected: .solid("#FF2D6F", opacity: 0.40),
             rowSelected: .solid("#FF2D6F", opacity: 0.18),
             rowHovered: .solid("#FF2D6F", opacity: 0.08),
             card: .solid("#08080C", opacity: 0.7),
@@ -719,13 +727,13 @@ struct Theme: Codable, Sendable, Equatable {
     static let vapor = Theme(
         id: "vapor",
         name: "Vapor",
-        options: Options(useMaterial: false, useSystemAccent: false, animatedPanel: true),
+        options: Options(useMaterial: false, useSystemAccent: false, animatedPanel: true, overlayBlurRadius: 1),
         fills: Fills(
-            panel: .linearGradient(["#1A1028", "#220E38"], from: "top", to: "bottom"),
-            contentArea: .linearGradient(["#1A1028", "#220E38"], from: "top", to: "bottom"),
+            panel: .linearGradient(["#1A1028", "#220E38"], from: "top", to: "bottom", opacity: 0.95),
+            contentArea: .linearGradient(["#1A1028", "#220E38"], from: "top", to: "bottom", opacity: 0.95),
             tabBar: .solid("#140C22", opacity: 0.6),
             tabButtonSelected: .linearGradient(["#FF71CE", "#B967FF"], from: "leading", to: "trailing", opacity: 0.3),
-            rowSelected: .linearGradient(["#FF71CE", "#B967FF"], from: "leading", to: "trailing", opacity: 0.15),
+            rowSelected: .linearGradient(["#FF71CE", "#B967FF"], from: "leading", to: "trailing", opacity: 0.09),
             rowHovered: .solid("#B967FF", opacity: 0.1),
             card: .solid("#140C22", opacity: 0.6),
             overlay: .solid("#0D0818", opacity: 0.6)
@@ -736,12 +744,14 @@ struct Theme: Codable, Sendable, Equatable {
             shortcutKeyBackground: "#B967FF", shortcutKeyBackgroundOpacity: 0.08,
             cardStroke: "#B967FF", cardStrokeOpacity: 0.1,
             imageIndicator: "#05FFA1", statusReady: "#05FFA1", statusWarning: "#FFFB96",
-            gaugeUnfilled: "#B967FF", gaugeUnfilledOpacity: 0.12
+            gaugeUnfilled: "#B967FF", gaugeUnfilledOpacity: 0.12,
+            searchHighlight: "#E465BA"
         ),
         effects: Effects(
-            selectedRowGlow: ThemeGlow(color: "#FF71CE", radius: 8, opacity: 0.35, innerRadius: 3, innerOpacity: 0.75),
-            hoveredRowGlow: ThemeGlow(color: "#B967FF", radius: 4, opacity: 0.2, innerRadius: 2, innerOpacity: 0.5),
-            panelGlow: ThemeGlow(color: "#B967FF", radius: 12, opacity: 0.15)
+            selectedRowGlow: ThemeGlow(color: "#FF71CE", radius: 8, opacity: 0.19, innerRadius: 3, innerOpacity: 0.75),
+            hoveredRowGlow: ThemeGlow(color: "#44265F", radius: 4, opacity: 0.2, innerRadius: 2, innerOpacity: 0.5),
+            panelGlow: ThemeGlow(color: "#B967FF", radius: 12, opacity: 0.15),
+            searchHighlightTextGlow: ThemeGlow(color: "#FF71CE", radius: 5, opacity: 0.66)
         ),
         cornerRadii: CornerRadii(
             panel: 16, contentArea: 14, card: 12, tabBar: 12,
@@ -753,32 +763,40 @@ struct Theme: Codable, Sendable, Equatable {
     static let macOSLight = Theme(
         id: "macos-light",
         name: "macOS Light",
-        options: Options(useMaterial: true, useSystemAccent: true, appearance: "light"),
+        options: Options(useMaterial: true, useSystemAccent: true, appearance: "light", overlayBlurRadius: 1),
         fills: Fills(
             panel: ThemeFill(opacity: 0),
             contentArea: ThemeFill(opacity: 0),
-            rowSelected: ThemeFill(opacity: 0.12),
+            tabButtonSelected: .solid("#FFFFFF", opacity: 0.5),
+            rowSelected: .solid("#929292", opacity: 0.84),
             rowHovered: ThemeFill(opacity: 0.06),
             card: .solid("#000000", opacity: 0.04),
             overlay: .solid("#000000", opacity: 0.12)
         ),
         colors: Colors(
+            accent: "#007AFF",
             pillBackgroundOpacity: 0.08,
             shortcutKeyBackground: "#000000", shortcutKeyBackgroundOpacity: 0.04,
             cardStroke: "#000000", cardStrokeOpacity: 0.06,
-            gaugeUnfilledOpacity: 0.1
+            imageIndicator: "#FF9500",
+            statusReady: "#34C759", statusWarning: "#FF9500",
+            gaugeUnfilledOpacity: 0.1,
+            searchHighlight: "#0096FF"
+        ),
+        borders: Borders(
+            selectedRow: ThemeBorder(color: "#000000", width: 1, opacity: 0.3)
         )
     )
 
     static let sciFi = Theme(
         id: "sci-fi",
         name: "Sci-Fi",
-        options: Options(useMaterial: false, useSystemAccent: false),
+        options: Options(useMaterial: false, useSystemAccent: false, overlayBlurRadius: 1),
         fills: Fills(
-            panel: .linearGradient(["#2F2F2F", "#12100A"], from: "top", to: "bottom", opacity: 0.9),
-            contentArea: .linearGradient(["#2F2F2F", "#12100A"], from: "top", to: "bottom", opacity: 0.9),
-            tabBar: .solid("#0A0800", opacity: 0.1),
-            tabButtonSelected: .solid("#FF6A00", opacity: 0.18),
+            panel: .linearGradient(["#2F2F2F", "#12100A"], from: "top", to: "bottom", opacity: 0.98),
+            contentArea: .linearGradient(["#2F2F2F", "#12100A"], from: "top", to: "bottom", opacity: 0.98),
+            tabBar: .solid("#0A0800", opacity: 0.45),
+            tabButtonSelected: .solid("#FF6A00", opacity: 0.29),
             rowSelected: .solid("#FF6A00", opacity: 0.14),
             rowHovered: .solid("#FF6A00", opacity: 0.06),
             card: .solid("#AAAAAA", opacity: 0.1),
@@ -822,7 +840,9 @@ struct Theme: Codable, Sendable, Equatable {
         options: Options(useMaterial: true, useSystemAccent: true),
         fills: Fills(
             panel: ThemeFill(opacity: 0),
-            contentArea: ThemeFill(opacity: 0),
+            contentArea: .solid("#000000", opacity: 0.7),
+            tabBar: .solid("#1E1E1E", opacity: 0.85),
+            tabButtonSelected: .solid("#FFFFFF", opacity: 0.27),
             rowSelected: ThemeFill(opacity: 0.18),
             rowHovered: ThemeFill(opacity: 0.09),
             card: .solid("#000000", opacity: 0.15),
@@ -834,7 +854,7 @@ struct Theme: Codable, Sendable, Equatable {
         ),
         effects: Effects(
             selectedRowGlow: ThemeGlow(color: "#FF6A00", radius: 6, opacity: 0.8),
-            hoveredRowGlow: ThemeGlow(color: "#FF0000", radius: 5, opacity: 1.0),
+            hoveredRowGlow: ThemeGlow(color: "#9D457A", radius: 5, opacity: 1.0),
             searchHighlightTextGlow: ThemeGlow(color: "#FFCC00", radius: 5, opacity: 0.8)
         ),
         cornerRadii: CornerRadii(
@@ -852,19 +872,19 @@ struct Theme: Codable, Sendable, Equatable {
     static let deepSpace = Theme(
         id: "deep-space",
         name: "Deep Space",
-        options: Options(useMaterial: false, useSystemAccent: true),
+        options: Options(useMaterial: false, useSystemAccent: true, overlayBlurRadius: 1),
         fills: Fills(
             panel: .meshGradient(
                 ["#200010", "#100030", "#001020",
                  "#280020", "#0C1840", "#003030",
                  "#100010", "#080C28", "#041818"],
-                columns: 3, rows: 3
+                columns: 3, rows: 3, opacity: 0.95
             ),
             contentArea: .meshGradient(
                 ["#200010", "#100030", "#001020",
                  "#280020", "#0C1840", "#003030",
                  "#100010", "#080C28", "#041818"],
-                columns: 3, rows: 3
+                columns: 3, rows: 3, opacity: 0.95
             ),
             tabBar: .solid("#000000", opacity: 0.05),
             tabButtonSelected: .solid("#FFFFFF", opacity: 0.1),
@@ -873,13 +893,17 @@ struct Theme: Codable, Sendable, Equatable {
             card: .solid("#000000", opacity: 0.15),
             overlay: .solid("#000000", opacity: 0.15)
         ),
-        colors: Colors(searchHighlight: "#FFCC00"),
+        colors: Colors(
+            searchHighlight: "#FFFB00",
+            searchHighlightBackground: "#FFFFFF", searchHighlightBackgroundOpacity: 0
+        ),
         borders: Borders(
             selectedRow: ThemeBorder(color: "#FFFFFF", width: 1, opacity: 0.4, dash: [6, 1])
         ),
         effects: Effects(
             selectedRowGlow: ThemeGlow(color: "#FF6A00", radius: 6, opacity: 0.8),
-            hoveredRowGlow: ThemeGlow(color: "#FF0000", radius: 5, opacity: 1.0)
+            hoveredRowGlow: ThemeGlow(color: "#FF0000", radius: 5, opacity: 1.0),
+            searchHighlightTextGlow: ThemeGlow(color: "#FFFB00", radius: 4, opacity: 0.89)
         ),
         spacing: Spacing(
             panelPadding: 10, sectionSpacing: 10,
@@ -888,54 +912,129 @@ struct Theme: Codable, Sendable, Equatable {
         )
     )
 
-    static let nebula = Theme(
-        id: "nebula",
-        name: "Nebula",
-        options: Options(useMaterial: false, useSystemAccent: false),
+    static let metal = Theme(
+        id: "metal",
+        name: "Metal",
+        options: Options(material: "ultraThin", useSystemAccent: true, overlayBlurRadius: 1),
         fills: Fills(
-            // 3×3 MeshGradient: violet → ocean blue → teal, top to bottom
+            panel: .solid("#797979", opacity: 0.80),
+            contentArea: .solid("#1E1E1E", opacity: 0.84),
+            tabBar: .solid("#797979", opacity: 0.89),
+            tabButtonSelected: .solid("#000000", opacity: 0.74),
+            rowSelected: .solid("#FFFFFF", opacity: 0),
+            rowHovered: .solid("#C0C0C0", opacity: 0.14),
+            card: .solid("#000000", opacity: 0.15),
+            overlay: .solid("#000000", opacity: 0.46)
+        ),
+        colors: Colors(
+            pillBackground: "#FFFFFF", pillBackgroundOpacity: 0.11,
+            searchHighlight: "#FFCC00",
+            separator: "#FFFFFF", separatorOpacity: 0.3
+        ),
+        borders: Borders(
+            contentArea: ThemeBorder(color: "#FFFFFF", width: 1, opacity: 0.30),
+            selectedRow: ThemeBorder(color: "#FFFFFF", width: 1, opacity: 0.4, dash: [6, 1], animation: "flash"),
+            tabBar: ThemeBorder(color: "#FFFFFF", width: 1, opacity: 0.2)
+        ),
+        effects: Effects(
+            selectedRowGlow: ThemeGlow(color: "#FF0000", radius: 4, opacity: 1.0, innerRadius: 1.5, innerOpacity: 0.40),
+            hoveredRowGlow: ThemeGlow(color: "#C0C0C0", radius: 5, opacity: 0.76),
+            searchHighlightTextGlow: ThemeGlow(color: "#FFCC00", radius: 5, opacity: 0.8),
+            tabBarInnerShadow: ThemeInnerShadow(color: "#000000", radius: 1, opacity: 0.7, x: 1, y: 1),
+            contentAreaInnerShadow: ThemeInnerShadow(color: "#000000", radius: 1, opacity: 0.6, x: 1, y: 1)
+        ),
+        spacing: Spacing(
+            panelPadding: 10, sectionSpacing: 10,
+            rowHorizontalPadding: 8, rowVerticalPadding: 6,
+            contentAreaPadding: 8, rowSpacing: 1
+        ),
+        fonts: Fonts(rowMono: FontSpec(family: "InconsolataGo Nerd Font", size: 13, weight: "regular"))
+    )
+
+    static let nasaColor = Theme(
+        id: "nasa-color",
+        name: "Nasa Color",
+        options: Options(material: "regular", useSystemAccent: true),
+        fills: Fills(
             panel: .meshGradient(
-                ["#120030", "#0A1A40", "#003030",
-                 "#1E0048", "#0C1E48", "#004040",
-                 "#0A0818", "#081428", "#041818"],
+                ["#200010", "#100030", "#001020",
+                 "#280020", "#0C1840", "#003030",
+                 "#100010", "#080C28", "#041818"],
                 columns: 3, rows: 3
             ),
             contentArea: .meshGradient(
-                ["#120030", "#0A1A40", "#003030",
-                 "#1E0048", "#0C1E48", "#004040",
-                 "#0A0818", "#081428", "#041818"],
+                ["#200010", "#100030", "#001020",
+                 "#280020", "#0C1840", "#003030",
+                 "#100010", "#080C28", "#041818"],
                 columns: 3, rows: 3
             ),
-            tabBar: .solid("#040A18", opacity: 0.5),
-            tabButtonSelected: .solid("#4EA8DE", opacity: 0.2),
-            rowSelected: .solid("#4EA8DE", opacity: 0.15),
-            rowHovered: .solid("#4EA8DE", opacity: 0.07),
-            card: .solid("#040A18", opacity: 0.5),
-            overlay: .solid("#030810", opacity: 0.6)
+            tabBar: .solid("#777777", opacity: 0.3),
+            tabButtonSelected: .solid("#222222", opacity: 0.9),
+            rowSelected: ThemeFill(opacity: 0.18),
+            rowHovered: ThemeFill(opacity: 0.09),
+            card: .solid("#000000", opacity: 0.15),
+            overlay: .solid("#000000", opacity: 0.15)
         ),
-        colors: Colors(
-            accent: "#4EA8DE",
-            pillBackground: "#4EA8DE", pillBackgroundOpacity: 0.12,
-            shortcutKeyBackground: "#080820", shortcutKeyBackgroundOpacity: 0.5,
-            cardStroke: "#4EA8DE", cardStrokeOpacity: 0.08,
-            imageIndicator: "#7DCFFF",
-            statusReady: "#73DACA", statusWarning: "#E0AF68",
-            gaugeUnfilled: "#4EA8DE", gaugeUnfilledOpacity: 0.12
+        colors: Colors(searchHighlight: "#FFCC00"),
+        borders: Borders(
+            selectedRow: ThemeBorder(color: "#FFFFFF", width: 1, opacity: 0.4, dash: [6, 1], animation: "flash")
         ),
         effects: Effects(
-            selectedRowGlow: ThemeGlow(color: "#4EA8DE", radius: 8, opacity: 0.3, innerRadius: 2, innerOpacity: 0.65),
-            hoveredRowGlow: ThemeGlow(color: "#4EA8DE", radius: 4, opacity: 0.15, innerRadius: 1.5, innerOpacity: 0.4),
-            panelGlow: ThemeGlow(color: "#1E0048", radius: 24, opacity: 0.35)
+            selectedRowGlow: ThemeGlow(color: "#FF6A00", radius: 10, opacity: 0.4, innerRadius: 3, innerOpacity: 0.85),
+            hoveredRowGlow: ThemeGlow(color: "#7C9AA7", radius: 8, opacity: 0.3, innerRadius: 2, innerOpacity: 0.6)
         ),
-        cornerRadii: CornerRadii(
-            panel: 16, contentArea: 14, card: 12, tabBar: 12,
-            row: 10, searchField: 10, tabButton: 10,
-            pickerRow: 8, shortcutRecordField: 8, keyBadge: 4, gauge: 2
+        spacing: Spacing(
+            panelPadding: 10, sectionSpacing: 10,
+            rowHorizontalPadding: 8, rowVerticalPadding: 6,
+            contentAreaPadding: 8, rowSpacing: 1
+        )
+    )
+
+    static let nasa = Theme(
+        id: "nasa",
+        name: "Nasa",
+        options: Options(
+            material: "none",
+            useSystemAccent: true,
+            animatedPanelColor: "#FFFFFF",
+            animatedPanelPeriod: 10.0,
+            overlayBlurRadius: 1
+        ),
+        fills: Fills(
+            panel: .solid("#5E5E5E", opacity: 1.0),
+            contentArea: .solid("#000000", opacity: 0.70),
+            tabBar: .solid("#1E1E1E", opacity: 0.85),
+            tabButtonSelected: .solid("#FFFFFF", opacity: 0.27),
+            rowSelected: ThemeFill(opacity: 0),
+            rowHovered: .solid("#C0C0C0", opacity: 0),
+            card: .solid("#000000", opacity: 0.15),
+            overlay: .solid("#000000", opacity: 0.45)
+        ),
+        colors: Colors(
+            pillBackground: "#FFFFFF",
+            gaugeUnfilled: "#FFFFFF",
+            searchHighlight: "#FFCC00"
+        ),
+        borders: Borders(
+            selectedRow: ThemeBorder(color: "#FFFFFF", width: 1, opacity: 0.4, dash: [6, 1], animation: "flash")
+        ),
+        effects: Effects(
+            selectedRowGlow: ThemeGlow(color: "#0096FF", radius: 10, opacity: 0.4, innerRadius: 3, innerOpacity: 0.85),
+            hoveredRowGlow: ThemeGlow(color: "#C0C0C0", radius: 8, opacity: 0.05, innerRadius: 2, innerOpacity: 0.37),
+            selectedRowTextGlow: ThemeGlow(color: "#FFFFFF", radius: 6, opacity: 0.4),
+            searchHighlightTextGlow: ThemeGlow(color: "#FFCC00", radius: 5, opacity: 0.8),
+            separatorGlow: ThemeGlow(color: "#EEEEFF", radius: 2, opacity: 0.05, innerRadius: 1, innerOpacity: 0.1)
+        ),
+        spacing: Spacing(
+            panelPadding: 10, sectionSpacing: 10,
+            rowHorizontalPadding: 8, rowVerticalPadding: 6,
+            contentAreaPadding: 8, rowSpacing: 1,
+            separatorThickness: 5
         )
     )
 
     static let builtInThemes: [Theme] = [
-        .default, .macOSLight, .rose, .nord, .neonNoir, .sciFi, .space, .deepSpace, .vapor, .nebula,
+        .default, .macOSLight, .rose, .nord, .neonNoir, .sciFi, .space, .deepSpace, .vapor, .metal, .nasaColor, .nasa,
     ]
 
     // MARK: - Initializers
