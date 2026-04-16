@@ -4,10 +4,12 @@
 ### Improvements
 - Search is significantly faster: pre-indexed search corpus, incremental narrowing, faster string matching, and highlights debounced to avoid blocking typing
 - History persistence no longer blocks the main thread (debounced background writes)
-- Left-click in history list no longer has a delay
 
 ### Fixed
-- Attempt to fix a rare bug showing some items mirrored upside-down after wake-up
+- Fixed a rare bug showing some items mirrored upside-down after wake-up
+- Left-click in history list no longer has a delay
+- Added missing shortcuts to the keyboard shortcuts cheatsheet
+- Favorites dialog was missing a theme's accent color
 
 ## [1.6.1] - 2026-04-14
 - Fixed missing "Add Separator" context menu entry
