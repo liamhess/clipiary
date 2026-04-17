@@ -1,5 +1,7 @@
 # Changelog
 ## [Unreleased]
+
+## [1.8.0] - 2026-04-17
 ### Added
 - New character count segmented bar and/or badge indicating the size of the element
 - History limit setting now has a help tooltip explaining that higher limits mostly affect search performance, and shows the current history file size
