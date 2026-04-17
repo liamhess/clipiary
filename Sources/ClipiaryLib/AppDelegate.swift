@@ -557,6 +557,9 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.activate(ignoringOtherApps: true)
             panel.open()
             appState.didOpenPopover()
+            DispatchQueue.main.async { [weak self] in
+                self?.appState.requestSearchFocus()
+            }
             let panelFrame = panel.frame
             if ThemeBuilderWindowController.shared.isVisible {
                 DispatchQueue.main.async {

@@ -171,7 +171,6 @@ final class AppState {
         showingFavoriteTabPicker = false
         ensureSelection()
         popoverOpenRequestID &+= 1
-        requestSearchFocus()
     }
 
     var allTabs: [PopoverTab] {
