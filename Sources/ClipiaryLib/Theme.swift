@@ -952,8 +952,8 @@ struct Theme: Codable, Sendable, Equatable {
     )
 
     static let nasaColor = Theme(
-        id: "nasa-color",
-        name: "Nasa Color",
+        id: "future-color",
+        name: "Future Color",
         options: Options(material: "regular", useSystemAccent: true),
         fills: Fills(
             panel: .meshGradient(
@@ -991,8 +991,8 @@ struct Theme: Codable, Sendable, Equatable {
     )
 
     static let nasa = Theme(
-        id: "nasa",
-        name: "Nasa",
+        id: "future-blue",
+        name: "Future Blue",
         options: Options(
             material: "none",
             useSystemAccent: true,
