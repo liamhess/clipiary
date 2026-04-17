@@ -500,7 +500,7 @@ func buildMenu(item: HistoryItem, appState: AppState) -> NSMenu {
     return menu
 }
 
-private extension Int {
+extension Int {
     var compactCharCount: String {
         switch self {
         case 0..<1_000: return "\(self)"

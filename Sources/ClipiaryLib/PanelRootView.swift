@@ -562,6 +562,10 @@ struct PanelRootView: View {
                 Text(item.isImage ? "Image" : item.rtfData != nil ? "RTF" : item.htmlData != nil ? "HTML" : "Plain text")
                 Text("·").foregroundStyle(.quaternary)
                 Text(item.createdAt.formatted(date: .abbreviated, time: .shortened))
+                if !item.isImage {
+                    Text("·").foregroundStyle(.quaternary)
+                    Text("\(item.text.count.compactCharCount) chars")
+                }
             }
             .font(.system(size: 10, weight: .medium))
             .foregroundStyle(.tertiary)
