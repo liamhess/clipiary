@@ -34,6 +34,13 @@ struct SelectedRowRectKey: PreferenceKey {
     }
 }
 
+struct RowHeightsKey: PreferenceKey {
+    static let defaultValue: [CGFloat] = []
+    static func reduce(value: inout [CGFloat], nextValue: () -> [CGFloat]) {
+        value.append(contentsOf: nextValue())
+    }
+}
+
 struct HistoryRowView: View, Equatable {
     @MainActor private static var bodyEvalCount = 0
     @MainActor private static var bodyEvalStart: CFAbsoluteTime = 0

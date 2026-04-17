@@ -11,6 +11,7 @@ struct PanelRootView: View {
     @State private var shortcutsHelpPresented = false
     @State private var selectedRowRect: CGRect = .zero
     @State private var scrollViewHeight: CGFloat = 0
+    @State private var renderedRowHeights: [CGFloat] = []
     @State private var snippetDescriptionText: String = ""
     @State private var searchFieldText: String = ""
     @State private var highlightTerms: [String] = []
@@ -98,6 +99,10 @@ struct PanelRootView: View {
                 }
                 .onPreferenceChange(SelectedRowRectKey.self) { rect in
                     selectedRowRect = rect
+                    updatePageSize()
+                }
+                .onPreferenceChange(RowHeightsKey.self) { heights in
+                    renderedRowHeights = heights
                     updatePageSize()
                 }
                 .onChange(of: appState.selectedHistoryItemID) { oldID, newID in
@@ -219,9 +224,17 @@ struct PanelRootView: View {
     }
 
     private func updatePageSize() {
-        let rowHeight = selectedRowRect.height
+        let rowHeight: CGFloat
+        if renderedRowHeights.isEmpty {
+            rowHeight = selectedRowRect.height
+        } else {
+            rowHeight = renderedRowHeights.reduce(0, +) / CGFloat(renderedRowHeights.count)
+        }
         guard rowHeight > 0, scrollViewHeight > 0 else { return }
-        appState.visiblePageSize = max(1, Int(scrollViewHeight / rowHeight))
+        let rowSpacing = theme.spacing.rowSpacing
+        let contentPadding = theme.spacing.contentAreaPadding
+        let usable = scrollViewHeight - 2 * contentPadding + rowSpacing
+        appState.visiblePageSize = max(1, Int(usable / (rowHeight + rowSpacing)))
     }
 
     private func handleUpdateButtonPress() {
@@ -416,6 +429,9 @@ struct PanelRootView: View {
                                 appState: appState
                             )
                             .equatable()
+                            .background(GeometryReader { geo in
+                                Color.clear.preference(key: RowHeightsKey.self, value: [geo.size.height])
+                            })
                         }
                     }
                     .contextMenu {
