@@ -539,10 +539,20 @@ struct PanelRootView: View {
                         .padding(12)
                 } else {
                     ScrollView {
-                        Text(item.text)
-                            .font(.system(size: 13))
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .padding(12)
+                        let previewLimit = 10_000
+                        let truncated = item.text.count > previewLimit
+                        let previewText = truncated ? String(item.text.prefix(previewLimit)) : item.text
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(previewText)
+                                .font(.system(size: 13))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            if truncated {
+                                Text("Preview truncated at 10k characters")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(12)
                     }
                 }
             }
