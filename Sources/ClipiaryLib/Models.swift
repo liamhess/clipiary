@@ -28,6 +28,7 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     var rtfData: Data?
     var htmlData: String?
     var displayText: String
+    var textCount: Int
     /// Lowercased concatenation of all searchable fields, computed once at init.
     var searchCorpus: String
 
@@ -76,6 +77,7 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         self.displayText = String(text.prefix(Self.displayTextCap))
             .replacingOccurrences(of: "\n", with: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)
+        self.textCount = text.count
         let desc = snippetDescription ?? ""
         let bun = bundleID ?? ""
         self.searchCorpus = "\(text)\n\(appName)\n\(bun)\n\(desc)".lowercased()
@@ -93,6 +95,7 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         displayText = String(text.prefix(Self.displayTextCap))
             .replacingOccurrences(of: "\n", with: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)
+        textCount = text.count
         let desc = snippetDescription ?? ""
         let bun = bundleID ?? ""
         searchCorpus = "\(text)\n\(appName)\n\(bun)\n\(desc)".lowercased()
@@ -153,6 +156,7 @@ extension HistoryItem: Codable {
         displayText = String(text.prefix(Self.displayTextCap))
             .replacingOccurrences(of: "\n", with: " ")
             .trimmingCharacters(in: .whitespacesAndNewlines)
+        textCount = text.count
         let desc = snippetDescription ?? ""
         let bun = bundleID ?? ""
         searchCorpus = "\(text)\n\(appName)\n\(bun)\n\(desc)".lowercased()

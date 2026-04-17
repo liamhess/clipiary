@@ -540,7 +540,7 @@ struct PanelRootView: View {
                 } else {
                     ScrollView {
                         let previewLimit = 10_000
-                        let truncated = item.text.count > previewLimit
+                        let truncated = item.textCount > previewLimit
                         let previewText = truncated ? String(item.text.prefix(previewLimit)) : item.text
                         VStack(alignment: .leading, spacing: 6) {
                             Text(previewText)
@@ -581,7 +581,7 @@ struct PanelRootView: View {
                 Text(item.createdAt.formatted(date: .abbreviated, time: .shortened))
                 if !item.isImage {
                     Text("·").foregroundStyle(.quaternary)
-                    Text("\(item.text.count.compactCharCount) chars")
+                    Text("\(item.textCount.compactCharCount) chars")
                 }
             }
             .font(.system(size: 10, weight: .medium))

@@ -190,7 +190,7 @@ struct HistoryRowView: View, Equatable {
                     }
 
                     if !item.isImage, showCharCountBadge {
-                        Text(item.text.count.compactCharCount)
+                        Text(item.textCount.compactCharCount)
                             .font(.system(size: 9, weight: .semibold))
                             .foregroundStyle(theme.resolvedTextSecondary)
                             .padding(.horizontal, 5)
@@ -236,7 +236,7 @@ struct HistoryRowView: View, Equatable {
                     Text(Calendar.current.isDateInToday(item.createdAt)
                         ? "Today, \(item.createdAt.formatted(date: .omitted, time: .shortened))"
                         : item.createdAt.formatted(date: .abbreviated, time: .shortened))
-                    Text("·  \(item.text.count.compactCharCount) chars")
+                    Text("·  \(item.textCount.compactCharCount) chars")
                 }
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(theme.resolvedTextTertiary)
@@ -397,7 +397,7 @@ struct HistoryRowView: View, Equatable {
     }
 
     private var sizeBarGauge: some View {
-        let count = item.text.count
+        let count = item.textCount
         let filled: Int = count >= 10_000 ? 5 : count >= 5_000 ? 4 : count >= 2_000 ? 3 : count >= 500 ? 2 : count >= 100 ? 1 : 0
         let totalSegments = 5
         let colors = PasteCountBarScheme.colors(for: sizeBarScheme)
