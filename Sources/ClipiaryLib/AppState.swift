@@ -69,6 +69,7 @@ final class AppState {
     private(set) var altPasteRequestID = 0
     private(set) var showContextMenuRequestID = 0
     @ObservationIgnored var selectedRowAnchorView: NSView?
+    var visiblePageSize: Int = 10
     @ObservationIgnored private var cachedBaseFilterResult: [HistoryItem]?
     @ObservationIgnored private var cachedBaseFilterQuery: String?
     @ObservationIgnored private var cachedBaseFilterGeneration: Int = -1
@@ -338,8 +339,7 @@ final class AppState {
     }
 
     func moveSelectionByPage(direction: Int) {
-        let pageSize = 10
-        moveSelection(direction: direction * pageSize)
+        moveSelection(direction: direction * visiblePageSize)
     }
 
     func moveToFirst() {

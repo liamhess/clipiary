@@ -92,12 +92,13 @@ struct PanelRootView: View {
                 .coordinateSpace(name: "scrollArea")
                 .background {
                     GeometryReader { geo in
-                        Color.clear.onAppear { scrollViewHeight = geo.size.height }
-                            .onChange(of: geo.size.height) { scrollViewHeight = $1 }
+                        Color.clear.onAppear { scrollViewHeight = geo.size.height; updatePageSize() }
+                            .onChange(of: geo.size.height) { scrollViewHeight = $1; updatePageSize() }
                     }
                 }
                 .onPreferenceChange(SelectedRowRectKey.self) { rect in
                     selectedRowRect = rect
+                    updatePageSize()
                 }
                 .onChange(of: appState.selectedHistoryItemID) { oldID, newID in
                     guard let newID else { return }
@@ -215,6 +216,12 @@ struct PanelRootView: View {
         .font(.system(size: 11, weight: .medium))
         .foregroundStyle(theme.resolvedTextSecondary)
         .padding(.horizontal, 2)
+    }
+
+    private func updatePageSize() {
+        let rowHeight = selectedRowRect.height
+        guard rowHeight > 0, scrollViewHeight > 0 else { return }
+        appState.visiblePageSize = max(1, Int(scrollViewHeight / rowHeight))
     }
 
     private func handleUpdateButtonPress() {

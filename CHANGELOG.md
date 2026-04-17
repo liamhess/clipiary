@@ -7,6 +7,7 @@
 ### Changed
 - Themes: reworked/polished existing themes and added new ones
 - Escape now clears the search field first when search text is present, instead of closing Clipiary immediately
+- Pg Up/Down keys now scroll one page instead of only half a page
 
 ### Fixed
 - Theme builder partially showed wrong initial values for undefined/defaulted properties
