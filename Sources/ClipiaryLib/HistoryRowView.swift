@@ -55,6 +55,8 @@ struct HistoryRowView: View, Equatable {
     let isSelected: Bool
     let showAppIcons: Bool
     let showItemDetails: Bool
+    let showCharCountBadge: Bool
+    let sizeBarScheme: String
     let pasteCountBarScheme: String
     let singleFavoriteTab: Bool
     let singleFavoriteTabName: String?
@@ -70,6 +72,8 @@ struct HistoryRowView: View, Equatable {
         lhs.isSelected == rhs.isSelected &&
         lhs.showAppIcons == rhs.showAppIcons &&
         lhs.showItemDetails == rhs.showItemDetails &&
+        lhs.showCharCountBadge == rhs.showCharCountBadge &&
+        lhs.sizeBarScheme == rhs.sizeBarScheme &&
         lhs.pasteCountBarScheme == rhs.pasteCountBarScheme &&
         lhs.singleFavoriteTab == rhs.singleFavoriteTab &&
         lhs.singleFavoriteTabName == rhs.singleFavoriteTabName &&
@@ -181,6 +185,22 @@ struct HistoryRowView: View, Equatable {
                             )
                     }
 
+                    if !item.isImage, sizeBarScheme != "none" {
+                        sizeBarGauge
+                    }
+
+                    if !item.isImage, showCharCountBadge {
+                        Text(item.text.count.compactCharCount)
+                            .font(.system(size: 9, weight: .semibold))
+                            .foregroundStyle(theme.resolvedTextSecondary)
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(
+                                RoundedRectangle(cornerRadius: theme.cornerRadii.keyBadge, style: .continuous)
+                                    .fill(theme.resolvedPillBackground)
+                            )
+                    }
+
                     if pasteCountBarScheme != "none" {
                         pasteFrequencyGauge
                     }
@@ -216,6 +236,7 @@ struct HistoryRowView: View, Equatable {
                     Text(Calendar.current.isDateInToday(item.createdAt)
                         ? "Today, \(item.createdAt.formatted(date: .omitted, time: .shortened))"
                         : item.createdAt.formatted(date: .abbreviated, time: .shortened))
+                    Text("·  \(item.text.count.compactCharCount) chars")
                 }
                 .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(theme.resolvedTextTertiary)
@@ -375,6 +396,23 @@ struct HistoryRowView: View, Equatable {
         .help(tooltipText)
     }
 
+    private var sizeBarGauge: some View {
+        let count = item.text.count
+        let filled: Int = count >= 10_000 ? 5 : count >= 5_000 ? 4 : count >= 2_000 ? 3 : count >= 500 ? 2 : count >= 100 ? 1 : 0
+        let totalSegments = 5
+        let colors = PasteCountBarScheme.colors(for: sizeBarScheme)
+        return HStack(spacing: 1.5) {
+            ForEach(0..<totalSegments, id: \.self) { index in
+                RoundedRectangle(cornerRadius: theme.cornerRadii.gauge)
+                    .fill(index < filled ? colors[index] : theme.resolvedGaugeUnfilled)
+                    .frame(width: 3, height: 10)
+            }
+        }
+        .padding(.vertical, 4)
+        .contentShape(Rectangle())
+        .help("\(count.compactCharCount) characters")
+    }
+
     @ViewBuilder
     private var favoriteButton: some View {        if singleFavoriteTab, let tabName = singleFavoriteTabName {
             Button {
@@ -460,6 +498,19 @@ func buildMenu(item: HistoryItem, appState: AppState) -> NSMenu {
     add(item.isFavorite ? "Remove from Favorites" : "Add to Favorites", tag: "favorite", key: "f")
 
     return menu
+}
+
+private extension Int {
+    var compactCharCount: String {
+        switch self {
+        case 0..<1_000: return "\(self)"
+        case 1_000..<10_000:
+            let k = Double(self) / 1_000
+            return k.truncatingRemainder(dividingBy: 1) == 0 ? "\(Int(k))k" : String(format: "%.1fk", k)
+        default:
+            return "\(self / 1_000)k"
+        }
+    }
 }
 
 private struct RowNSViewCapture: NSViewRepresentable {

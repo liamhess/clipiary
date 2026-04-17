@@ -1,14 +1,15 @@
 # Changelog
 ## [Unreleased]
 ### Added
+- New character count segmented bar and/or badge indicating the size of the element
 - History limit setting now has a help tooltip explaining that higher limits mostly affect search performance, and shows the current history file size
 
 ### Changed
-- Themes: reworked/polished built-in themes
+- Themes: reworked/polished existing themes and added new ones
 - Escape now clears the search field first when search text is present, instead of closing Clipiary immediately
 
 ### Fixed
-- Theme builder partially showed wrong values for defaulted properties
+- Theme builder partially showed wrong initial values for undefined/defaulted properties
 
 
 

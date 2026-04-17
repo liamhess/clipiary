@@ -32,6 +32,9 @@ final class AppSettings {
         static let moveToTopOnPaste = "moveToTopOnPaste"
         static let moveToTopSkipFavorites = "moveToTopSkipFavorites"
         static let showItemDetails = "showItemDetails"
+        static let showCharCountBadge = "showCharCountBadge"
+        static let showSizeBar = "showSizeBar"
+        static let sizeBarScheme = "sizeBarScheme"
         static let alwaysShowSearch = "alwaysShowSearch"
         static let copyOnSelectBufferLimit = "copyOnSelectBufferLimit"
         static let showAppIcons = "showAppIcons"
@@ -111,6 +114,18 @@ final class AppSettings {
 
     var showItemDetails: Bool {
         didSet { defaults.set(showItemDetails, forKey: Keys.showItemDetails) }
+    }
+
+    var showCharCountBadge: Bool {
+        didSet { defaults.set(showCharCountBadge, forKey: Keys.showCharCountBadge) }
+    }
+
+    var showSizeBar: Bool {
+        didSet { defaults.set(showSizeBar, forKey: Keys.showSizeBar) }
+    }
+
+    var sizeBarScheme: String {
+        didSet { defaults.set(sizeBarScheme, forKey: Keys.sizeBarScheme) }
     }
 
     var alwaysShowSearch: Bool {
@@ -216,6 +231,9 @@ final class AppSettings {
             Keys.moveToTopOnPaste: true,
             Keys.moveToTopSkipFavorites: false,
             Keys.showItemDetails: true,
+            Keys.showCharCountBadge: false,
+            Keys.showSizeBar: true,
+            Keys.sizeBarScheme: "sunset",
             Keys.alwaysShowSearch: true,
             Keys.copyOnSelectBufferLimit: 3,
             Keys.showAppIcons: true,
@@ -255,6 +273,9 @@ final class AppSettings {
         moveToTopOnPaste = defaults.bool(forKey: Keys.moveToTopOnPaste)
         moveToTopSkipFavorites = defaults.bool(forKey: Keys.moveToTopSkipFavorites)
         showItemDetails = defaults.bool(forKey: Keys.showItemDetails)
+        showCharCountBadge = defaults.bool(forKey: Keys.showCharCountBadge)
+        showSizeBar = defaults.bool(forKey: Keys.showSizeBar)
+        sizeBarScheme = defaults.string(forKey: Keys.sizeBarScheme) ?? "sunset"
         alwaysShowSearch = defaults.bool(forKey: Keys.alwaysShowSearch)
         copyOnSelectBufferLimit = defaults.integer(forKey: Keys.copyOnSelectBufferLimit)
         showAppIcons = defaults.bool(forKey: Keys.showAppIcons)

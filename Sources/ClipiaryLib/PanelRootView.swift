@@ -370,6 +370,8 @@ struct PanelRootView: View {
         let maxPasteCount = max(items.map(\.pasteCount).max() ?? 1, 1)
         let showAppIcons = appState.settings.showAppIcons
         let showItemDetails = appState.settings.showItemDetails
+        let showCharCountBadge = appState.settings.showCharCountBadge
+        let sizeBarScheme = appState.settings.sizeBarScheme
         let pasteCountBarScheme = appState.settings.pasteCountBarScheme
         let itemLineLimit = appState.settings.itemLineLimit
         let singleFavoriteTab = appState.configManager.favoriteTabs.count == 1
@@ -395,6 +397,8 @@ struct PanelRootView: View {
                                 isSelected: selectedID == item.id,
                                 showAppIcons: showAppIcons,
                                 showItemDetails: showItemDetails,
+                                showCharCountBadge: showCharCountBadge,
+                                sizeBarScheme: sizeBarScheme,
                                 pasteCountBarScheme: pasteCountBarScheme,
                                 singleFavoriteTab: singleFavoriteTab,
                                 singleFavoriteTabName: singleFavoriteTabName,

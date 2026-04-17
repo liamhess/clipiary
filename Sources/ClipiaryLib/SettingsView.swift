@@ -166,6 +166,15 @@ struct SettingsView: View {
             )
 
             settingsToggleRow(
+                title: "Show character count badge",
+                help: "Shows a badge (e.g. \"1.2k\") on items whose text spans two or more lines.",
+                isOn: Binding(
+                    get: { appState.settings.showCharCountBadge },
+                    set: { appState.settings.showCharCountBadge = $0 }
+                )
+            )
+
+            settingsToggleRow(
                 title: "Show app icons",
                 isOn: Binding(
                     get: { appState.settings.showAppIcons },
@@ -204,6 +213,19 @@ struct SettingsView: View {
                 Picker("", selection: Binding(
                     get: { appState.settings.pasteCountBarScheme },
                     set: { appState.settings.pasteCountBarScheme = $0 }
+                )) {
+                    ForEach(PasteCountBarScheme.allSchemes, id: \.id) { scheme in
+                        Text(scheme.label).tag(scheme.id)
+                    }
+                }
+                .labelsHidden()
+                .pickerStyle(.menu)
+            }
+
+            settingMetric(title: "Text size bar", help: "A colored bar on each item indicating its rough character count. Hover for the exact count.") {
+                Picker("", selection: Binding(
+                    get: { appState.settings.sizeBarScheme },
+                    set: { appState.settings.sizeBarScheme = $0 }
                 )) {
                     ForEach(PasteCountBarScheme.allSchemes, id: \.id) { scheme in
                         Text(scheme.label).tag(scheme.id)
