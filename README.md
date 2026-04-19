@@ -19,6 +19,7 @@ Clipiary is a vibe coded macOS clipboard manager with powerful features and an o
 - **Theme Builder** — UI to configure all aspects of a theme and instantly see the results
 - **Image support** — captures images copied to the clipboard with dimensions display and preview
 - **Drag-and-drop reordering** — reorder items in favorites tabs by dragging
+- **Character count bar** — a colored character count gauge on each item indicating its size, with 8 color schemes
 - **Paste count bar** — a colored frequency gauge on each item showing how often you paste it, with 8 color schemes
 - **Auto monospace** — items copied from terminals or IDEs (Terminal, iTerm2, Ghostty, VSCode, Goland) automatically use a console font, with a configurable app list
 - **Rich text support** — configurable capture of RTF and HTML formatting; choose whether to paste rich text or plain text by default, with a configurable alternate paste shortcut for the opposite format
