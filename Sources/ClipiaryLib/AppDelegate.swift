@@ -549,6 +549,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         guard let panel else {
             return
         }
+        let t0 = debugPerfEnabled ? CFAbsoluteTimeGetCurrent() : 0
 
         if panel.isVisible {
             panel.close()
@@ -556,6 +557,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             previousApp = NSWorkspace.shared.frontmostApplication
             NSApp.activate(ignoringOtherApps: true)
             panel.open()
+            if debugPerfEnabled {
+                let ms = (CFAbsoluteTimeGetCurrent() - t0) * 1000
+                print("[PERF] panel.open(): \(String(format: "%.1f", ms))ms")
+            }
             appState.didOpenPopover()
             DispatchQueue.main.async { [weak self] in
                 self?.appState.requestSearchFocus()

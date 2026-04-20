@@ -82,7 +82,8 @@ final class FloatingPanel: NSPanel {
         }
     }
 
-    func open() {
+    @MainActor func open() {
+        let t0 = debugPerfEnabled ? CFAbsoluteTimeGetCurrent() : 0
         let settings = appState.settings
         let preferredSize = NSSize(width: settings.panelWidth, height: settings.panelHeight)
 
@@ -118,19 +119,30 @@ final class FloatingPanel: NSPanel {
         isSuppressingPersistence = true
         setFrame(NSRect(origin: targetOrigin, size: size), display: true)
         isSuppressingPersistence = false
+        if debugPerfEnabled {
+            print("[PERF] FloatingPanel.open() setFrame: \(String(format: "%.1f", (CFAbsoluteTimeGetCurrent() - t0) * 1000))ms")
+        }
         // After sleep/wake or display reconfiguration, SwiftUI's LazyVStack can
         // leave some cells with stale layer transforms, making them render
         // upside-down. Replacing the root view with a new identity forces SwiftUI
         // to tear down and recreate the entire view hierarchy before the panel
         // becomes visible. Important state lives in AppState (not @State), so
         // nothing meaningful is lost.
+        let didRebuild = displayChangedWhileHidden
         if displayChangedWhileHidden {
             displayChangedWhileHidden = false
+            let tRebuild = debugPerfEnabled ? CFAbsoluteTimeGetCurrent() : 0
             (contentView as? PanelHostingView)?.rebuildViewHierarchy()
+            if debugPerfEnabled {
+                print("[PERF] FloatingPanel.open() rebuildViewHierarchy: \(String(format: "%.1f", (CFAbsoluteTimeGetCurrent() - tRebuild) * 1000))ms")
+            }
         }
         orderFrontRegardless()
         makeKey()
         statusBarButton?.isHighlighted = true
+        if debugPerfEnabled {
+            print("[PERF] FloatingPanel.open() total: \(String(format: "%.1f", (CFAbsoluteTimeGetCurrent() - t0) * 1000))ms, rebuild=\(didRebuild)")
+        }
     }
 
     @objc private func screenParametersChanged() {
