@@ -192,6 +192,19 @@ Setting `innerRadius` activates a tighter, brighter glow layer on top of the out
 | `hoveredRowTextGlow` | Glow applied to the text of a hovered row. |
 | `searchHighlightTextGlow` | Glow applied to the main text when search highlights are active. |
 | `separatorGlow` | Glow around horizontal separators in favorites tabs. |
+| `tabBarInnerShadow` | Inner shadow inside the tab bar. |
+| `contentAreaInnerShadow` | Inner shadow inside the content area. |
+| `searchFieldInnerShadow` | Inner shadow inside the search field. |
+
+### Inner shadow object
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `color` | string | `#000000` | Hex shadow color. |
+| `radius` | number | `4` | Blur radius in points. |
+| `opacity` | number | `0.4` | Opacity of the shadow color. |
+| `x` | number | `0` | Horizontal offset (positive = right). |
+| `y` | number | `0` | Vertical offset (positive = down). |
 
 ## `cornerRadii`
 

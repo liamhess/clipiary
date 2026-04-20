@@ -441,10 +441,11 @@ struct Theme: Codable, Sendable, Equatable {
         var separatorGlow: ThemeGlow?
         var tabBarInnerShadow: ThemeInnerShadow?
         var contentAreaInnerShadow: ThemeInnerShadow?
+        var searchFieldInnerShadow: ThemeInnerShadow?
 
         static let `default` = Effects()
 
-        init(selectedRowGlow: ThemeGlow? = nil, hoveredRowGlow: ThemeGlow? = nil, panelGlow: ThemeGlow? = nil, selectedRowTextGlow: ThemeGlow? = nil, hoveredRowTextGlow: ThemeGlow? = nil, searchHighlightTextGlow: ThemeGlow? = nil, separatorGlow: ThemeGlow? = nil, tabBarInnerShadow: ThemeInnerShadow? = nil, contentAreaInnerShadow: ThemeInnerShadow? = nil) {
+        init(selectedRowGlow: ThemeGlow? = nil, hoveredRowGlow: ThemeGlow? = nil, panelGlow: ThemeGlow? = nil, selectedRowTextGlow: ThemeGlow? = nil, hoveredRowTextGlow: ThemeGlow? = nil, searchHighlightTextGlow: ThemeGlow? = nil, separatorGlow: ThemeGlow? = nil, tabBarInnerShadow: ThemeInnerShadow? = nil, contentAreaInnerShadow: ThemeInnerShadow? = nil, searchFieldInnerShadow: ThemeInnerShadow? = nil) {
             self.selectedRowGlow = selectedRowGlow
             self.hoveredRowGlow = hoveredRowGlow
             self.panelGlow = panelGlow
@@ -454,6 +455,7 @@ struct Theme: Codable, Sendable, Equatable {
             self.separatorGlow = separatorGlow
             self.tabBarInnerShadow = tabBarInnerShadow
             self.contentAreaInnerShadow = contentAreaInnerShadow
+            self.searchFieldInnerShadow = searchFieldInnerShadow
         }
 
         init(from decoder: Decoder) throws {
@@ -467,6 +469,7 @@ struct Theme: Codable, Sendable, Equatable {
             separatorGlow = try container.decodeIfPresent(ThemeGlow.self, forKey: .separatorGlow)
             tabBarInnerShadow = try container.decodeIfPresent(ThemeInnerShadow.self, forKey: .tabBarInnerShadow)
             contentAreaInnerShadow = try container.decodeIfPresent(ThemeInnerShadow.self, forKey: .contentAreaInnerShadow)
+            searchFieldInnerShadow = try container.decodeIfPresent(ThemeInnerShadow.self, forKey: .searchFieldInnerShadow)
         }
     }
 
@@ -1321,4 +1324,5 @@ extension Theme {
 
     var resolvedTabBarInnerShadow: ResolvedInnerShadow? { resolvedInnerShadow(effects.tabBarInnerShadow) }
     var resolvedContentAreaInnerShadow: ResolvedInnerShadow? { resolvedInnerShadow(effects.contentAreaInnerShadow) }
+    var resolvedSearchFieldInnerShadow: ResolvedInnerShadow? { resolvedInnerShadow(effects.searchFieldInnerShadow) }
 }

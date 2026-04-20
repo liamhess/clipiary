@@ -1,5 +1,7 @@
 # Changelog
 ## [Unreleased]
+### Added
+- Theme effects: search field inner shadow setting
 
 ## [1.8.0] - 2026-04-17
 ### Added

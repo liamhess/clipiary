@@ -384,6 +384,7 @@ struct PanelRootView: View {
                     .stroke(border.color, style: border.strokeStyle)
             }
         }
+        .innerShadow(cornerRadius: theme.cornerRadii.searchField, shadow: theme.resolvedSearchFieldInnerShadow)
     }
 
     private func historyGroup(title: String, items: [HistoryItem]) -> some View {

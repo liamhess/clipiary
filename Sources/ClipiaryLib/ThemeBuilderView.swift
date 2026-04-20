@@ -639,6 +639,7 @@ struct ThemeBuilderView: View {
             builderSubHeader("Inner Shadows")
             InnerShadowEditorRow(label: "Tab bar inner shadow", shadow: $editorState.theme.effects.tabBarInnerShadow, disabled: disabled)
             InnerShadowEditorRow(label: "Content area inner shadow", shadow: $editorState.theme.effects.contentAreaInnerShadow, disabled: disabled)
+            InnerShadowEditorRow(label: "Search field inner shadow", shadow: $editorState.theme.effects.searchFieldInnerShadow, disabled: disabled)
         }
     }
 
