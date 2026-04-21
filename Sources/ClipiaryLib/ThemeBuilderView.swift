@@ -723,10 +723,17 @@ struct ThemeBuilderView: View {
             }
             .padding(10)
             .frame(maxWidth: .infinity, alignment: .topLeading)
-            .background(
-                RoundedRectangle(cornerRadius: t.cornerRadii.card, style: .continuous)
-                    .fill(t.resolvedCardFill)
-            )
+            .background {
+                let cornerRadius = t.cornerRadii.card
+                ZStack {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(t.resolvedCardFill)
+                    if t.fills.card.texture != nil {
+                        TextureOverlay(fill: t.fills.card, themesDirectory: appState.themeManager.themesDirectoryURL)
+                            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                    }
+                }
+            }
             .overlay {
                 let border = t.resolvedCardBorder
                 if border.isVisible {

@@ -266,10 +266,20 @@ struct HistoryRowView: View, Equatable {
                 }
             }
         }
-        .background(
-            RoundedRectangle(cornerRadius: theme.cornerRadii.row, style: .continuous)
-                .fill(rowFill)
-        )
+        .background {
+            let cornerRadius = theme.cornerRadii.row
+            ZStack {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(rowFill)
+                if isSelected, theme.fills.rowSelected.texture != nil {
+                    TextureOverlay(fill: theme.fills.rowSelected, themesDirectory: appState.themeManager.themesDirectoryURL)
+                        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                } else if isHovered, theme.fills.rowHovered.texture != nil {
+                    TextureOverlay(fill: theme.fills.rowHovered, themesDirectory: appState.themeManager.themesDirectoryURL)
+                        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                }
+            }
+        }
         .overlay {
             let border = theme.resolvedSelectedRowBorder
             if isSelected, border.isVisible {

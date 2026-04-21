@@ -782,51 +782,6 @@ struct PanelRootView: View {
         }
     }
 
-    private struct TextureOverlay: View {
-        let fill: ThemeFill
-        let themesDirectory: URL
-        @State private var displayImage: NSImage?
-
-        var body: some View {
-            Color.clear
-                .overlay {
-                    if let displayImage {
-                        Image(nsImage: displayImage)
-                            .resizable(resizingMode: .tile)
-                            .opacity(fill.textureOpacity ?? 1.0)
-                            .blendMode(fill.resolvedBlendMode)
-                    }
-                }
-                .task(id: loadKey) { load() }
-        }
-
-        private var loadKey: String { "\(fill.texture ?? "")@\(fill.textureScale ?? 1.0)" }
-
-        private func load() {
-            guard let ref = fill.texture, !ref.isEmpty else { displayImage = nil; return }
-            if ref.hasPrefix("file:") {
-                let filename = String(ref.dropFirst(5))
-                guard let original = NSImage(contentsOf: themesDirectory.appending(path: filename)) else {
-                    displayImage = nil
-                    return
-                }
-                let scale = fill.textureScale ?? 1.0
-                displayImage = scale == 1.0 ? original : scaled(original, by: scale)
-            } else {
-                displayImage = nil
-            }
-        }
-
-        private func scaled(_ image: NSImage, by factor: Double) -> NSImage {
-            let newSize = NSSize(width: image.size.width * factor, height: image.size.height * factor)
-            let result = NSImage(size: newSize)
-            result.lockFocus()
-            image.draw(in: NSRect(origin: .zero, size: newSize))
-            result.unlockFocus()
-            return result
-        }
-    }
-
     private var panelFill: AnyShapeStyle {
         // For material themes with no explicit contentArea color, use the same material
         // as the outer shell so the content area matches and the scroll view's own
@@ -883,10 +838,17 @@ struct PanelRootView: View {
             }
         }
         .padding(4)
-        .background(
-            RoundedRectangle(cornerRadius: theme.cornerRadii.tabBar, style: .continuous)
-                .fill(theme.resolvedTabBarFill)
-        )
+        .background {
+            let cornerRadius = theme.cornerRadii.tabBar
+            ZStack {
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                    .fill(theme.resolvedTabBarFill)
+                if theme.fills.tabBar.texture != nil {
+                    TextureOverlay(fill: theme.fills.tabBar, themesDirectory: appState.themeManager.themesDirectoryURL)
+                        .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                }
+            }
+        }
         .innerShadow(cornerRadius: theme.cornerRadii.tabBar, shadow: theme.resolvedTabBarInnerShadow)
         .overlay {
             let border = theme.resolvedTabBarBorder
@@ -919,10 +881,19 @@ struct PanelRootView: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 6)
             .frame(maxWidth: .infinity)
-            .background(
-                RoundedRectangle(cornerRadius: theme.cornerRadii.tabButton, style: .continuous)
-                    .fill(isSelected ? theme.resolvedTabButtonSelectedFill : AnyShapeStyle(Color.clear))
-            )
+            .background {
+                let cornerRadius = theme.cornerRadii.tabButton
+                if isSelected {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .fill(theme.resolvedTabButtonSelectedFill)
+                        if let selectedFill = theme.fills.tabButtonSelected, selectedFill.texture != nil {
+                            TextureOverlay(fill: selectedFill, themesDirectory: appState.themeManager.themesDirectoryURL)
+                                .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                        }
+                    }
+                }
+            }
             .contentShape(Rectangle())
         }
         .frame(maxWidth: .infinity)
@@ -972,9 +943,14 @@ struct PanelRootView: View {
         GeometryReader { geometry in
             let (leadingOffset, topOffset) = pickerOffset(anchor: anchor, geometry: geometry)
             ZStack(alignment: .topLeading) {
-                Rectangle().fill(theme.resolvedOverlayFill)
-                    .ignoresSafeArea()
-                    .onTapGesture {
+                ZStack {
+                    Rectangle().fill(theme.resolvedOverlayFill)
+                    if theme.fills.overlay.texture != nil {
+                        TextureOverlay(fill: theme.fills.overlay, themesDirectory: appState.themeManager.themesDirectoryURL)
+                    }
+                }
+                .ignoresSafeArea()
+                .onTapGesture {
                         NSApp.keyWindow?.makeFirstResponder(nil)
                         appState.showingFavoriteTabPicker = false
                         appState.requestSearchFocus()
@@ -1448,6 +1424,53 @@ enum PasteCountBarScheme {
 
     static func colors(for schemeID: String) -> [Color] {
         allSchemes.first { $0.id == schemeID }?.colors ?? allSchemes[1].colors
+    }
+}
+
+// MARK: - Texture Overlay
+
+struct TextureOverlay: View {
+    let fill: ThemeFill
+    let themesDirectory: URL
+    @State private var displayImage: NSImage?
+
+    var body: some View {
+        Color.clear
+            .overlay {
+                if let displayImage {
+                    Image(nsImage: displayImage)
+                        .resizable(resizingMode: .tile)
+                        .opacity(fill.textureOpacity ?? 1.0)
+                        .blendMode(fill.resolvedBlendMode)
+                }
+            }
+            .task(id: loadKey) { load() }
+    }
+
+    private var loadKey: String { "\(fill.texture ?? "")@\(fill.textureScale ?? 1.0)" }
+
+    private func load() {
+        guard let ref = fill.texture, !ref.isEmpty else { displayImage = nil; return }
+        if ref.hasPrefix("file:") {
+            let filename = String(ref.dropFirst(5))
+            guard let original = NSImage(contentsOf: themesDirectory.appending(path: filename)) else {
+                displayImage = nil
+                return
+            }
+            let scale = fill.textureScale ?? 1.0
+            displayImage = scale == 1.0 ? original : scaled(original, by: scale)
+        } else {
+            displayImage = nil
+        }
+    }
+
+    private func scaled(_ image: NSImage, by factor: Double) -> NSImage {
+        let newSize = NSSize(width: image.size.width * factor, height: image.size.height * factor)
+        let result = NSImage(size: newSize)
+        result.lockFocus()
+        image.draw(in: NSRect(origin: .zero, size: newSize))
+        result.unlockFocus()
+        return result
     }
 }
 
