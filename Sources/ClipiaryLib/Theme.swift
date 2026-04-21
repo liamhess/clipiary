@@ -14,6 +14,11 @@ struct ThemeFill: Codable, Sendable, Equatable {
     var meshColumns: Int?
     var meshRows: Int?
     var meshPoints: [[Double]]?
+    // Texture overlay — "file:<filename>" for a file in the themes directory, "builtin:<name>" reserved for future use
+    var texture: String?
+    var textureOpacity: Double?
+    var textureScale: Double?     // tile scale multiplier; nil → 1.0
+    var textureBlendMode: String? // "normal" | "overlay" | "multiply" | "screen" | "luminosity"
 
     static func solid(_ hex: String, opacity: Double? = nil) -> ThemeFill {
         ThemeFill(color: hex, opacity: opacity)
@@ -81,6 +86,16 @@ struct ThemeFill: Codable, Sendable, Equatable {
         case "bottomTrailing": .bottomTrailing
         case "center": .center
         default: .top
+        }
+    }
+
+    var resolvedBlendMode: BlendMode {
+        switch textureBlendMode {
+        case "overlay":    .overlay
+        case "multiply":   .multiply
+        case "screen":     .screen
+        case "luminosity": .luminosity
+        default:           .normal
         }
     }
 }

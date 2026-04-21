@@ -3,6 +3,7 @@
 ### Added
 - Named separators: separators in favorites tabs can now have a text label, displayed as a full-width pill-styled badge (themeable width)
 - Theme effects: search field inner shadow setting
+- Theme fills: texture overlay support — any fill can now have a tiled image texture with configurable opacity and blend mode
 
 ### Fixed
 - Drag-and-drop reorder indicator was off by one when dragging items downward

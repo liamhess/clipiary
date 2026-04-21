@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 // MARK: - Editor State
 
@@ -529,7 +530,8 @@ struct ThemeBuilderView: View {
             let d = Theme.Fills.default
             let accentHex = editorState.theme.resolvedAccent.hexString
             let hasMaterial = editorState.theme.options.material != nil
-            FillEditorRow(label: "Panel", fill: $editorState.theme.fills.panel, disabled: disabled || hasMaterial, defaultFill: d.panel, displayDefaultOpacity: Theme.Fills.panelDefaultOpacity)
+            let dir = appState.themeManager.themesDirectoryURL
+            FillEditorRow(label: "Panel", fill: $editorState.theme.fills.panel, disabled: disabled || hasMaterial, defaultFill: d.panel, displayDefaultOpacity: Theme.Fills.panelDefaultOpacity, themesDirectory: dir)
             if hasMaterial {
                 Text("Panel fill is replaced by the material background. Set Material to None in Options to use a solid fill.")
                     .font(.system(size: 10))
@@ -537,13 +539,13 @@ struct ThemeBuilderView: View {
                     .padding(.horizontal, 8)
                     .padding(.bottom, 4)
             }
-            FillEditorRow(label: "Content area", fill: $editorState.theme.fills.contentArea, disabled: disabled, defaultFill: d.contentArea, displayDefaultOpacity: Theme.Fills.panelDefaultOpacity)
-            FillEditorRow(label: "Tab bar", fill: $editorState.theme.fills.tabBar, disabled: disabled, defaultFill: d.tabBar, displayDefaultOpacity: Theme.Fills.tabBarDefaultOpacity)
-            OptionalFillEditorRow(label: "Tab button selected", fill: $editorState.theme.fills.tabButtonSelected, disabled: disabled, defaultValue: d.tabButtonSelected)
-            FillEditorRow(label: "Selected row", fill: $editorState.theme.fills.rowSelected, disabled: disabled, defaultFill: d.rowSelected, accentHex: accentHex, displayDefaultOpacity: Theme.Fills.rowSelectedDefaultOpacity)
-            FillEditorRow(label: "Hovered row", fill: $editorState.theme.fills.rowHovered, disabled: disabled, defaultFill: d.rowHovered, accentHex: accentHex, displayDefaultOpacity: Theme.Fills.rowHoveredDefaultOpacity)
-            FillEditorRow(label: "Card", fill: $editorState.theme.fills.card, disabled: disabled, defaultFill: d.card, displayDefaultOpacity: Theme.Fills.cardDefaultOpacity)
-            FillEditorRow(label: "Overlay", fill: $editorState.theme.fills.overlay, disabled: disabled, defaultFill: d.overlay, displayDefaultOpacity: Theme.Fills.overlayDefaultOpacity)
+            FillEditorRow(label: "Content area", fill: $editorState.theme.fills.contentArea, disabled: disabled, defaultFill: d.contentArea, displayDefaultOpacity: Theme.Fills.panelDefaultOpacity, themesDirectory: dir)
+            FillEditorRow(label: "Tab bar", fill: $editorState.theme.fills.tabBar, disabled: disabled, defaultFill: d.tabBar, displayDefaultOpacity: Theme.Fills.tabBarDefaultOpacity, themesDirectory: dir)
+            OptionalFillEditorRow(label: "Tab button selected", fill: $editorState.theme.fills.tabButtonSelected, disabled: disabled, defaultValue: d.tabButtonSelected, themesDirectory: dir)
+            FillEditorRow(label: "Selected row", fill: $editorState.theme.fills.rowSelected, disabled: disabled, defaultFill: d.rowSelected, accentHex: accentHex, displayDefaultOpacity: Theme.Fills.rowSelectedDefaultOpacity, themesDirectory: dir)
+            FillEditorRow(label: "Hovered row", fill: $editorState.theme.fills.rowHovered, disabled: disabled, defaultFill: d.rowHovered, accentHex: accentHex, displayDefaultOpacity: Theme.Fills.rowHoveredDefaultOpacity, themesDirectory: dir)
+            FillEditorRow(label: "Card", fill: $editorState.theme.fills.card, disabled: disabled, defaultFill: d.card, displayDefaultOpacity: Theme.Fills.cardDefaultOpacity, themesDirectory: dir)
+            FillEditorRow(label: "Overlay", fill: $editorState.theme.fills.overlay, disabled: disabled, defaultFill: d.overlay, displayDefaultOpacity: Theme.Fills.overlayDefaultOpacity, themesDirectory: dir)
         }
     }
 
@@ -784,6 +786,10 @@ private struct FillEditorRow: View {
     var defaultFill: ThemeFill? = nil
     var accentHex: String = "#FFFFFF"
     var displayDefaultOpacity: Double = 1.0
+    var themesDirectory: URL? = nil
+    var showOuterBracket: Bool = true
+
+    @State private var isTextureDragTargeted = false
 
     private var isDefault: Bool { defaultFill.map { fill == $0 } ?? false }
 
@@ -832,15 +838,33 @@ private struct FillEditorRow: View {
                 .padding(.vertical, 3)
             }
 
-            Group {
-                switch kind {
-                case .solid: solidEditor
-                case .linear: linearEditor
-                case .mesh: meshEditor
+            if showOuterBracket {
+                DependentGroup(enabled: true) {
+                    Group {
+                        switch kind {
+                        case .solid: solidEditor
+                        case .linear: linearEditor
+                        case .mesh: meshEditor
+                        }
+                    }
+                    .disabled(disabled)
+
+                    textureSection
                 }
+            } else {
+                Group {
+                    switch kind {
+                    case .solid: solidEditor
+                    case .linear: linearEditor
+                    case .mesh: meshEditor
+                    }
+                }
+                .padding(.leading, 16)
+                .disabled(disabled)
+
+                textureSection
+                    .padding(.leading, 18)
             }
-            .padding(.leading, 16)
-            .disabled(disabled)
         }
     }
 
@@ -1027,7 +1051,160 @@ private struct FillEditorRow: View {
         fill.gradient = c
     }
 
+    // MARK: Texture
+
+    private var textureFilename: String {
+        guard let ref = fill.texture, !ref.isEmpty else { return "" }
+        return ref.hasPrefix("file:") ? String(ref.dropFirst(5)) : ref
+    }
+
+    private var textureSection: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(spacing: 8) {
+                Toggle(isOn: Binding(
+                    get: { fill.texture != nil },
+                    set: { fill.texture = $0 ? "" : nil }
+                )) {
+                    Text("Texture").font(.system(size: 12))
+                }
+                .toggleStyle(.checkbox)
+                .disabled(disabled)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 3)
+
+            if fill.texture != nil {
+                DependentGroup(enabled: !disabled) {
+                    HStack(spacing: 6) {
+                        let name = textureFilename
+                        Group {
+                            if name.isEmpty {
+                                Text("Drop an image or click Import…")
+                                    .foregroundStyle(.tertiary)
+                            } else {
+                                Text(name)
+                                    .foregroundStyle(.primary)
+                            }
+                        }
+                        .font(.system(size: 11, design: .monospaced))
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 4)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(isTextureDragTargeted ? Color.accentColor.opacity(0.12) : Color.black.opacity(0.12))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 4)
+                                        .stroke(isTextureDragTargeted ? Color.accentColor.opacity(0.6) : Color.secondary.opacity(0.2), lineWidth: 1)
+                                )
+                        )
+                        .onDrop(of: [.fileURL], isTargeted: $isTextureDragTargeted, perform: handleTextureDrop)
+
+                        Button("Import…", action: runImportPanel)
+                            .controlSize(.small)
+                            .disabled(disabled || themesDirectory == nil)
+
+                        if !name.isEmpty {
+                            Button {
+                                fill.texture = nil
+                                fill.textureOpacity = nil
+                                fill.textureScale = nil
+                                fill.textureBlendMode = nil
+                            } label: {
+                                Image(systemName: "xmark.circle.fill")
+                            }
+                            .buttonStyle(.plain)
+                            .foregroundStyle(.secondary)
+                            .disabled(disabled)
+                        }
+                    }
+                    .padding(.trailing, 8)
+
+                    OpacitySlider(value: Binding(
+                        get: { fill.textureOpacity ?? 1.0 },
+                        set: { fill.textureOpacity = $0 }
+                    ))
+                    .disabled(disabled)
+
+                    LabeledSliderRow(
+                        label: "Scale",
+                        value: Binding(
+                            get: { fill.textureScale ?? 1.0 },
+                            set: { fill.textureScale = $0 }
+                        ),
+                        range: 0.1...4.0, step: 0.1,
+                        format: "%.1f×"
+                    )
+                    .disabled(disabled)
+
+                    HStack(spacing: 8) {
+                        Text("Blend mode")
+                            .font(.system(size: 11))
+                            .foregroundStyle(.secondary)
+                        Picker("", selection: Binding(
+                            get: { fill.textureBlendMode ?? "normal" },
+                            set: { fill.textureBlendMode = $0 }
+                        )) {
+                            Text("Normal").tag("normal")
+                            Text("Overlay").tag("overlay")
+                            Text("Multiply").tag("multiply")
+                            Text("Screen").tag("screen")
+                            Text("Luminosity").tag("luminosity")
+                        }
+                        .labelsHidden()
+                        .pickerStyle(.menu)
+                        .controlSize(.small)
+                        .disabled(disabled)
+                    }
+                    .padding(.trailing, 8)
+                    .padding(.bottom, 5)
+                }
+            }
+        }
+    }
+
+    private func runImportPanel() {
+        guard let dir = themesDirectory else { return }
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.png, .jpeg, .tiff, .bmp, .gif]
+        panel.allowsMultipleSelection = false
+        panel.message = "Choose a texture image"
+        panel.prompt = "Import"
+        guard panel.runModal() == .OK, let url = panel.url else { return }
+        if let ref = try? copyTextureFile(from: url, to: dir) {
+            fill.texture = ref
+        }
+    }
+
+    private func handleTextureDrop(_ providers: [NSItemProvider]) -> Bool {
+        guard let dir = themesDirectory, let provider = providers.first else { return false }
+        Task { @MainActor in
+            guard let item = try? await provider.loadItem(forTypeIdentifier: UTType.fileURL.identifier),
+                  let data = item as? Data,
+                  let url = URL(dataRepresentation: data, relativeTo: nil),
+                  let ref = try? copyTextureFile(from: url, to: dir) else { return }
+            fill.texture = ref
+        }
+        return true
+    }
+
+    private func copyTextureFile(from sourceURL: URL, to dir: URL) throws -> String {
+        let filename = sourceURL.lastPathComponent
+        let destURL = dir.appending(path: filename)
+        if FileManager.default.fileExists(atPath: destURL.path) {
+            try FileManager.default.removeItem(at: destURL)
+        }
+        try FileManager.default.copyItem(at: sourceURL, to: destURL)
+        return "file:\(filename)"
+    }
+
     private func switchKind(to newKind: FillKind) {
+        let tex = fill.texture
+        let texOpacity = fill.textureOpacity
+        let texScale = fill.textureScale
+        let texBlend = fill.textureBlendMode
         switch newKind {
         case .solid:
             let c = fill.gradient?.first ?? fill.mesh?.first ?? accentHex
@@ -1040,6 +1217,10 @@ private struct FillEditorRow: View {
             let base = fill.color ?? fill.gradient?.first ?? accentHex
             fill = .meshGradient([String](repeating: base, count: 9), columns: 3, rows: 3, opacity: fill.opacity)
         }
+        fill.texture = tex
+        fill.textureOpacity = texOpacity
+        fill.textureScale = texScale
+        fill.textureBlendMode = texBlend
     }
 }
 
@@ -1051,6 +1232,7 @@ private struct OptionalFillEditorRow: View {
     let disabled: Bool
     var defaultValue: ThemeFill? = nil
     var defaultLabel: String = "default"
+    var themesDirectory: URL? = nil
 
     private var isDefault: Bool { fill == defaultValue }
 
@@ -1084,11 +1266,11 @@ private struct OptionalFillEditorRow: View {
                             unwrapped = $0
                             fill = $0
                         }
-                    ), disabled: disabled)
+                    ), disabled: disabled, themesDirectory: themesDirectory, showOuterBracket: false)
                 }
             } else {
                 DependentGroup(enabled: false) {
-                    FillEditorRow(label: "", fill: .constant(.solid("#FFFFFF", opacity: 0.15)), disabled: disabled)
+                    FillEditorRow(label: "", fill: .constant(.solid("#FFFFFF", opacity: 0.15)), disabled: disabled, themesDirectory: themesDirectory, showOuterBracket: false)
                 }
             }
         }

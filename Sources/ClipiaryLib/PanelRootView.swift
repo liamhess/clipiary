@@ -148,10 +148,17 @@ struct PanelRootView: View {
                     }
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(
-                    RoundedRectangle(cornerRadius: theme.cornerRadii.contentArea, style: .continuous)
-                        .fill(panelFill)
-                )
+                .background {
+                    let cornerRadius = theme.cornerRadii.contentArea
+                    ZStack {
+                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                            .fill(panelFill)
+                        if theme.fills.contentArea.texture != nil {
+                            TextureOverlay(fill: theme.fills.contentArea, themesDirectory: appState.themeManager.themesDirectoryURL)
+                                .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
+                        }
+                    }
+                }
                 .innerShadow(cornerRadius: theme.cornerRadii.contentArea, shadow: theme.resolvedContentAreaInnerShadow)
                 .overlay {
                     let border = theme.resolvedContentAreaBorder
@@ -735,6 +742,9 @@ struct PanelRootView: View {
                 RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
                     .fill(theme.resolvedPanelFill)
             }
+            if theme.fills.panel.texture != nil {
+                TextureOverlay(fill: theme.fills.panel, themesDirectory: appState.themeManager.themesDirectoryURL)
+            }
             if theme.options.animatedPanel {
                 TimelineView(.animation(minimumInterval: 1.0 / 20.0)) { timeline in
                     let period = theme.options.animatedPanelPeriod ?? 8.0
@@ -769,6 +779,51 @@ struct PanelRootView: View {
         case "thick":       return AnyShapeStyle(.thickMaterial)
         case "ultraThick":  return AnyShapeStyle(.ultraThickMaterial)
         default:            return AnyShapeStyle(.regularMaterial)
+        }
+    }
+
+    private struct TextureOverlay: View {
+        let fill: ThemeFill
+        let themesDirectory: URL
+        @State private var displayImage: NSImage?
+
+        var body: some View {
+            Color.clear
+                .overlay {
+                    if let displayImage {
+                        Image(nsImage: displayImage)
+                            .resizable(resizingMode: .tile)
+                            .opacity(fill.textureOpacity ?? 1.0)
+                            .blendMode(fill.resolvedBlendMode)
+                    }
+                }
+                .task(id: loadKey) { load() }
+        }
+
+        private var loadKey: String { "\(fill.texture ?? "")@\(fill.textureScale ?? 1.0)" }
+
+        private func load() {
+            guard let ref = fill.texture, !ref.isEmpty else { displayImage = nil; return }
+            if ref.hasPrefix("file:") {
+                let filename = String(ref.dropFirst(5))
+                guard let original = NSImage(contentsOf: themesDirectory.appending(path: filename)) else {
+                    displayImage = nil
+                    return
+                }
+                let scale = fill.textureScale ?? 1.0
+                displayImage = scale == 1.0 ? original : scaled(original, by: scale)
+            } else {
+                displayImage = nil
+            }
+        }
+
+        private func scaled(_ image: NSImage, by factor: Double) -> NSImage {
+            let newSize = NSSize(width: image.size.width * factor, height: image.size.height * factor)
+            let result = NSImage(size: newSize)
+            result.lockFocus()
+            image.draw(in: NSRect(origin: .zero, size: newSize))
+            result.unlockFocus()
+            return result
         }
     }
 

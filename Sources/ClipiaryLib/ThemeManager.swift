@@ -112,6 +112,19 @@ final class ThemeManager {
         return copy
     }
 
+    /// Copy an image file into the themes directory and return a `"file:<filename>"` texture reference.
+    @discardableResult
+    func importTexture(from sourceURL: URL) throws -> String {
+        try fileManager.createDirectory(at: themesDirectoryURL, withIntermediateDirectories: true)
+        let filename = sourceURL.lastPathComponent
+        let destURL = themesDirectoryURL.appending(path: filename)
+        if fileManager.fileExists(atPath: destURL.path) {
+            try fileManager.removeItem(at: destURL)
+        }
+        try fileManager.copyItem(at: sourceURL, to: destURL)
+        return "file:\(filename)"
+    }
+
     /// Delete a custom theme. Throws if the theme is a built-in.
     func delete(id: String) throws {
         guard !Theme.builtInThemes.contains(where: { $0.id == id }) else {
