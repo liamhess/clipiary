@@ -146,9 +146,7 @@ final class FloatingPanel: NSPanel {
     }
 
     @objc private func screenParametersChanged() {
-        if !isVisible {
-            displayChangedWhileHidden = true
-        }
+        displayChangedWhileHidden = true
     }
 
     override func resignKey() {
