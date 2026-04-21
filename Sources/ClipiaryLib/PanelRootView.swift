@@ -580,7 +580,7 @@ struct PanelRootView: View {
                     .frame(height: thickness)
             }
         }
-        .frame(height: isNamed ? 22 : nil)
+        .frame(height: isNamed ? theme.spacing.separatorHeight : nil)
         .padding(.horizontal, theme.spacing.separatorInset)
         .padding(.vertical, isNamed ? 3 : 5)
         .contentShape(Rectangle())

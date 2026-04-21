@@ -546,6 +546,7 @@ struct Theme: Codable, Sendable, Equatable {
         var rowDetailsSpacing: CGFloat
         var separatorThickness: CGFloat
         var separatorInset: CGFloat
+        var separatorHeight: CGFloat
 
         static let `default` = Spacing(
             panelPadding: 12, sectionSpacing: 12,
@@ -553,7 +554,8 @@ struct Theme: Codable, Sendable, Equatable {
             contentAreaPadding: 10, rowSpacing: 2,
             rowDetailsSpacing: 3,
             separatorThickness: 3,
-            separatorInset: 12
+            separatorInset: 12,
+            separatorHeight: 22
         )
 
         init(
@@ -565,13 +567,14 @@ struct Theme: Codable, Sendable, Equatable {
             rowSpacing: CGFloat = Self.default.rowSpacing,
             rowDetailsSpacing: CGFloat = Self.default.rowDetailsSpacing,
             separatorThickness: CGFloat = Self.default.separatorThickness,
-            separatorInset: CGFloat = Self.default.separatorInset
+            separatorInset: CGFloat = Self.default.separatorInset,
+            separatorHeight: CGFloat = Self.default.separatorHeight
         ) {
             self.panelPadding = panelPadding; self.sectionSpacing = sectionSpacing
             self.rowHorizontalPadding = rowHorizontalPadding; self.rowVerticalPadding = rowVerticalPadding
             self.contentAreaPadding = contentAreaPadding; self.rowSpacing = rowSpacing
             self.rowDetailsSpacing = rowDetailsSpacing; self.separatorThickness = separatorThickness
-            self.separatorInset = separatorInset
+            self.separatorInset = separatorInset; self.separatorHeight = separatorHeight
         }
 
         init(from decoder: Decoder) throws {
@@ -586,6 +589,7 @@ struct Theme: Codable, Sendable, Equatable {
             rowDetailsSpacing = try container.decodeIfPresent(CGFloat.self, forKey: .rowDetailsSpacing) ?? d.rowDetailsSpacing
             separatorThickness = try container.decodeIfPresent(CGFloat.self, forKey: .separatorThickness) ?? d.separatorThickness
             separatorInset = try container.decodeIfPresent(CGFloat.self, forKey: .separatorInset) ?? d.separatorInset
+            separatorHeight = try container.decodeIfPresent(CGFloat.self, forKey: .separatorHeight) ?? d.separatorHeight
         }
     }
 

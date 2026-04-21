@@ -242,6 +242,7 @@ Layout spacing values (in points).
 | `rowDetailsSpacing` | `3` | Vertical gap between the main row text and its detail lines (snippet description, app name / timestamp). Only visible when item details are enabled in Settings. |
 | `separatorThickness` | `3` | Height in points of unnamed horizontal separators in favorites tabs. |
 | `separatorInset` | `12` | Horizontal inset (padding) for separators from the content area edges. |
+| `separatorHeight` | `22` | Height in points of named separator badges. |
 
 ## `fonts`
 
