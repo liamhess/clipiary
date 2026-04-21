@@ -392,6 +392,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             return suppressKeyUp(for: event)
         }
 
+        if appState.isEditingSeparatorName {
+            return event
+        }
+
         switch event.keyCode {
         case 49:
             guard appState.searchQuery.isEmpty else { return event }
@@ -586,6 +590,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         appState.isRecordingItemShortcut = false
         appState.itemShortcutError = nil
         appState.showingFavoriteTabPicker = false
+        appState.isEditingSeparatorName = false
         appState.isPreviewVisible = false
         appState.searchQuery = ""
         suppressedKeyUps.removeAll()

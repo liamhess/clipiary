@@ -176,6 +176,23 @@ final class FloatingPanel: NSPanel {
     }
 
     override func sendEvent(_ event: NSEvent) {
+        if event.type == .keyDown, appState.isEditingSeparatorName {
+            let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+            if modifiers.isDisjoint(with: [.command, .option, .control]) {
+                switch event.keyCode {
+                case 36: // Return — commit via focus-loss handler
+                    makeFirstResponder(nil)
+                    return
+                case 53: // Escape — cancel without saving
+                    appState.isEditingSeparatorName = false
+                    makeFirstResponder(nil)
+                    appState.requestSearchFocus()
+                    return
+                default:
+                    break
+                }
+            }
+        }
         // When editing item text, intercept Return to commit + defocus; let Escape close the picker
         if event.type == .keyDown, appState.showingFavoriteTabPicker, appState.isEditingItemText {
             let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
@@ -263,6 +280,10 @@ final class FloatingPanel: NSPanel {
     }
 
     override func close() {
+        if appState.isEditingSeparatorName {
+            appState.isEditingSeparatorName = false
+            makeFirstResponder(nil)
+        }
         if appState.showingFavoriteTabPicker {
             appState.showingFavoriteTabPicker = false
             appState.isRecordingItemShortcut = false

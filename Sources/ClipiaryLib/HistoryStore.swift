@@ -218,6 +218,13 @@ final class HistoryStore {
         persist()
     }
 
+    func setSeparatorText(_ text: String, for item: HistoryItem) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        items[index].text = text
+        items[index].rebuildDerivedFields()
+        persist()
+    }
+
     func seedEntries(for tabConfig: FavoritesTabConfig) {
         guard let entries = tabConfig.entries else { return }
         for entry in entries {
@@ -326,10 +333,10 @@ final class HistoryStore {
         guard let sourceIndex = orderedItems.firstIndex(where: { $0.id == itemID }) else { return }
         guard sourceIndex != destinationIndex else { return }
 
-        // Build the list without the dragged item
         var reordered = orderedItems
         let moved = reordered.remove(at: sourceIndex)
-        let insertAt = min(destinationIndex, reordered.count)
+        let adjustedIndex = sourceIndex < destinationIndex ? destinationIndex - 1 : destinationIndex
+        let insertAt = min(adjustedIndex, reordered.count)
 
         let newSortIndex: Double
         if reordered.isEmpty {

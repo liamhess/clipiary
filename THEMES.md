@@ -119,6 +119,8 @@ Flat hex colors (`#RRGGBB` or `#RRGGBBAA`) for small UI elements and foreground 
 | `searchHighlightBackgroundOpacity` | `0.15` | Opacity for search highlight backgrounds. |
 | `separator` | card stroke | Color of horizontal separators in favorites tabs. `null` = uses the resolved card stroke color. |
 | `separatorOpacity` | `0.35` | Opacity for separator lines. |
+| `separatorTextColor` | secondary text | Text color of named separator labels. `null` = uses `textSecondary`. |
+| `separatorTextOpacity` | `1.0` | Opacity for separator label text. |
 
 ## `borders`
 
@@ -222,6 +224,7 @@ Corner radius (in points) for each UI element.
 | `pickerRow` | `6` | Favorites picker rows. |
 | `shortcutRecordField` | `6` | Shortcut recording field in settings. |
 | `keyBadge` | `3` | Keyboard shortcut hint badges. |
+| `separator` | `6` | Named separator badges in favorites tabs. |
 | `gauge` | `1` | Paste-count gauge bar segments. |
 
 ## `spacing`
@@ -237,7 +240,8 @@ Layout spacing values (in points).
 | `contentAreaPadding` | `10` | Padding inside the scroll area. |
 | `rowSpacing` | `2` | Vertical gap between rows. |
 | `rowDetailsSpacing` | `3` | Vertical gap between the main row text and its detail lines (snippet description, app name / timestamp). Only visible when item details are enabled in Settings. |
-| `separatorThickness` | `3` | Height in points of horizontal separators in favorites tabs. |
+| `separatorThickness` | `3` | Height in points of unnamed horizontal separators in favorites tabs. |
+| `separatorInset` | `12` | Horizontal inset (padding) for separators from the content area edges. |
 
 ## `fonts`
 

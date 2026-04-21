@@ -60,6 +60,7 @@ final class AppState {
     var isRecordingItemShortcut = false
     var isEditingSnippetDescription = false
     var isEditingItemText = false
+    var isEditingSeparatorName = false
     var itemShortcutError: String?
     private(set) var itemShortcutsChangedID = 0
     private(set) var searchFocusRequestID = 0
@@ -435,11 +436,18 @@ final class AppState {
             isSeparator: true
         )
         history.insertSeparator(sep, after: item, inTab: tabName)
+        selectedHistoryItemID = sep.id
+        isEditingSeparatorName = true
     }
 
     func removeSeparator(_ item: HistoryItem) {
         guard item.isSeparator else { return }
         history.delete(item)
+    }
+
+    func setSeparatorName(_ name: String) {
+        guard let item = selectedItem, item.isSeparator else { return }
+        history.setSeparatorText(name.trimmingCharacters(in: .whitespacesAndNewlines), for: item)
     }
 
     func togglePickerMonospace() {

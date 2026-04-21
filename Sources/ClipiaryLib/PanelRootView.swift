@@ -19,6 +19,8 @@ struct PanelRootView: View {
     @FocusState private var isDescriptionFieldFocused: Bool
     @State private var itemEditText: String = ""
     @FocusState private var isItemTextEditorFocused: Bool
+    @State private var separatorNameText: String = ""
+    @FocusState private var isSeparatorNameFieldFocused: Bool
 
     var body: some View {
         VStack(spacing: theme.spacing.sectionSpacing) {
@@ -410,7 +412,7 @@ struct PanelRootView: View {
                     }
                     Group {
                         if item.isSeparator {
-                            separatorRow
+                            separatorRow(for: item)
                         } else {
                             HistoryRowView(
                                 item: item,
@@ -469,6 +471,11 @@ struct PanelRootView: View {
                                 }
                             }
                             if item.isSeparator {
+                                Button("Rename Separator") {
+                                    appState.selectedHistoryItemID = item.id
+                                    separatorNameText = item.text
+                                    appState.isEditingSeparatorName = true
+                                }
                                 Button("Remove Separator", role: .destructive) {
                                     appState.removeSeparator(item)
                                 }
@@ -515,34 +522,88 @@ struct PanelRootView: View {
             .padding(.vertical, 2)
     }
 
-    private var separatorRow: some View {
+    private func separatorRow(for item: HistoryItem) -> some View {
         let glow = theme.resolvedSeparatorGlow
-        let thickness = theme.resolvedSeparatorThickness
+        let isEditing = appState.isEditingSeparatorName && appState.selectedHistoryItemID == item.id
+        let isNamed = !item.text.isEmpty || isEditing
+
         return ZStack {
-            // Outer glow: blurred copy rendered behind the capsule, contained within the padded frame
-            if let glow {
+            if isNamed {
+                if let glow {
+                    RoundedRectangle(cornerRadius: theme.cornerRadii.separator, style: .continuous)
+                        .fill(glow.color)
+                        .blur(radius: glow.radius * 0.6)
+                        .allowsHitTesting(false)
+                }
+                if let glow, let innerColor = glow.innerColor, let innerRadius = glow.innerRadius {
+                    RoundedRectangle(cornerRadius: theme.cornerRadii.separator, style: .continuous)
+                        .fill(innerColor)
+                        .blur(radius: innerRadius * 0.5)
+                        .allowsHitTesting(false)
+                }
+                RoundedRectangle(cornerRadius: theme.cornerRadii.separator, style: .continuous)
+                    .fill(theme.resolvedSeparator)
+
+                if isEditing {
+                    TextField("Separator name", text: $separatorNameText)
+                        .font(.system(size: 10, weight: .semibold))
+                        .textFieldStyle(.plain)
+                        .multilineTextAlignment(.center)
+                        .focused($isSeparatorNameFieldFocused)
+                        .onChange(of: isSeparatorNameFieldFocused) { _, focused in
+                            if !focused, appState.isEditingSeparatorName { commitSeparatorName() }
+                        }
+                        .padding(.horizontal, 8)
+                } else {
+                    Text(item.text)
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundStyle(theme.resolvedSeparatorTextColor)
+                }
+            } else {
+                let thickness = theme.resolvedSeparatorThickness
+                if let glow {
+                    Capsule()
+                        .fill(glow.color)
+                        .frame(height: thickness)
+                        .blur(radius: glow.radius * 0.6)
+                        .allowsHitTesting(false)
+                }
+                if let glow, let innerColor = glow.innerColor, let innerRadius = glow.innerRadius {
+                    Capsule()
+                        .fill(innerColor)
+                        .frame(height: thickness)
+                        .blur(radius: innerRadius * 0.5)
+                        .allowsHitTesting(false)
+                }
                 Capsule()
-                    .fill(glow.color)
+                    .fill(theme.resolvedSeparator)
                     .frame(height: thickness)
-                    .blur(radius: glow.radius * 0.6)
-                    .allowsHitTesting(false)
             }
-            // Inner glow: tighter, brighter
-            if let glow, let innerColor = glow.innerColor, let innerRadius = glow.innerRadius {
-                Capsule()
-                    .fill(innerColor)
-                    .frame(height: thickness)
-                    .blur(radius: innerRadius * 0.5)
-                    .allowsHitTesting(false)
-            }
-            // Actual separator
-            Capsule()
-                .fill(theme.resolvedSeparator)
-                .frame(height: thickness)
         }
-        .padding(.horizontal, theme.spacing.rowHorizontalPadding + 4)
-        .padding(.vertical, 5)
+        .frame(height: isNamed ? 22 : nil)
+        .padding(.horizontal, theme.spacing.separatorInset)
+        .padding(.vertical, isNamed ? 3 : 5)
         .contentShape(Rectangle())
+        .simultaneousGesture(TapGesture(count: 2).onEnded {
+            guard !isEditing else { return }
+            appState.selectedHistoryItemID = item.id
+            separatorNameText = item.text
+            appState.isEditingSeparatorName = true
+        })
+        .onChange(of: appState.isEditingSeparatorName) { _, editing in
+            if editing, appState.selectedHistoryItemID == item.id {
+                separatorNameText = item.text
+                DispatchQueue.main.async {
+                    isSeparatorNameFieldFocused = true
+                }
+            }
+        }
+    }
+
+    private func commitSeparatorName() {
+        appState.setSeparatorName(separatorNameText)
+        appState.isEditingSeparatorName = false
+        appState.requestSearchFocus()
     }
 
     private func itemPreview(for item: HistoryItem) -> some View {

@@ -314,6 +314,8 @@ struct Theme: Codable, Sendable, Equatable {
         var searchHighlightBackgroundOpacity: Double?
         var separator: String?
         var separatorOpacity: Double?
+        var separatorTextColor: String?
+        var separatorTextOpacity: Double?
 
         static let `default` = Colors(
             accent: "#007AFF",
@@ -335,7 +337,9 @@ struct Theme: Codable, Sendable, Equatable {
             searchHighlightBackground: nil,
             searchHighlightBackgroundOpacity: 0.15,
             separator: nil,
-            separatorOpacity: nil
+            separatorOpacity: nil,
+            separatorTextColor: nil,
+            separatorTextOpacity: nil
         )
 
         init(
@@ -347,7 +351,8 @@ struct Theme: Codable, Sendable, Equatable {
             imageIndicator: String? = nil, statusReady: String? = nil, statusWarning: String? = nil,
             gaugeUnfilled: String? = nil, gaugeUnfilledOpacity: Double? = nil,
             searchHighlight: String? = nil, searchHighlightBackground: String? = nil, searchHighlightBackgroundOpacity: Double? = nil,
-            separator: String? = nil, separatorOpacity: Double? = nil
+            separator: String? = nil, separatorOpacity: Double? = nil,
+            separatorTextColor: String? = nil, separatorTextOpacity: Double? = nil
         ) {
             self.accent = accent
             self.pillBackground = pillBackground
@@ -369,6 +374,8 @@ struct Theme: Codable, Sendable, Equatable {
             self.searchHighlightBackgroundOpacity = searchHighlightBackgroundOpacity
             self.separator = separator
             self.separatorOpacity = separatorOpacity
+            self.separatorTextColor = separatorTextColor
+            self.separatorTextOpacity = separatorTextOpacity
         }
 
         init(from decoder: Decoder) throws {
@@ -394,6 +401,8 @@ struct Theme: Codable, Sendable, Equatable {
             searchHighlightBackgroundOpacity = try container.decodeIfPresent(Double.self, forKey: .searchHighlightBackgroundOpacity) ?? d.searchHighlightBackgroundOpacity
             separator = try container.decodeIfPresent(String.self, forKey: .separator)
             separatorOpacity = try container.decodeIfPresent(Double.self, forKey: .separatorOpacity)
+            separatorTextColor = try container.decodeIfPresent(String.self, forKey: .separatorTextColor)
+            separatorTextOpacity = try container.decodeIfPresent(Double.self, forKey: .separatorTextOpacity)
         }
     }
 
@@ -484,12 +493,13 @@ struct Theme: Codable, Sendable, Equatable {
         var pickerRow: CGFloat
         var shortcutRecordField: CGFloat
         var keyBadge: CGFloat
+        var separator: CGFloat
         var gauge: CGFloat
 
         static let `default` = CornerRadii(
             panel: 14, contentArea: 12, card: 10, tabBar: 10,
             row: 8, searchField: 8, tabButton: 8,
-            pickerRow: 6, shortcutRecordField: 6, keyBadge: 3, gauge: 1
+            pickerRow: 6, shortcutRecordField: 6, keyBadge: 3, separator: 6, gauge: 1
         )
 
         init(
@@ -498,13 +508,14 @@ struct Theme: Codable, Sendable, Equatable {
             row: CGFloat = Self.default.row, searchField: CGFloat = Self.default.searchField,
             tabButton: CGFloat = Self.default.tabButton, pickerRow: CGFloat = Self.default.pickerRow,
             shortcutRecordField: CGFloat = Self.default.shortcutRecordField,
-            keyBadge: CGFloat = Self.default.keyBadge, gauge: CGFloat = Self.default.gauge
+            keyBadge: CGFloat = Self.default.keyBadge, separator: CGFloat = Self.default.separator,
+            gauge: CGFloat = Self.default.gauge
         ) {
             self.panel = panel; self.contentArea = contentArea; self.card = card
             self.tabBar = tabBar; self.row = row; self.searchField = searchField
             self.tabButton = tabButton; self.pickerRow = pickerRow
             self.shortcutRecordField = shortcutRecordField
-            self.keyBadge = keyBadge; self.gauge = gauge
+            self.keyBadge = keyBadge; self.separator = separator; self.gauge = gauge
         }
 
         init(from decoder: Decoder) throws {
@@ -520,6 +531,7 @@ struct Theme: Codable, Sendable, Equatable {
             pickerRow = try container.decodeIfPresent(CGFloat.self, forKey: .pickerRow) ?? d.pickerRow
             shortcutRecordField = try container.decodeIfPresent(CGFloat.self, forKey: .shortcutRecordField) ?? d.shortcutRecordField
             keyBadge = try container.decodeIfPresent(CGFloat.self, forKey: .keyBadge) ?? d.keyBadge
+            separator = try container.decodeIfPresent(CGFloat.self, forKey: .separator) ?? d.separator
             gauge = try container.decodeIfPresent(CGFloat.self, forKey: .gauge) ?? d.gauge
         }
     }
@@ -533,13 +545,15 @@ struct Theme: Codable, Sendable, Equatable {
         var rowSpacing: CGFloat
         var rowDetailsSpacing: CGFloat
         var separatorThickness: CGFloat
+        var separatorInset: CGFloat
 
         static let `default` = Spacing(
             panelPadding: 12, sectionSpacing: 12,
             rowHorizontalPadding: 8, rowVerticalPadding: 8,
             contentAreaPadding: 10, rowSpacing: 2,
             rowDetailsSpacing: 3,
-            separatorThickness: 3
+            separatorThickness: 3,
+            separatorInset: 12
         )
 
         init(
@@ -550,12 +564,14 @@ struct Theme: Codable, Sendable, Equatable {
             contentAreaPadding: CGFloat = Self.default.contentAreaPadding,
             rowSpacing: CGFloat = Self.default.rowSpacing,
             rowDetailsSpacing: CGFloat = Self.default.rowDetailsSpacing,
-            separatorThickness: CGFloat = Self.default.separatorThickness
+            separatorThickness: CGFloat = Self.default.separatorThickness,
+            separatorInset: CGFloat = Self.default.separatorInset
         ) {
             self.panelPadding = panelPadding; self.sectionSpacing = sectionSpacing
             self.rowHorizontalPadding = rowHorizontalPadding; self.rowVerticalPadding = rowVerticalPadding
             self.contentAreaPadding = contentAreaPadding; self.rowSpacing = rowSpacing
             self.rowDetailsSpacing = rowDetailsSpacing; self.separatorThickness = separatorThickness
+            self.separatorInset = separatorInset
         }
 
         init(from decoder: Decoder) throws {
@@ -569,6 +585,7 @@ struct Theme: Codable, Sendable, Equatable {
             rowSpacing = try container.decodeIfPresent(CGFloat.self, forKey: .rowSpacing) ?? d.rowSpacing
             rowDetailsSpacing = try container.decodeIfPresent(CGFloat.self, forKey: .rowDetailsSpacing) ?? d.rowDetailsSpacing
             separatorThickness = try container.decodeIfPresent(CGFloat.self, forKey: .separatorThickness) ?? d.separatorThickness
+            separatorInset = try container.decodeIfPresent(CGFloat.self, forKey: .separatorInset) ?? d.separatorInset
         }
     }
 
@@ -1233,6 +1250,11 @@ extension Theme {
     var resolvedSeparator: Color {
         let base = Color(hex: colors.separator) ?? resolvedCardStroke
         return base.opacity(colors.separatorOpacity ?? 0.35)
+    }
+
+    var resolvedSeparatorTextColor: Color {
+        let base = Color(hex: colors.separatorTextColor) ?? resolvedTextSecondary
+        return base.opacity(colors.separatorTextOpacity ?? 1.0)
     }
 
     var resolvedSeparatorThickness: CGFloat {

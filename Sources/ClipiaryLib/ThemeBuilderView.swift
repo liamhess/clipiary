@@ -607,6 +607,11 @@ struct ThemeBuilderView: View {
                                     opacity: $editorState.theme.colors.separatorOpacity,
                                     defaultOpacity: 0.35, disabled: disabled,
                                     defaultColor: t.resolvedCardStroke, defaultLabel: "card stroke @ 35%")
+            OptionalColorOpacityRow(label: "Separator text",
+                                    hex: $editorState.theme.colors.separatorTextColor,
+                                    opacity: $editorState.theme.colors.separatorTextOpacity,
+                                    defaultOpacity: 1.0, disabled: disabled,
+                                    defaultColor: t.resolvedTextSecondary, defaultLabel: "secondary text")
         }
     }
 
@@ -657,6 +662,7 @@ struct ThemeBuilderView: View {
             RadiusRow(label: "Picker row", value: $editorState.theme.cornerRadii.pickerRow, defaultValue: d.pickerRow, disabled: disabled)
             RadiusRow(label: "Shortcut record field", value: $editorState.theme.cornerRadii.shortcutRecordField, defaultValue: d.shortcutRecordField, disabled: disabled)
             RadiusRow(label: "Key badge", value: $editorState.theme.cornerRadii.keyBadge, defaultValue: d.keyBadge, disabled: disabled)
+            RadiusRow(label: "Separator", value: $editorState.theme.cornerRadii.separator, defaultValue: d.separator, disabled: disabled)
             RadiusRow(label: "Gauge", value: $editorState.theme.cornerRadii.gauge, defaultValue: d.gauge, disabled: disabled)
         }
     }
@@ -675,6 +681,7 @@ struct ThemeBuilderView: View {
             SpacingRow(label: "Row spacing", value: $editorState.theme.spacing.rowSpacing, range: 0...10, defaultValue: d.rowSpacing, disabled: disabled)
             SpacingRow(label: "Row details spacing", value: $editorState.theme.spacing.rowDetailsSpacing, range: 0...16, defaultValue: d.rowDetailsSpacing, disabled: disabled)
             SpacingRow(label: "Separator thickness", value: $editorState.theme.spacing.separatorThickness, range: 1...8, defaultValue: d.separatorThickness, disabled: disabled)
+            SpacingRow(label: "Separator inset", value: $editorState.theme.spacing.separatorInset, range: 0...120, step: 10, defaultValue: d.separatorInset, disabled: disabled)
         }
     }
 
@@ -1453,6 +1460,7 @@ private struct SpacingRow: View {
     let label: String
     @Binding var value: CGFloat
     var range: ClosedRange<Double>
+    var step: Double = 1
     let defaultValue: CGFloat
     let disabled: Bool
 
@@ -1460,7 +1468,7 @@ private struct SpacingRow: View {
         LabeledSliderRow(
             label: label,
             value: Binding(get: { Double(value) }, set: { value = CGFloat($0) }),
-            range: range, step: 1,
+            range: range, step: step,
             format: "%.0f",
             disabled: disabled,
             trailingReset: value != defaultValue && !disabled ? { value = defaultValue } : nil,
