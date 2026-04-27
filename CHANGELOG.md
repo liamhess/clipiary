@@ -6,6 +6,7 @@
 - Theme fills: texture overlay support — any fill can now have a tiled image texture with configurable opacity and blend mode
 
 ### Fixed
+- Mouse click areas for favorite/delete buttons were misaligned
 - Drag-and-drop reorder indicator was off by one when dragging items downward
 
 ## [1.8.0] - 2026-04-17

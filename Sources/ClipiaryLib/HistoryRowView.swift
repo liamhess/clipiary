@@ -219,7 +219,7 @@ struct HistoryRowView: View, Equatable {
                         appState.history.delete(item)
                         appState.ensureSelection()
                     } label: {
-                        Image(systemName: "xmark")
+                        Text(Image(systemName: "xmark"))
                             .font(.system(size: 10, weight: .bold))
                     }
                     .buttonStyle(.plain)
@@ -279,6 +279,8 @@ struct HistoryRowView: View, Equatable {
                         .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
                 }
             }
+            .shadow(color: rowGlowColor, radius: rowGlowRadius)
+            .shadow(color: rowInnerGlowColor, radius: rowInnerGlowRadius)
         }
         .overlay {
             let border = theme.resolvedSelectedRowBorder
@@ -289,10 +291,8 @@ struct HistoryRowView: View, Equatable {
                         let duration = border.animationDuration
                         let p = min(elapsed / duration, 0.7)
                         ZStack {
-                            // Static full border always visible
                             RoundedRectangle(cornerRadius: theme.cornerRadii.row, style: .continuous)
                                 .stroke(border.color, style: border.strokeStyle)
-                            // Two bright pulses: A from top-left, B from bottom-right, meeting in the middle
                             RoundedRectangle(cornerRadius: theme.cornerRadii.row, style: .continuous)
                                 .trim(from: max(0, p - 0.2), to: min(p, 0.5))
                                 .stroke(border.color, style: StrokeStyle(lineWidth: border.width))
@@ -312,6 +312,15 @@ struct HistoryRowView: View, Equatable {
                 }
             }
         }
+        .overlay {
+            if let glow = activeGlow, let innerColor = glow.innerColor, let innerRadius = glow.innerRadius {
+                RoundedRectangle(cornerRadius: theme.cornerRadii.row, style: .continuous)
+                    .fill(innerColor.opacity(0.25))
+                    .blur(radius: innerRadius * 0.8)
+                    .blendMode(.screen)
+                    .allowsHitTesting(false)
+            }
+        }
         .onChange(of: isSelected) { _, selected in
             let border = theme.resolvedSelectedRowBorder
             if selected, border.animation == "flash" {
@@ -323,18 +332,6 @@ struct HistoryRowView: View, Equatable {
         .onAppear {
             if isSelected { appState.selectedRowAnchorView = rowNSView }
         }
-        .compositingGroup()
-        .overlay {
-            if let glow = activeGlow, let innerColor = glow.innerColor, let innerRadius = glow.innerRadius {
-                RoundedRectangle(cornerRadius: theme.cornerRadii.row, style: .continuous)
-                    .fill(innerColor.opacity(0.25))
-                    .blur(radius: innerRadius * 0.8)
-                    .blendMode(.screen)
-                    .allowsHitTesting(false)
-            }
-        }
-        .shadow(color: rowGlowColor, radius: rowGlowRadius)
-        .shadow(color: rowInnerGlowColor, radius: rowInnerGlowRadius)
         .contentShape(Rectangle())
         .simultaneousGesture(TapGesture(count: 2).onEnded {
             appState.selectedHistoryItemID = item.id
@@ -431,13 +428,14 @@ struct HistoryRowView: View, Equatable {
     }
 
     @ViewBuilder
-    private var favoriteButton: some View {        if singleFavoriteTab, let tabName = singleFavoriteTabName {
+    private var favoriteButton: some View {
+        if singleFavoriteTab, let tabName = singleFavoriteTabName {
             Button {
                 appState.selectedHistoryItemID = item.id
                 appState.toggleFavoriteTab(item, tabName: tabName)
                 appState.ensureSelection()
             } label: {
-                Image(systemName: item.isFavorite ? "star.fill" : "star")
+                Text(Image(systemName: item.isFavorite ? "star.fill" : "star"))
                     .font(.system(size: 11, weight: .medium))
             }
             .buttonStyle(.plain)
@@ -448,7 +446,7 @@ struct HistoryRowView: View, Equatable {
                 appState.selectedHistoryItemID = item.id
                 appState.toggleFavoriteSelectedItem()
             } label: {
-                Image(systemName: item.isFavorite ? "star.fill" : "star")
+                Text(Image(systemName: item.isFavorite ? "star.fill" : "star"))
                     .font(.system(size: 11, weight: .medium))
             }
             .buttonStyle(.plain)

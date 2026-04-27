@@ -88,8 +88,8 @@ struct PanelRootView: View {
                             historyGroup(title: "", items: items)
                         }
                     }
+                    .padding(theme.spacing.contentAreaPadding)
                 }
-                .contentMargins(theme.spacing.contentAreaPadding, for: .scrollContent)
                 .scrollIndicators(.hidden)
                 .onAppear { overrideScrollerStyle() }
                 .coordinateSpace(name: "scrollArea")
