@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss xmlns:ns0="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><title>Clipiary</title><item><title>Version 1.8.0</title><ns0:version>1.8.0</ns0:version><ns0:shortVersionString>1.8.0</ns0:shortVersionString><description ns0:format="markdown">### Added
-- New character count segmented bar and/or badge indicating the size of the element
-- History limit setting now has a help tooltip explaining that higher limits mostly affect search performance, and shows the current history file size
-
-### Changed
-- Themes: reworked/polished existing themes and added new ones
-- Escape now clears the search field first when search text is present, instead of closing Clipiary immediately
-- Pg Up/Down keys now scroll one page instead of only half a page
-- Preview popup now limited to 10k chars max
+<rss xmlns:ns0="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><title>Clipiary</title><item><title>Version 1.9.0</title><ns0:version>1.9.0</ns0:version><ns0:shortVersionString>1.9.0</ns0:shortVersionString><description ns0:format="markdown">### Added
+- Named separators: separators in favorites tabs can now have a text label, displayed as a full-width pill-styled badge (themeable width)
+- Theme effects: search field inner shadow setting
+- Theme fills: texture overlay support — any fill can now have a tiled image texture with configurable opacity and blend mode
 
 ### Fixed
-- Theme builder partially showed wrong initial values for undefined/defaulted properties
-</description><pubDate>Fri, 17 Apr 2026 15:22:20 +0000</pubDate><enclosure url="https://github.com/liamhess/clipiary/releases/download/v1.8.0/Clipiary-1.8.0.zip" ns0:edSignature="YurlzIYR7/gsICICEov8wCzvbgv1McyCdYS/klQ9PXTktgW0ohgoytVwnj4RZUYA8Z4XecUo065vxrjKHcXnBg==" length="3803760" type="application/octet-stream" /></item></channel></rss>
+- Mouse click areas for favorite/delete buttons were misaligned
+- Drag-and-drop reorder indicator was off by one when dragging items downward
+</description><pubDate>Mon, 27 Apr 2026 13:34:30 +0000</pubDate><enclosure url="https://github.com/liamhess/clipiary/releases/download/v1.9.0/Clipiary-1.9.0.zip" ns0:edSignature="yeXGbA1yEPJaDYPKEd15g243zD/Tq6wAdPkVHSz7a/Td79leSv0Q18Cbnn5bS0kSdfB9z1s8xe/NqWL6bt/WCw==" length="3936725" type="application/octet-stream" /></item></channel></rss>
