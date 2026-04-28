@@ -2,6 +2,52 @@ import AppKit
 import SwiftUI
 import UniformTypeIdentifiers
 
+/// Measures its content's height, then offsets it vertically so it fits within the panel.
+/// Prefers placing below the row; flips above when that would overflow; falls back to
+/// whichever side has more space.
+private struct MeasuredOffsetView<Content: View>: View {
+    let panelHeight: CGFloat
+    let rowRect: CGRect?
+    let leadingOffset: CGFloat
+    @ViewBuilder let content: Content
+
+    @State private var contentHeight: CGFloat = 0
+
+    var body: some View {
+        content
+            .background(
+                GeometryReader { geo in
+                    Color.clear.onChange(of: geo.size.height, initial: true) { _, h in
+                        contentHeight = h
+                    }
+                }
+            )
+            .offset(x: leadingOffset, y: topOffset)
+            .opacity(contentHeight > 0 ? 1 : 0)
+    }
+
+    private var topOffset: CGFloat {
+        guard let rowRect else { return panelHeight / 2 }
+        let gap: CGFloat = 4
+        let spaceBelow = panelHeight - rowRect.maxY - gap
+        let spaceAbove = rowRect.minY - gap
+
+        if contentHeight <= spaceBelow {
+            // Fits below the row
+            return rowRect.maxY + gap
+        } else if contentHeight <= spaceAbove {
+            // Fits above the row
+            return rowRect.minY - gap - contentHeight
+        } else if spaceBelow >= spaceAbove {
+            // More room below — clamp to panel bottom
+            return max(panelHeight - contentHeight, 0)
+        } else {
+            // More room above — clamp to panel top
+            return 0
+        }
+    }
+}
+
 struct PanelRootView: View {
     @Environment(AppState.self) private var appState
     @Environment(\.theme) private var theme
@@ -810,7 +856,13 @@ struct PanelRootView: View {
 
     private func favoriteTabPickerOverlay(anchor: Anchor<CGRect>?) -> some View {
         GeometryReader { geometry in
-            let (leadingOffset, topOffset) = pickerOffset(anchor: anchor, geometry: geometry)
+            let panelWidth = geometry.size.width
+            let panelHeight = geometry.size.height
+            let pickerWidth: CGFloat = 240
+            let rowRect: CGRect? = anchor.map { geometry[$0] }
+            let originX = rowRect?.midX ?? panelWidth / 2
+            let clampedX = min(max(originX, pickerWidth / 2 + 8), panelWidth - pickerWidth / 2 - 8) - pickerWidth / 2
+
             ZStack(alignment: .topLeading) {
                 ZStack {
                     Rectangle().fill(theme.resolvedOverlayFill)
@@ -825,27 +877,15 @@ struct PanelRootView: View {
                         appState.requestSearchFocus()
                     }
 
-                favoriteTabPickerContent
-                    .offset(x: leadingOffset, y: topOffset)
+                MeasuredOffsetView(
+                    panelHeight: panelHeight,
+                    rowRect: rowRect,
+                    leadingOffset: clampedX
+                ) {
+                    favoriteTabPickerContent
+                }
             }
         }
-    }
-
-    private func pickerOffset(anchor: Anchor<CGRect>?, geometry: GeometryProxy) -> (CGFloat, CGFloat) {
-        let pickerWidth: CGFloat = 240
-        let panelWidth = geometry.size.width
-        let originX: CGFloat
-        let originY: CGFloat
-        if let anchor {
-            let rowRect = geometry[anchor]
-            originX = rowRect.midX
-            originY = rowRect.maxY + 4
-        } else {
-            originX = panelWidth / 2
-            originY = geometry.size.height / 2
-        }
-        let clampedX = min(max(originX, pickerWidth / 2 + 8), panelWidth - pickerWidth / 2 - 8)
-        return (clampedX - pickerWidth / 2, originY)
     }
 
     private var favoriteTabPickerContent: some View {

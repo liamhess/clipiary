@@ -10,6 +10,7 @@
 
 ### Fixed
 - Keyboard navigation to first/last item not fully scrolling to reveal content padding
+- Favorites popup always opening below selected entry, thereby cutting it off sometimes
 
 ## [1.9.0] - 2026-04-27
 ### Added
