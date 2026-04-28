@@ -210,7 +210,7 @@ final class FloatingPanel: NSPanel {
                 }
             }
         }
-        if event.type == .keyDown, appState.showingFavoriteTabPicker, !appState.isRecordingItemShortcut, !appState.isEditingSnippetDescription, !appState.isEditingItemText {
+        if event.type == .keyDown, appState.showingFavoriteTabPicker, !appState.isRecordingItemShortcut, !appState.isEditingSnippetDescription, !appState.isEditingReferenceURL, !appState.isEditingItemText {
             let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
             if modifiers.isDisjoint(with: [.command, .option, .control]) {
                 switch event.keyCode {
@@ -226,6 +226,8 @@ final class FloatingPanel: NSPanel {
                     appState.startRecordingItemShortcut()
                 case 2: // D
                     appState.isEditingSnippetDescription = true
+                case 32: // U
+                    appState.isEditingReferenceURL = true
                 case 14: // E
                     appState.isEditingItemText = true
                 case 51: // Delete/Backspace
@@ -286,6 +288,7 @@ final class FloatingPanel: NSPanel {
             appState.showingFavoriteTabPicker = false
             appState.isRecordingItemShortcut = false
             appState.isEditingSnippetDescription = false
+            appState.isEditingReferenceURL = false
             appState.isEditingItemText = false
             appState.itemShortcutError = nil
             makeFirstResponder(nil)

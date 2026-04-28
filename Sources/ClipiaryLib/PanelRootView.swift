@@ -16,6 +16,8 @@ struct PanelRootView: View {
     @FocusState private var isDescriptionFieldFocused: Bool
     @State private var itemEditText: String = ""
     @FocusState private var isItemTextEditorFocused: Bool
+    @State private var referenceURLText: String = ""
+    @FocusState private var isReferenceURLFieldFocused: Bool
     @State private var separatorNameText: String = ""
     @FocusState private var isSeparatorNameFieldFocused: Bool
 
@@ -393,6 +395,11 @@ struct PanelRootView: View {
                                 }
                             }
                             Divider()
+                            if let urlString = item.referenceURL, let url = URL(string: urlString) {
+                                Button("Open Reference URL") {
+                                    NSWorkspace.shared.open(url)
+                                }
+                            }
                             Button(item.isFavorite ? "Remove from Favorites" : "Add to Favorites") {
                                 appState.selectedHistoryItemID = item.id
                                 appState.toggleFavoriteSelectedItem()
@@ -952,6 +959,43 @@ struct PanelRootView: View {
             Divider()
                 .padding(.vertical, 2)
 
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text("Reference URL (optional)")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    if !isReferenceURLFieldFocused {
+                        Text("U")
+                            .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(
+                                RoundedRectangle(cornerRadius: theme.cornerRadii.keyBadge, style: .continuous)
+                                    .fill(theme.resolvedPillBackground)
+                            )
+                    }
+                }
+                TextField("https://…", text: $referenceURLText)
+                    .font(.system(size: 11))
+                    .textFieldStyle(.roundedBorder)
+                    .focused($isReferenceURLFieldFocused)
+                    .onChange(of: referenceURLText) { _, newValue in
+                        appState.setReferenceURL(newValue)
+                    }
+                    .onChange(of: isReferenceURLFieldFocused) { _, focused in
+                        appState.isEditingReferenceURL = focused
+                    }
+                    .onSubmit {
+                        isReferenceURLFieldFocused = false
+                    }
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+
+            Divider()
+                .padding(.vertical, 2)
+
             HStack(spacing: 6) {
                 Image(systemName: appState.selectedItem?.isMonospace == true ? "checkmark.square" : "square")
                     .font(.system(size: 11))
@@ -1068,9 +1112,13 @@ struct PanelRootView: View {
         .onAppear {
             snippetDescriptionText = appState.selectedItem?.snippetDescription ?? ""
             itemEditText = appState.selectedItem?.text ?? ""
+            referenceURLText = appState.selectedItem?.referenceURL ?? ""
         }
         .onChange(of: appState.isEditingSnippetDescription) { _, editing in
             isDescriptionFieldFocused = editing
+        }
+        .onChange(of: appState.isEditingReferenceURL) { _, editing in
+            isReferenceURLFieldFocused = editing
         }
         .onChange(of: appState.isEditingItemText) { _, editing in
             isItemTextEditorFocused = editing
@@ -1078,6 +1126,7 @@ struct PanelRootView: View {
         .onChange(of: appState.showingFavoriteTabPicker) { _, showing in
             if !showing {
                 isDescriptionFieldFocused = false
+                isReferenceURLFieldFocused = false
                 isItemTextEditorFocused = false
             }
         }

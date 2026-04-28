@@ -209,6 +209,13 @@ final class HistoryStore {
         persist()
     }
 
+    func setReferenceURL(_ url: String?, for item: HistoryItem) {
+        guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
+        let trimmed = url?.trimmingCharacters(in: .whitespacesAndNewlines)
+        items[index].referenceURL = (trimmed?.isEmpty ?? true) ? nil : trimmed
+        persist()
+    }
+
     func setText(_ text: String, for item: HistoryItem) {
         guard let index = items.firstIndex(where: { $0.id == item.id }) else { return }
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)

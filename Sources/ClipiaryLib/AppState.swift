@@ -59,6 +59,7 @@ final class AppState {
     var favoriteTabPickerIndex = 0
     var isRecordingItemShortcut = false
     var isEditingSnippetDescription = false
+    var isEditingReferenceURL = false
     var isEditingItemText = false
     var isEditingSeparatorName = false
     var itemShortcutError: String?
@@ -458,6 +459,11 @@ final class AppState {
     func setSnippetDescription(_ description: String?) {
         guard let item = selectedItem else { return }
         history.setSnippetDescription(description, for: item)
+    }
+
+    func setReferenceURL(_ url: String?) {
+        guard let item = selectedItem else { return }
+        history.setReferenceURL(url, for: item)
     }
 
     func setItemText(_ text: String) {

@@ -238,6 +238,22 @@ struct HistoryRowView: View, Equatable {
                     .padding(.leading, 22)
             }
 
+            if let urlString = item.referenceURL, let url = URL(string: urlString) {
+                HStack(spacing: 4) {
+                    Image(systemName: "link")
+                        .font(.system(size: 9))
+                    Text(urlString)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                }
+                .font(.system(size: 10))
+                .foregroundStyle(theme.resolvedAccent)
+                .padding(.leading, 22)
+                .onTapGesture {
+                    NSWorkspace.shared.open(url)
+                }
+            }
+
             if showItemDetails {
                 HStack(spacing: 6) {
                     highlightedText(item.appName, terms: searchTerms, foreground: theme.resolvedSearchHighlight, background: theme.resolvedSearchHighlightBackground)
@@ -484,6 +500,10 @@ final class ContextMenuHandler: NSObject {
             appState.requestRawSourcePaste()
         case "favorite":
             appState.toggleFavoriteSelectedItem()
+        case "openurl":
+            if let urlString = item.referenceURL, let url = URL(string: urlString) {
+                NSWorkspace.shared.open(url)
+            }
         default:
             break
         }
@@ -513,6 +533,9 @@ func buildMenu(item: HistoryItem, appState: AppState) -> NSMenu {
         add("Paste Raw Source", tag: "raw", key: "s")
     }
     menu.addItem(.separator())
+    if item.referenceURL != nil {
+        add("Open Reference URL", tag: "openurl", key: "u")
+    }
     add(item.isFavorite ? "Remove from Favorites" : "Add to Favorites", tag: "favorite", key: "f")
 
     return menu

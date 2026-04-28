@@ -24,6 +24,7 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
     var shortcutModifiers: Int?
     var sortIndex: Double?
     var snippetDescription: String?
+    var referenceURL: String?
     var isSeparator: Bool
     var rtfData: Data?
     var htmlData: String?
@@ -51,6 +52,7 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         shortcutModifiers: Int? = nil,
         sortIndex: Double? = nil,
         snippetDescription: String? = nil,
+        referenceURL: String? = nil,
         isSeparator: Bool = false,
         rtfData: Data? = nil,
         htmlData: String? = nil
@@ -71,6 +73,7 @@ struct HistoryItem: Identifiable, Hashable, Sendable {
         self.shortcutModifiers = shortcutModifiers
         self.sortIndex = sortIndex
         self.snippetDescription = snippetDescription
+        self.referenceURL = referenceURL
         self.isSeparator = isSeparator
         self.rtfData = rtfData
         self.htmlData = htmlData
@@ -120,6 +123,7 @@ extension HistoryItem: Codable {
         case shortcutKeyCode, shortcutModifiers
         case sortIndex
         case snippetDescription
+        case referenceURL
         case isSeparator
         case rtfData
         case htmlData
@@ -142,6 +146,7 @@ extension HistoryItem: Codable {
         shortcutModifiers = try container.decodeIfPresent(Int.self, forKey: .shortcutModifiers)
         sortIndex = try container.decodeIfPresent(Double.self, forKey: .sortIndex)
         snippetDescription = try container.decodeIfPresent(String.self, forKey: .snippetDescription)
+        referenceURL = try container.decodeIfPresent(String.self, forKey: .referenceURL)
         isSeparator = (try? container.decode(Bool.self, forKey: .isSeparator)) ?? false
         rtfData = try container.decodeIfPresent(Data.self, forKey: .rtfData)
         htmlData = try container.decodeIfPresent(String.self, forKey: .htmlData)
@@ -180,6 +185,7 @@ extension HistoryItem: Codable {
         try container.encodeIfPresent(shortcutModifiers, forKey: .shortcutModifiers)
         try container.encodeIfPresent(sortIndex, forKey: .sortIndex)
         try container.encodeIfPresent(snippetDescription, forKey: .snippetDescription)
+        try container.encodeIfPresent(referenceURL, forKey: .referenceURL)
         try container.encode(isSeparator, forKey: .isSeparator)
         try container.encodeIfPresent(rtfData, forKey: .rtfData)
         try container.encodeIfPresent(htmlData, forKey: .htmlData)
