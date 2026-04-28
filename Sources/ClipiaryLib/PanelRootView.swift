@@ -915,30 +915,36 @@ struct PanelRootView: View {
             Divider()
                 .padding(.vertical, 2)
 
-            HStack(spacing: 6) {
-                TextField("Description (optional)", text: $snippetDescriptionText)
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 6) {
+                    Text("Description (optional)")
+                        .font(.system(size: 11))
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    if !isDescriptionFieldFocused {
+                        Text("D")
+                            .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(
+                                RoundedRectangle(cornerRadius: theme.cornerRadii.keyBadge, style: .continuous)
+                                    .fill(theme.resolvedPillBackground)
+                            )
+                    }
+                }
+                TextEditor(text: $snippetDescriptionText)
                     .font(.system(size: 11))
-                    .textFieldStyle(.roundedBorder)
                     .focused($isDescriptionFieldFocused)
+                    .frame(height: 60)
+                    .scrollContentBackground(.hidden)
+                    .background(Color.secondary.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
                     .onChange(of: snippetDescriptionText) { _, newValue in
                         appState.setSnippetDescription(newValue)
                     }
                     .onChange(of: isDescriptionFieldFocused) { _, focused in
                         appState.isEditingSnippetDescription = focused
                     }
-                    .onSubmit {
-                        isDescriptionFieldFocused = false
-                    }
-                if !isDescriptionFieldFocused {
-                    Text("D")
-                        .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                        .padding(.horizontal, 5)
-                        .padding(.vertical, 2)
-                        .background(
-                            RoundedRectangle(cornerRadius: theme.cornerRadii.keyBadge, style: .continuous)
-                                .fill(theme.resolvedPillBackground)
-                        )
-                }
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
@@ -1154,10 +1160,16 @@ private struct TabListView<Content: View>: View {
     var body: some View {
         ScrollViewReader { proxy in
             ScrollView {
-                LazyVStack(spacing: 12) {
-                    content()
+                VStack(spacing: 0) {
+                    Color.clear.frame(height: 0)
+                        .id("scrollEdgeTop")
+                    LazyVStack(spacing: 12) {
+                        content()
+                    }
+                    .padding(theme.spacing.contentAreaPadding)
+                    Color.clear.frame(height: 0)
+                        .id("scrollEdgeBottom")
                 }
-                .padding(theme.spacing.contentAreaPadding)
             }
             .scrollIndicators(.hidden)
             .onAppear { overrideScrollerStyle() }
@@ -1195,6 +1207,8 @@ private struct TabListView<Content: View>: View {
                         return
                     }
                     let movingDown = oldIdx.map { newIdx >= $0 } ?? false
+                    let isFirst = newIdx == items.startIndex
+                    let isLast = newIdx == items.index(before: items.endIndex)
                     let anchor: UnitPoint
                     if rect == .zero {
                         anchor = movingDown ? .bottom : .top
@@ -1206,7 +1220,13 @@ private struct TabListView<Content: View>: View {
                         return
                     }
                     withAnimation(.easeInOut(duration: 0.12)) {
-                        proxy.scrollTo(newID, anchor: anchor)
+                        if isFirst {
+                            proxy.scrollTo("scrollEdgeTop", anchor: .top)
+                        } else if isLast {
+                            proxy.scrollTo("scrollEdgeBottom", anchor: .bottom)
+                        } else {
+                            proxy.scrollTo(newID, anchor: anchor)
+                        }
                     }
                 }
             }

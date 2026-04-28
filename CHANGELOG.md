@@ -5,6 +5,10 @@
 
 ### Changed
 - Use dedicated UI lists for the different tabs for better selection/scrolling preservation
+- Bigger description field in favorites dialog
+
+### Fixed
+- Keyboard navigation to first/last item not fully scrolling to reveal content padding
 
 ## [1.9.0] - 2026-04-27
 ### Added
