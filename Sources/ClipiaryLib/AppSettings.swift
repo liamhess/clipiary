@@ -35,6 +35,7 @@ final class AppSettings {
         static let showCharCountBadge = "showCharCountBadge"
         static let showSizeBar = "showSizeBar"
         static let sizeBarScheme = "sizeBarScheme"
+        static let sizeBarThresholds = "sizeBarThresholds"
         static let alwaysShowSearch = "alwaysShowSearch"
         static let copyOnSelectBufferLimit = "copyOnSelectBufferLimit"
         static let showAppIcons = "showAppIcons"
@@ -47,6 +48,8 @@ final class AppSettings {
         static let isRichTextCaptureEnabled = "isRichTextCaptureEnabled"
         static let richTextPasteDefault = "richTextPasteDefault"
     }
+
+    static let defaultSizeBarThresholds = "100, 500, 2000, 5000, 10000"
 
     static let defaultTerminalBundleIDsString = "com.apple.Terminal, com.googlecode.iterm2, com.mitchellh.ghostty, com.microsoft.VSCode, com.jetbrains.goland"
 
@@ -127,6 +130,20 @@ final class AppSettings {
     var sizeBarScheme: String {
         didSet { defaults.set(sizeBarScheme, forKey: Keys.sizeBarScheme) }
     }
+
+    var sizeBarThresholds: String {
+        didSet { defaults.set(sizeBarThresholds, forKey: Keys.sizeBarThresholds) }
+    }
+
+    var parsedSizeBarThresholds: [Int] {
+        let parsed = sizeBarThresholds
+            .split(separator: ",")
+            .compactMap { Int($0.trimmingCharacters(in: .whitespaces)) }
+            .sorted()
+        return parsed.isEmpty ? Self.defaultSizeBarThresholdValues : parsed
+    }
+
+    static let defaultSizeBarThresholdValues: [Int] = [100, 500, 2000, 5000, 10000]
 
     var alwaysShowSearch: Bool {
         didSet { defaults.set(alwaysShowSearch, forKey: Keys.alwaysShowSearch) }
@@ -234,6 +251,7 @@ final class AppSettings {
             Keys.showCharCountBadge: false,
             Keys.showSizeBar: true,
             Keys.sizeBarScheme: "sunset",
+            Keys.sizeBarThresholds: Self.defaultSizeBarThresholds,
             Keys.alwaysShowSearch: true,
             Keys.copyOnSelectBufferLimit: 3,
             Keys.showAppIcons: true,
@@ -276,6 +294,7 @@ final class AppSettings {
         showCharCountBadge = defaults.bool(forKey: Keys.showCharCountBadge)
         showSizeBar = defaults.bool(forKey: Keys.showSizeBar)
         sizeBarScheme = defaults.string(forKey: Keys.sizeBarScheme) ?? "sunset"
+        sizeBarThresholds = defaults.string(forKey: Keys.sizeBarThresholds) ?? Self.defaultSizeBarThresholds
         alwaysShowSearch = defaults.bool(forKey: Keys.alwaysShowSearch)
         copyOnSelectBufferLimit = defaults.integer(forKey: Keys.copyOnSelectBufferLimit)
         showAppIcons = defaults.bool(forKey: Keys.showAppIcons)

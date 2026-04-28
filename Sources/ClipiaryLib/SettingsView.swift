@@ -223,6 +223,10 @@ struct SettingsView: View {
             }
 
             settingMetric(title: "Text size bar", help: "A colored bar on each item indicating its rough character count. Hover for the exact count.") {
+                SizeBarThresholdsConfigButton(sizeBarThresholds: Binding(
+                    get: { appState.settings.sizeBarThresholds },
+                    set: { appState.settings.sizeBarThresholds = $0 }
+                ))
                 Picker("", selection: Binding(
                     get: { appState.settings.sizeBarScheme },
                     set: { appState.settings.sizeBarScheme = $0 }
@@ -653,6 +657,42 @@ private struct TerminalBundleIDsConfigButton: View {
                     .font(.system(size: 11, design: .monospaced))
                     .textFieldStyle(.roundedBorder)
                 Text("Comma-separated list of app bundle identifiers.")
+                    .font(.system(size: 10))
+                    .foregroundStyle(.tertiary)
+            }
+            .padding(10)
+            .frame(width: 300)
+        }
+        .onChange(of: isShowingConfig) { _, showing in
+            if !showing {
+                NSApp.keyWindow?.makeFirstResponder(nil)
+            }
+        }
+    }
+}
+
+private struct SizeBarThresholdsConfigButton: View {
+    @Binding var sizeBarThresholds: String
+    @State private var isShowingConfig = false
+
+    var body: some View {
+        Button {
+            isShowingConfig.toggle()
+        } label: {
+            Image(systemName: "gearshape")
+                .font(.system(size: 11))
+                .foregroundStyle(.tertiary)
+        }
+        .buttonStyle(.plain)
+        .popover(isPresented: $isShowingConfig, arrowEdge: .trailing) {
+            VStack(alignment: .leading, spacing: 6) {
+                Text("Size bar thresholds")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                TextField("100, 500, 2000, 5000, 10000", text: $sizeBarThresholds)
+                    .font(.system(size: 11, design: .monospaced))
+                    .textFieldStyle(.roundedBorder)
+                Text("Comma-separated character counts for each segment.")
                     .font(.system(size: 10))
                     .foregroundStyle(.tertiary)
             }

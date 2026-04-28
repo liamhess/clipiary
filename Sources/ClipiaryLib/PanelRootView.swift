@@ -328,6 +328,7 @@ struct PanelRootView: View {
         let showItemDetails = appState.settings.showItemDetails
         let showCharCountBadge = appState.settings.showCharCountBadge
         let sizeBarScheme = appState.settings.sizeBarScheme
+        let sizeBarThresholds = appState.settings.parsedSizeBarThresholds
         let pasteCountBarScheme = appState.settings.pasteCountBarScheme
         let itemLineLimit = appState.settings.itemLineLimit
         let singleFavoriteTab = appState.configManager.favoriteTabs.count == 1
@@ -355,6 +356,7 @@ struct PanelRootView: View {
                                 showItemDetails: showItemDetails,
                                 showCharCountBadge: showCharCountBadge,
                                 sizeBarScheme: sizeBarScheme,
+                                sizeBarThresholds: sizeBarThresholds,
                                 pasteCountBarScheme: pasteCountBarScheme,
                                 singleFavoriteTab: singleFavoriteTab,
                                 singleFavoriteTabName: singleFavoriteTabName,

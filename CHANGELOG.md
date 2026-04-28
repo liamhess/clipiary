@@ -1,5 +1,8 @@
 # Changelog
 ## [Unreleased]
+### Added
+- Configurable thresholds for the text size bar segments (gear icon in settings)
+
 ### Changed
 - Use dedicated UI lists for the different tabs for better selection/scrolling preservation
 

@@ -64,6 +64,7 @@ struct HistoryRowView: View, Equatable {
     let showItemDetails: Bool
     let showCharCountBadge: Bool
     let sizeBarScheme: String
+    let sizeBarThresholds: [Int]
     let pasteCountBarScheme: String
     let singleFavoriteTab: Bool
     let singleFavoriteTabName: String?
@@ -81,6 +82,7 @@ struct HistoryRowView: View, Equatable {
         lhs.showItemDetails == rhs.showItemDetails &&
         lhs.showCharCountBadge == rhs.showCharCountBadge &&
         lhs.sizeBarScheme == rhs.sizeBarScheme &&
+        lhs.sizeBarThresholds == rhs.sizeBarThresholds &&
         lhs.pasteCountBarScheme == rhs.pasteCountBarScheme &&
         lhs.singleFavoriteTab == rhs.singleFavoriteTab &&
         lhs.singleFavoriteTabName == rhs.singleFavoriteTabName &&
@@ -412,13 +414,14 @@ struct HistoryRowView: View, Equatable {
 
     private var sizeBarGauge: some View {
         let count = item.textCount
-        let filled: Int = count >= 10_000 ? 5 : count >= 5_000 ? 4 : count >= 2_000 ? 3 : count >= 500 ? 2 : count >= 100 ? 1 : 0
-        let totalSegments = 5
+        let thresholds = sizeBarThresholds
+        let filled = thresholds.reduce(0) { $0 + (count >= $1 ? 1 : 0) }
+        let totalSegments = thresholds.count
         let colors = PasteCountBarScheme.colors(for: sizeBarScheme)
         return HStack(spacing: 1.5) {
             ForEach(0..<totalSegments, id: \.self) { index in
                 RoundedRectangle(cornerRadius: theme.cornerRadii.gauge)
-                    .fill(index < filled ? colors[index] : theme.resolvedGaugeUnfilled)
+                    .fill(index < filled ? colors[index % max(colors.count, 1)] : theme.resolvedGaugeUnfilled)
                     .frame(width: 3, height: 10)
             }
         }
