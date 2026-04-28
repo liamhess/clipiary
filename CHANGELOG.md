@@ -1,5 +1,7 @@
 # Changelog
 ## [Unreleased]
+### Changed
+- Use dedicated UI lists for the different tabs for better selection/scrolling preservation
 
 ## [1.9.0] - 2026-04-27
 ### Added

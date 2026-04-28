@@ -9,9 +9,6 @@ struct PanelRootView: View {
     @State private var draggingItemID: HistoryItem.ID?
     @State private var dropTargetIndex: Int?
     @State private var shortcutsHelpPresented = false
-    @State private var selectedRowRect: CGRect = .zero
-    @State private var scrollViewHeight: CGFloat = 0
-    @State private var renderedRowHeights: [CGFloat] = []
     @State private var snippetDescriptionText: String = ""
     @State private var searchFieldText: String = ""
     @State private var highlightTerms: [String] = []
@@ -72,100 +69,43 @@ struct PanelRootView: View {
     }
 
     private var historySection: some View {
-        let items = appState.activeItems
-
-        return VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 10) {
             searchField
                 .frame(height: appState.settings.alwaysShowSearch || !searchFieldText.isEmpty ? nil : 0)
                 .clipped()
 
-            ScrollViewReader { proxy in
-                ScrollView {
-                    LazyVStack(spacing: 12) {
+            ZStack {
+                ForEach(appState.allTabs) { tab in
+                    let items = appState.filteredItems(for: tab)
+                    TabListView(tab: tab) {
                         if items.isEmpty {
                             emptyState
                         } else {
                             historyGroup(title: "", items: items)
                         }
                     }
-                    .padding(theme.spacing.contentAreaPadding)
+                    .opacity(tab == appState.selectedTab ? 1 : 0)
+                    .allowsHitTesting(tab == appState.selectedTab)
                 }
-                .scrollIndicators(.hidden)
-                .onAppear { overrideScrollerStyle() }
-                .coordinateSpace(name: "scrollArea")
-                .background {
-                    GeometryReader { geo in
-                        Color.clear.onAppear { scrollViewHeight = geo.size.height; updatePageSize() }
-                            .onChange(of: geo.size.height) { scrollViewHeight = $1; updatePageSize() }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background {
+                let cornerRadius = theme.cornerRadii.contentArea
+                ZStack {
+                    RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                        .fill(panelFill)
+                    if theme.fills.contentArea.texture != nil {
+                        TextureOverlay(fill: theme.fills.contentArea, themesDirectory: appState.themeManager.themesDirectoryURL)
+                            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
                     }
                 }
-                .onPreferenceChange(SelectedRowRectKey.self) { rect in
-                    selectedRowRect = rect
-                    updatePageSize()
-                }
-                .onPreferenceChange(RowHeightsKey.self) { heights in
-                    renderedRowHeights = heights
-                    updatePageSize()
-                }
-                .onChange(of: appState.selectedHistoryItemID) { oldID, newID in
-                    guard let newID else { return }
-                    let items = appState.activeItems
-                    guard let newIdx = items.firstIndex(where: { $0.id == newID }) else { return }
-                    let oldIdx = oldID.flatMap { id in items.firstIndex(where: { $0.id == id }) }
-                    let movingDown = oldIdx.map { newIdx >= $0 } ?? false
-
-                    // Defer one run-loop tick so onPreferenceChange has had a chance
-                    // to update selectedRowRect with the newly selected item's rect.
-                    DispatchQueue.main.async {
-                        let rect = selectedRowRect
-                        let anchor: UnitPoint
-                        if rect == .zero {
-                            // Item not yet rendered by LazyVStack — definitely off-screen.
-                            anchor = movingDown ? .bottom : .top
-                        } else if rect.maxY > scrollViewHeight {
-                            anchor = .bottom  // below fold
-                        } else if rect.minY < 0 {
-                            anchor = .top     // above fold
-                        } else {
-                            return            // already fully visible, no scroll needed
-                        }
-                        withAnimation(.easeInOut(duration: 0.12)) {
-                            proxy.scrollTo(newID, anchor: anchor)
-                        }
-                    }
-                }
-                .overlay {
-                    if appState.isPreviewVisible, let item = appState.selectedItem {
-                        Color.clear
-                            .popover(
-                                isPresented: .constant(true),
-                                attachmentAnchor: .rect(.rect(selectedRowRect)),
-                                arrowEdge: .trailing
-                            ) {
-                                itemPreview(for: item)
-                            }
-                            .id(item.id)
-                    }
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background {
-                    let cornerRadius = theme.cornerRadii.contentArea
-                    ZStack {
-                        RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                            .fill(panelFill)
-                        if theme.fills.contentArea.texture != nil {
-                            TextureOverlay(fill: theme.fills.contentArea, themesDirectory: appState.themeManager.themesDirectoryURL)
-                                .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-                        }
-                    }
-                }
-                .innerShadow(cornerRadius: theme.cornerRadii.contentArea, shadow: theme.resolvedContentAreaInnerShadow)
-                .overlay {
-                    let border = theme.resolvedContentAreaBorder
-                    if border.isVisible {
-                        RoundedRectangle(cornerRadius: theme.cornerRadii.contentArea, style: .continuous)
-                            .stroke(border.color, style: border.strokeStyle)
-                    }
+            }
+            .innerShadow(cornerRadius: theme.cornerRadii.contentArea, shadow: theme.resolvedContentAreaInnerShadow)
+            .overlay {
+                let border = theme.resolvedContentAreaBorder
+                if border.isVisible {
+                    RoundedRectangle(cornerRadius: theme.cornerRadii.contentArea, style: .continuous)
+                        .stroke(border.color, style: border.strokeStyle)
                 }
             }
         }
@@ -230,20 +170,6 @@ struct PanelRootView: View {
         .font(.system(size: 11, weight: .medium))
         .foregroundStyle(theme.resolvedTextSecondary)
         .padding(.horizontal, 2)
-    }
-
-    private func updatePageSize() {
-        let rowHeight: CGFloat
-        if renderedRowHeights.isEmpty {
-            rowHeight = selectedRowRect.height
-        } else {
-            rowHeight = renderedRowHeights.reduce(0, +) / CGFloat(renderedRowHeights.count)
-        }
-        guard rowHeight > 0, scrollViewHeight > 0 else { return }
-        let rowSpacing = theme.spacing.rowSpacing
-        let contentPadding = theme.spacing.contentAreaPadding
-        let usable = scrollViewHeight - 2 * contentPadding + rowSpacing
-        appState.visiblePageSize = max(1, Int(usable / (rowHeight + rowSpacing)))
     }
 
     private func handleUpdateButtonPress() {
@@ -611,72 +537,6 @@ struct PanelRootView: View {
         appState.setSeparatorName(separatorNameText)
         appState.isEditingSeparatorName = false
         appState.requestSearchFocus()
-    }
-
-    private func itemPreview(for item: HistoryItem) -> some View {
-        VStack(spacing: 0) {
-            Group {
-                if item.isImage, let nsImage = appState.history.loadImage(for: item) {
-                    Image(nsImage: nsImage)
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(maxWidth: 500, maxHeight: 580)
-                        .padding(12)
-                } else {
-                    ScrollView {
-                        let previewLimit = 10_000
-                        let truncated = item.textCount > previewLimit
-                        let previewText = truncated ? String(item.text.prefix(previewLimit)) : item.text
-                        VStack(alignment: .leading, spacing: 6) {
-                            Text(previewText)
-                                .font(.system(size: 13))
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                            if truncated {
-                                Text("Preview truncated at 10k characters")
-                                    .font(.system(size: 11))
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .padding(12)
-                    }
-                }
-            }
-            if let desc = item.snippetDescription {
-                Divider()
-                Text(desc)
-                    .font(.system(size: 11))
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 8)
-            }
-            Divider()
-            HStack(spacing: 5) {
-                if let icon = appIcon(for: item.bundleID) {
-                    Image(nsImage: icon)
-                        .resizable()
-                        .frame(width: 12, height: 12)
-                        .opacity(0.6)
-                }
-                Text(item.appName)
-                Text("·").foregroundStyle(.quaternary)
-                Text(item.isImage ? "Image" : item.rtfData != nil ? "RTF" : item.htmlData != nil ? "HTML" : "Plain text")
-                Text("·").foregroundStyle(.quaternary)
-                Text(item.createdAt.formatted(date: .abbreviated, time: .shortened))
-                if !item.isImage {
-                    Text("·").foregroundStyle(.quaternary)
-                    Text("\(item.textCount.compactCharCount) chars")
-                }
-            }
-            .font(.system(size: 10, weight: .medium))
-            .foregroundStyle(.tertiary)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(.black.opacity(0.15))
-        }
-        .frame(idealWidth: 500, maxHeight: 600)
     }
 
     private var emptyState: some View {
@@ -1276,6 +1136,176 @@ struct PanelRootView: View {
         alert.addButton(withTitle: "Delete")
         alert.addButton(withTitle: "Cancel")
         return alert.runModal() == .alertFirstButtonReturn
+    }
+
+}
+
+private struct TabListView<Content: View>: View {
+    let tab: AppState.PopoverTab
+    @ViewBuilder let content: () -> Content
+    @Environment(AppState.self) private var appState
+    @Environment(\.theme) private var theme
+    @State private var selectedRowRect: CGRect = .zero
+    @State private var scrollViewHeight: CGFloat = 0
+    @State private var renderedRowHeights: [CGFloat] = []
+
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 12) {
+                    content()
+                }
+                .padding(theme.spacing.contentAreaPadding)
+            }
+            .scrollIndicators(.hidden)
+            .onAppear { overrideScrollerStyle() }
+            .coordinateSpace(name: "scrollArea")
+            .background {
+                GeometryReader { geo in
+                    Color.clear
+                        .onAppear { scrollViewHeight = geo.size.height; updatePageSize() }
+                        .onChange(of: geo.size.height) { scrollViewHeight = $1; updatePageSize() }
+                }
+            }
+            .onPreferenceChange(SelectedRowRectKey.self) { rect in
+                selectedRowRect = rect
+                updatePageSize()
+            }
+            .onPreferenceChange(RowHeightsKey.self) { heights in
+                renderedRowHeights = heights
+                updatePageSize()
+            }
+            .onChange(of: appState.selectedHistoryItemID) { oldID, newID in
+                guard tab == appState.selectedTab else { return }
+                guard let newID else { return }
+                let items = appState.activeItems
+                guard let newIdx = items.firstIndex(where: { $0.id == newID }) else { return }
+                let oldIdx = oldID.flatMap { id in items.firstIndex(where: { $0.id == id }) }
+                let isTabSwitch = oldID != nil && oldIdx == nil
+
+                DispatchQueue.main.async {
+                    let rect = selectedRowRect
+                    if isTabSwitch {
+                        if rect != .zero && rect.minY >= 0 && rect.maxY <= scrollViewHeight { return }
+                        withAnimation(.easeInOut(duration: 0.12)) {
+                            proxy.scrollTo(newID, anchor: .center)
+                        }
+                        return
+                    }
+                    let movingDown = oldIdx.map { newIdx >= $0 } ?? false
+                    let anchor: UnitPoint
+                    if rect == .zero {
+                        anchor = movingDown ? .bottom : .top
+                    } else if rect.maxY > scrollViewHeight {
+                        anchor = .bottom
+                    } else if rect.minY < 0 {
+                        anchor = .top
+                    } else {
+                        return
+                    }
+                    withAnimation(.easeInOut(duration: 0.12)) {
+                        proxy.scrollTo(newID, anchor: anchor)
+                    }
+                }
+            }
+            .overlay {
+                if tab == appState.selectedTab, appState.isPreviewVisible, let item = appState.selectedItem {
+                    Color.clear
+                        .popover(
+                            isPresented: .constant(true),
+                            attachmentAnchor: .rect(.rect(selectedRowRect)),
+                            arrowEdge: .trailing
+                        ) {
+                            itemPreview(for: item)
+                        }
+                        .id(item.id)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .transformPreference(SelectedRowAnchorKey.self) { value in
+            if tab != appState.selectedTab { value = nil }
+        }
+    }
+
+    private func updatePageSize() {
+        let rowHeight: CGFloat
+        if renderedRowHeights.isEmpty {
+            rowHeight = selectedRowRect.height
+        } else {
+            rowHeight = renderedRowHeights.reduce(0, +) / CGFloat(renderedRowHeights.count)
+        }
+        guard rowHeight > 0, scrollViewHeight > 0 else { return }
+        let rowSpacing = theme.spacing.rowSpacing
+        let contentPadding = theme.spacing.contentAreaPadding
+        let usable = scrollViewHeight - 2 * contentPadding + rowSpacing
+        appState.visiblePageSize = max(1, Int(usable / (rowHeight + rowSpacing)))
+    }
+
+    private func itemPreview(for item: HistoryItem) -> some View {
+        VStack(spacing: 0) {
+            Group {
+                if item.isImage, let nsImage = appState.history.loadImage(for: item) {
+                    Image(nsImage: nsImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fit)
+                        .frame(maxWidth: 500, maxHeight: 580)
+                        .padding(12)
+                } else {
+                    ScrollView {
+                        let previewLimit = 10_000
+                        let truncated = item.textCount > previewLimit
+                        let previewText = truncated ? String(item.text.prefix(previewLimit)) : item.text
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text(previewText)
+                                .font(.system(size: 13))
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                            if truncated {
+                                Text("Preview truncated at 10k characters")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        .padding(12)
+                    }
+                }
+            }
+            if let desc = item.snippetDescription {
+                Divider()
+                Text(desc)
+                    .font(.system(size: 11))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 8)
+            }
+            Divider()
+            HStack(spacing: 5) {
+                if let icon = appIcon(for: item.bundleID) {
+                    Image(nsImage: icon)
+                        .resizable()
+                        .frame(width: 12, height: 12)
+                        .opacity(0.6)
+                }
+                Text(item.appName)
+                Text("·").foregroundStyle(.quaternary)
+                Text(item.isImage ? "Image" : item.rtfData != nil ? "RTF" : item.htmlData != nil ? "HTML" : "Plain text")
+                Text("·").foregroundStyle(.quaternary)
+                Text(item.createdAt.formatted(date: .abbreviated, time: .shortened))
+                if !item.isImage {
+                    Text("·").foregroundStyle(.quaternary)
+                    Text("\(item.textCount.compactCharCount) chars")
+                }
+            }
+            .font(.system(size: 10, weight: .medium))
+            .foregroundStyle(.tertiary)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(.black.opacity(0.15))
+        }
+        .frame(idealWidth: 500, maxHeight: 600)
     }
 
     private func overrideScrollerStyle() {
