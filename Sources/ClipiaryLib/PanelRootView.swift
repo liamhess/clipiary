@@ -1237,6 +1237,10 @@ struct PanelRootView: View {
 
 }
 
+private final class ScrollPending {
+    var lastItemID: HistoryItem.ID? = nil
+}
+
 private struct TabListView<Content: View>: View {
     let tab: AppState.PopoverTab
     @ViewBuilder let content: () -> Content
@@ -1245,6 +1249,7 @@ private struct TabListView<Content: View>: View {
     @State private var selectedRowRect: CGRect = .zero
     @State private var scrollViewHeight: CGFloat = 0
     @State private var renderedRowHeights: [CGFloat] = []
+    @State private var scrollPending = ScrollPending()
 
     var body: some View {
         ScrollViewReader { proxy in
@@ -1273,6 +1278,10 @@ private struct TabListView<Content: View>: View {
             .onPreferenceChange(SelectedRowRectKey.self) { rect in
                 selectedRowRect = rect
                 updatePageSize()
+                if let id = scrollPending.lastItemID, rect != .zero {
+                    scrollPending.lastItemID = nil
+                    DispatchQueue.main.async { proxy.scrollTo(id, anchor: .bottom) }
+                }
             }
             .onPreferenceChange(RowHeightsKey.self) { heights in
                 renderedRowHeights = heights
@@ -1286,6 +1295,10 @@ private struct TabListView<Content: View>: View {
                 let oldIdx = oldID.flatMap { id in items.firstIndex(where: { $0.id == id }) }
                 let isTabSwitch = oldID != nil && oldIdx == nil
 
+                // Set before the async block so the reference is current when onPreferenceChange fires.
+                let isLast = !isTabSwitch && newID == items.last(where: { !$0.isSeparator })?.id
+                scrollPending.lastItemID = isLast ? newID : nil
+
                 DispatchQueue.main.async {
                     let rect = selectedRowRect
                     if isTabSwitch {
@@ -1296,8 +1309,7 @@ private struct TabListView<Content: View>: View {
                         return
                     }
                     let movingDown = oldIdx.map { newIdx >= $0 } ?? false
-                    let isFirst = newIdx == items.startIndex
-                    let isLast = newIdx == items.index(before: items.endIndex)
+                    let isFirst = newID == items.first(where: { !$0.isSeparator })?.id
                     let anchor: UnitPoint
                     if rect == .zero {
                         anchor = movingDown ? .bottom : .top
@@ -1311,6 +1323,9 @@ private struct TabListView<Content: View>: View {
                     if isFirst {
                         proxy.scrollTo("scrollEdgeTop", anchor: .top)
                     } else if isLast {
+                        // Scroll to sentinel to force LazyVStack to materialize bottom items.
+                        // onPreferenceChange(SelectedRowRectKey) fires once the item renders
+                        // and does the precise scroll to the item.
                         proxy.scrollTo("scrollEdgeBottom", anchor: .bottom)
                     } else {
                         withAnimation(.easeInOut(duration: 0.12)) {

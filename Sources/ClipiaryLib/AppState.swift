@@ -346,14 +346,12 @@ final class AppState {
 
     func moveToFirst() {
         let items = activeItems
-        guard !items.isEmpty else { return }
-        selectedHistoryItemID = items.first?.id
+        selectedHistoryItemID = items.first(where: { !$0.isSeparator })?.id
     }
 
     func moveToLast() {
         let items = activeItems
-        guard !items.isEmpty else { return }
-        selectedHistoryItemID = items.last?.id
+        selectedHistoryItemID = items.last(where: { !$0.isSeparator })?.id
     }
 
     func ensureSelection() {
