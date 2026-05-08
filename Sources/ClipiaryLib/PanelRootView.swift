@@ -1308,12 +1308,12 @@ private struct TabListView<Content: View>: View {
                     } else {
                         return
                     }
-                    withAnimation(.easeInOut(duration: 0.12)) {
-                        if isFirst {
-                            proxy.scrollTo("scrollEdgeTop", anchor: .top)
-                        } else if isLast {
-                            proxy.scrollTo("scrollEdgeBottom", anchor: .bottom)
-                        } else {
+                    if isFirst {
+                        proxy.scrollTo("scrollEdgeTop", anchor: .top)
+                    } else if isLast {
+                        proxy.scrollTo("scrollEdgeBottom", anchor: .bottom)
+                    } else {
+                        withAnimation(.easeInOut(duration: 0.12)) {
                             proxy.scrollTo(newID, anchor: anchor)
                         }
                     }
