@@ -5,10 +5,11 @@
 - Reference URL field for favorites: optionally attach a URL to any favorite item, displayed as a clickable link on the row and accessible via context menu
 
 ### Changed
-- Use dedicated UI lists for the different tabs for better selection/scrolling preservation
+- Faster tab switching and better selection/scrolling preservation
 - Bigger description field in favorites dialog
 
 ### Fixed
+- Occasional slow performance after several sleep/wake cycles
 - Keyboard navigation to first/last item not fully scrolling to reveal content padding
 - Favorites popup always opening below selected entry, thereby cutting it off sometimes
 
