@@ -722,19 +722,15 @@ struct PanelRootView: View {
 
     private func scheduleHighlightUpdate(for query: String) {
         highlightDebounceTask?.cancel()
+        highlightDebounceTask = nil
         let terms = query
             .split(separator: " ", omittingEmptySubsequences: true)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
             .filter { !$0.isEmpty }
-        guard !terms.isEmpty else {
-            highlightTerms = []
-            return
-        }
-        highlightDebounceTask = Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(10))
-            guard !Task.isCancelled else { return }
-            highlightTerms = terms
-        }
+        // Update synchronously with searchQuery so both changes land in the same SwiftUI
+        // transaction — one render pass instead of two (previously a 10ms Task.sleep caused
+        // a second full render of all visible rows per keypress).
+        highlightTerms = terms
     }
 
     private var emptyTitle: String {

@@ -1,21 +1,19 @@
 import AppKit
 import SwiftUI
 
+// Plain dictionary instead of NSCache: NSCache evicts under memory pressure (e.g. sleep/wake),
+// which causes cold NSWorkspace lookups to block body evaluation on the next open.
 @MainActor
-let appIconCache: NSCache<NSString, NSImage> = {
-    let cache = NSCache<NSString, NSImage>()
-    cache.countLimit = 100
-    return cache
-}()
+var appIconStore: [String: NSImage] = [:]
 
 @MainActor
 func appIcon(for bundleID: String?) -> NSImage? {
     guard let bundleID else { return nil }
-    let key = bundleID as NSString
-    if let cached = appIconCache.object(forKey: key) { return cached }
+    if let cached = appIconStore[bundleID] { return cached }
     guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else { return nil }
     let icon = NSWorkspace.shared.icon(forFile: url.path)
-    appIconCache.setObject(icon, forKey: key)
+    if appIconStore.count >= 300 { appIconStore.removeAll() }
+    appIconStore[bundleID] = icon
     return icon
 }
 
@@ -561,7 +559,9 @@ private struct RowNSViewCapture: NSViewRepresentable {
         DispatchQueue.main.async { onReady(v) }
         return v
     }
-    func updateNSView(_ nsView: NSView, context: Context) { onReady(nsView) }
+    // NSView identity is stable after makeNSView; calling onReady here would write @State
+    // on every update cycle, scheduling unnecessary re-renders.
+    func updateNSView(_ nsView: NSView, context: Context) {}
 }
 
 private func buildHighlightAttrs(
