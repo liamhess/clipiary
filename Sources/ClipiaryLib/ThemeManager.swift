@@ -73,7 +73,9 @@ final class ThemeManager {
     }
 
     func selectTheme(id: String) {
-        activeTheme = availableThemes.first { $0.id == id } ?? .default
+        let resolved = availableThemes.first { $0.id == id } ?? .default
+        guard resolved != activeTheme else { return }
+        activeTheme = resolved
     }
 
     /// Write a theme to disk and reload.
@@ -187,7 +189,9 @@ final class ThemeManager {
 
     private func resolveActiveTheme() {
         let currentID = activeTheme.id
-        activeTheme = availableThemes.first { $0.id == currentID } ?? .default
+        let resolved = availableThemes.first { $0.id == currentID } ?? .default
+        guard resolved != activeTheme else { return }
+        activeTheme = resolved
     }
 }
 

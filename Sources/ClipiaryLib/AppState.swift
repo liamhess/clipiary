@@ -4,6 +4,51 @@ import Observation
 
 @MainActor var debugPerfEnabled = false
 
+/// Watches the main run loop for long stalls. When debug perf is on, prints which run-loop
+/// activity (beforeSources, beforeWaiting, etc.) was bracketing the stall — narrows down
+/// whether the pause is in SwiftUI's diff/render, a Core Animation commit, or a system service.
+@MainActor
+final class MainThreadStallDetector {
+    static let shared = MainThreadStallDetector()
+    private var lastActivityTime: CFAbsoluteTime = 0
+    private var lastActivity: String = "init"
+    private var observer: CFRunLoopObserver?
+
+    func start() {
+        guard observer == nil else { return }
+        let activities: CFRunLoopActivity = [.entry, .beforeTimers, .beforeSources, .beforeWaiting, .afterWaiting, .exit]
+        observer = CFRunLoopObserverCreateWithHandler(nil, activities.rawValue, true, 0) { [weak self] _, activity in
+            guard let self else { return }
+            MainActor.assumeIsolated {
+                self.tick(activity: activity)
+            }
+        }
+        if let observer {
+            CFRunLoopAddObserver(CFRunLoopGetMain(), observer, .commonModes)
+        }
+    }
+
+    private func tick(activity: CFRunLoopActivity) {
+        let now = CFAbsoluteTimeGetCurrent()
+        let elapsed = (now - lastActivityTime) * 1000
+        if debugPerfEnabled, elapsed > 50, lastActivityTime > 0 {
+            print("[PERF] STALL \(String(format: "%.0f", elapsed))ms between \(lastActivity) and \(name(activity)), nsViewMakes=\(rowNSViewMakeCount)")
+        }
+        lastActivityTime = now
+        lastActivity = name(activity)
+    }
+
+    private func name(_ activity: CFRunLoopActivity) -> String {
+        if activity.contains(.entry) { return "entry" }
+        if activity.contains(.beforeTimers) { return "beforeTimers" }
+        if activity.contains(.beforeSources) { return "beforeSources" }
+        if activity.contains(.beforeWaiting) { return "beforeWaiting" }
+        if activity.contains(.afterWaiting) { return "afterWaiting" }
+        if activity.contains(.exit) { return "exit" }
+        return "?"
+    }
+}
+
 @MainActor
 @Observable
 final class AppState {

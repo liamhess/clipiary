@@ -9,6 +9,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     private var suppressedKeyUps = Set<UInt16>()
     private var consumeNextMenuDismissalKey = false
     private var panel: FloatingPanel?
+    private var needsPanelRebuild = false
     private var previousApp: NSRunningApplication?
     private let hotKeyManager = GlobalHotKeyManager(id: 1)
     private let quickPasteHotKeyManager = GlobalHotKeyManager(id: 2)
@@ -53,6 +54,22 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.updateStatusItem()
             }
         }
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.willSleepNotification, object: nil, queue: .main) { _ in
+            print("[PERF] --- system sleep ---")
+        }
+        NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in
+            print("[PERF] --- system wake ---")
+            // After the displays sleep/wake (especially with multiple monitors), the panel's
+            // window backing surface can go stale: Core Animation commits that normally take
+            // <1ms balloon to hundreds of ms (visible as exit→entry run-loop stalls), and only
+            // relaunching the app clears it. Swapping the SwiftUI root view's identity is not
+            // enough because the degraded surface lives at the NSWindow level, below SwiftUI.
+            // So we do the in-process equivalent of a relaunch: discard the window and build a
+            // fresh one. All meaningful state lives in AppState, so nothing is lost. Deferred to
+            // the next open so we never rebuild a visible window out from under the user.
+            self?.needsPanelRebuild = true
+        }
+        MainThreadStallDetector.shared.start()
     }
 
     public func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -141,6 +158,19 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.panelDidClose()
         }
         self.panel = panel
+    }
+
+    /// Tears down the current panel and builds a fresh one. Recovers from a stale window
+    /// backing surface after display sleep/wake (see the didWakeNotification handler). Cheap
+    /// enough to run on the open path since it only happens once per wake, while hidden.
+    private func rebuildPanel() {
+        needsPanelRebuild = false
+        let old = panel
+        panel = nil
+        old?.onClose = nil
+        old?.orderOut(nil)
+        old?.close()
+        configurePanel()
     }
 
     private func configureHotKey() {
@@ -550,6 +580,9 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc
     private func togglePopover() {
+        if needsPanelRebuild, panel?.isVisible != true {
+            rebuildPanel()
+        }
         guard let panel else {
             return
         }

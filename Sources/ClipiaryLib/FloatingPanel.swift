@@ -74,6 +74,13 @@ final class FloatingPanel: NSPanel {
         )
     }
 
+    deinit {
+        // A panel discarded by AppDelegate.rebuildPanel() must stop observing so it can't
+        // react to screen/wake notifications after being replaced.
+        NotificationCenter.default.removeObserver(self)
+        NSWorkspace.shared.notificationCenter.removeObserver(self)
+    }
+
     func toggle() {
         if isVisible {
             close()

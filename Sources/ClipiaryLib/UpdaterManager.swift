@@ -132,12 +132,12 @@ public final class UpdaterManager: NSObject, SPUUpdaterDelegate {
     /// Last update state seen from a real Sparkle check — used by cycleDebugPhase().
     var debugLastUpdateFound: (item: SUAppcastItem, state: SPUUserUpdateState?)?
 
-    var canShowDebugPreview: Bool { true }
+    var canShowDebugPreview: Bool { debugLastUpdateFound != nil }
 
     func showDebugPreview() {
-        guard let fakeItem = debugFakeAppcastItem() else { return }
-        let item = debugLastUpdateFound?.item ?? fakeItem
-        let state = debugLastUpdateFound?.state
+        guard let found = debugLastUpdateFound else { return }
+        let item = found.item
+        let state = found.state
         phase = .updateFound(item: item, state: state, reply: { choice in
             switch choice {
             case .dismiss, .skip:
@@ -165,9 +165,8 @@ public final class UpdaterManager: NSObject, SPUUpdaterDelegate {
         case .backgroundUpdateAvailable:
             phase = .checking(cancel: {})
         case .checking:
-            guard let fakeItem = debugFakeAppcastItem() else { break }
-            let (item, state) = debugLastUpdateFound ?? (fakeItem, nil)
-            phase = .updateFound(item: item, state: state, reply: { _ in })
+            guard let found = debugLastUpdateFound else { break }
+            phase = .updateFound(item: found.item, state: found.state, reply: { _ in })
             releaseNotesHTML = debugReleaseNotesHTML
         case .updateFound:
             downloadExpectedBytes = 3_126_236
@@ -195,22 +194,6 @@ public final class UpdaterManager: NSObject, SPUUpdaterDelegate {
             downloadReceivedBytes = 0
             extractionProgress = 0
         }
-    }
-
-    @available(*, deprecated)
-    private func _makeFakeAppcastItemDeprecated(props: [String: Any]) -> SUAppcastItem? {
-        var reason: NSString?
-        return SUAppcastItem(dictionary: props, relativeTo: nil, failureReason: &reason)
-    }
-
-    private func debugFakeAppcastItem() -> SUAppcastItem? {
-        let props: [String: Any] = [
-            "title": "Version 99.0.0",
-            "sparkle:version": "99.0.0",
-            "sparkle:shortVersionString": "99.0.0",
-            "enclosure": ["url": "https://example.com/Clipiary-99.0.0.zip", "length": "0"],
-        ]
-        return _makeFakeAppcastItemDeprecated(props: props)
     }
 
     private let debugReleaseNotesHTML = """

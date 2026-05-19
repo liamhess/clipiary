@@ -1,17 +1,52 @@
 import AppKit
 import SwiftUI
 
-// Plain dictionary instead of NSCache: NSCache evicts under memory pressure (e.g. sleep/wake),
-// which causes cold NSWorkspace lookups to block body evaluation on the next open.
+// Plain dictionary instead of NSCache: NSCache evicts under memory pressure (e.g. sleep/wake).
 @MainActor
-var appIconStore: [String: NSImage] = [:]
+var appIconStore: [String: CGImage] = [:]
+
+// Rasterize into a CGBitmapContext and extract the CGImage directly. Storing CGImage
+// (not NSImage) in the cache means SwiftUI's Image(decorative:scale:) gets a plain pixel
+// buffer and uploads it to Metal without going through NSImage.cgImage(forProposedRect:)
+// on every render pass, which is what causes the 100-900ms spikes on cache-hit rows.
+@MainActor
+private func prerasterize(_ image: NSImage, size: CGFloat = 32) -> CGImage? {
+    let physical = Int(size * 2)
+    guard let ctx = CGContext(
+        data: nil,
+        width: physical,
+        height: physical,
+        bitsPerComponent: 8,
+        bytesPerRow: 0,
+        space: CGColorSpaceCreateDeviceRGB(),
+        bitmapInfo: CGBitmapInfo.byteOrder32Little.rawValue | CGImageAlphaInfo.premultipliedFirst.rawValue
+    ) else { return nil }
+    let nsCtx = NSGraphicsContext(cgContext: ctx, flipped: false)
+    NSGraphicsContext.saveGraphicsState()
+    NSGraphicsContext.current = nsCtx
+    nsCtx.imageInterpolation = NSImageInterpolation.high
+    image.draw(in: NSRect(x: 0, y: 0, width: physical, height: physical))
+    NSGraphicsContext.restoreGraphicsState()
+    return ctx.makeImage()
+}
 
 @MainActor
-func appIcon(for bundleID: String?) -> NSImage? {
+func appIcon(for bundleID: String?) -> CGImage? {
     guard let bundleID else { return nil }
     if let cached = appIconStore[bundleID] { return cached }
+    let t0 = debugPerfEnabled ? CFAbsoluteTimeGetCurrent() : 0
     guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else { return nil }
-    let icon = NSWorkspace.shared.icon(forFile: url.path)
+    let raw = NSWorkspace.shared.icon(forFile: url.path)
+    if debugPerfEnabled {
+        let ms = (CFAbsoluteTimeGetCurrent() - t0) * 1000
+        print("[PERF] appIcon miss: \(bundleID) \(String(format: "%.1f", ms))ms raw=\(Int(raw.size.width))x\(Int(raw.size.height))")
+    }
+    let t1 = debugPerfEnabled ? CFAbsoluteTimeGetCurrent() : 0
+    guard let icon = prerasterize(raw) else { return nil }
+    if debugPerfEnabled {
+        let ms1 = (CFAbsoluteTimeGetCurrent() - t1) * 1000
+        print("[PERF] appIcon prerasterize: \(bundleID) \(String(format: "%.1f", ms1))ms -> \(icon.width)x\(icon.height)px")
+    }
     if appIconStore.count >= 300 { appIconStore.removeAll() }
     appIconStore[bundleID] = icon
     return icon
@@ -32,26 +67,44 @@ struct SelectedRowRectKey: PreferenceKey {
     }
 }
 
-struct RowHeightsKey: PreferenceKey {
-    static let defaultValue: [CGFloat] = []
-    static func reduce(value: inout [CGFloat], nextValue: () -> [CGFloat]) {
-        value.append(contentsOf: nextValue())
-    }
-}
-
 struct HistoryRowView: View, Equatable {
     @MainActor private static var bodyEvalCount = 0
     @MainActor private static var bodyEvalStart: CFAbsoluteTime = 0
+    @MainActor private static var lastRowStart: CFAbsoluteTime = 0
+    @MainActor private static var lastRowDesc: String = ""
+    @MainActor private static var slowRowCount = 0
 
-    @MainActor static func trackBodyEval() {
+    @MainActor static func trackBodyEval(desc: String) {
         guard debugPerfEnabled else { return }
-        if bodyEvalCount == 0 { bodyEvalStart = CFAbsoluteTimeGetCurrent() }
+        let now = CFAbsoluteTimeGetCurrent()
+        if bodyEvalCount > 0 {
+            // Time from previous row's body start to this row's body start ≈ previous row's body cost.
+            let prevMs = (now - lastRowStart) * 1000
+            if prevMs > 3 {
+                print("[PERF] slow row (\(String(format: "%.1f", prevMs))ms): \(lastRowDesc)")
+                slowRowCount += 1
+            }
+        } else {
+            bodyEvalStart = now
+            slowRowCount = 0
+        }
+        lastRowStart = now
+        lastRowDesc = desc
         bodyEvalCount += 1
         DispatchQueue.main.async {
             guard bodyEvalCount > 0 else { return }
             let ms = (CFAbsoluteTimeGetCurrent() - bodyEvalStart) * 1000
-            print("[PERF] HistoryRowView.body: \(bodyEvalCount) rows in \(String(format: "%.1f", ms))ms")
+            // Also account for the last row's cost (from its start to now).
+            let lastMs = (CFAbsoluteTimeGetCurrent() - lastRowStart) * 1000
+            if lastMs > 3 {
+                print("[PERF] slow row (\(String(format: "%.1f", lastMs))ms): \(lastRowDesc) [last]")
+                slowRowCount += 1
+            }
+            let slowSuffix = slowRowCount > 0 ? " (\(slowRowCount) slow)" : ""
+            print("[PERF] HistoryRowView.body: \(bodyEvalCount) rows in \(String(format: "%.1f", ms))ms\(slowSuffix), nsViewMakes=\(rowNSViewMakeCount)")
             bodyEvalCount = 0
+            slowRowCount = 0
+            rowNSViewMakeCount = 0
         }
     }
 
@@ -98,7 +151,11 @@ struct HistoryRowView: View, Equatable {
     @State private var lastTapDate: Date? = nil
 
     var body: some View {
-        let _ = Self.trackBodyEval()
+        let _bodyT0 = debugPerfEnabled ? CFAbsoluteTimeGetCurrent() : 0
+        let _ = Self.trackBodyEval(desc: "\(item.bundleID ?? "?") icon=\(showAppIcons) search=\(!searchTerms.isEmpty) len=\(item.displayText.count) mono=\(item.isMonospace)")
+        let _icon: CGImage? = showAppIcons ? appIcon(for: item.bundleID) : nil
+        let _iconMs = debugPerfEnabled ? (CFAbsoluteTimeGetCurrent() - _bodyT0) * 1000 : 0
+        let _ = debugPerfEnabled && _iconMs > 2 ? print("[PERF] body.icon: \(item.bundleID ?? "?") \(String(format: "%.1f", _iconMs))ms") : ()
         VStack(alignment: .leading, spacing: theme.spacing.rowDetailsSpacing) {
             HStack(alignment: .top, spacing: 8) {
                 Button {
@@ -107,8 +164,8 @@ struct HistoryRowView: View, Equatable {
                 } label: {
                     HStack(alignment: .center, spacing: 8) {
                         ZStack(alignment: .bottomTrailing) {
-                            if showAppIcons, let icon = appIcon(for: item.bundleID) {
-                                Image(nsImage: icon)
+                            if let icon = _icon {
+                                Image(decorative: icon, scale: 2.0)
                                     .resizable()
                                     .frame(width: 16, height: 16)
                             } else {
@@ -146,8 +203,7 @@ struct HistoryRowView: View, Equatable {
                                 .foregroundStyle(theme.resolvedTextPrimary)
                                 .lineLimit(itemLineLimit)
                                 .multilineTextAlignment(.leading)
-                                .shadow(color: activeTextGlow?.color ?? .clear, radius: activeTextGlow?.radius ?? 0)
-                                .shadow(color: activeTextGlow?.innerColor ?? .clear, radius: activeTextGlow?.innerRadius ?? 0)
+                                .modifier(OptionalShadow(glow: activeTextGlow))
                         }
                     }
                 }
@@ -270,9 +326,38 @@ struct HistoryRowView: View, Equatable {
         .padding(.vertical, theme.spacing.rowVerticalPadding)
         .frame(maxWidth: .infinity, alignment: .leading)
         .id(item.id)
-        .background(RowNSViewCapture { rowNSView = $0 })
-        .anchorPreference(key: SelectedRowAnchorKey.self, value: .bounds) { anchor in
-            isSelected ? anchor : nil
+        .background {
+            // Only the selected row needs an AppKit anchor NSView (for positioning the
+            // right-click context menu — see AppDelegate.showContextMenuForSelectedItem).
+            // Bridging an NSViewRepresentable into EVERY visible lazy row hosts an
+            // AppKit-backed layer per row; that layer work lands in the render/CA-commit
+            // pipeline (invisible to body timing) and balloons on the degraded compositor
+            // path after display sleep/wake. Gating on isSelected keeps at most one.
+            if isSelected {
+                // onReady is the authoritative source for the selected row's anchor:
+                // the capture only exists while isSelected, and makeNSView's async
+                // callback is the first moment the NSView is available. Setting the
+                // anchor here (rather than relying on onChange/onAppear reading
+                // rowNSView) avoids the race where isSelected flips true before the
+                // NSView has been bridged — which left selectedRowAnchorView nil and
+                // broke the Cmd+Return context menu.
+                RowNSViewCapture { view in
+                    rowNSView = view
+                    if isSelected { appState.selectedRowAnchorView = view }
+                }
+            }
+        }
+        .background {
+            // Emit the selected-row anchor ONLY for the selected row. Attaching an
+            // anchorPreference to every row (even one that returns nil) registers every row
+            // as a preference source, which forces the enclosing LazyVStack to materialize
+            // ALL filtered rows on each pass — defeating virtualization and turning a
+            // ~20-row commit into a full-list commit (the multi-hundred-ms exit→entry CA
+            // stalls). Mirrors the SelectedRowRectKey pattern below, which is lazy-friendly.
+            if isSelected {
+                Color.clear
+                    .anchorPreference(key: SelectedRowAnchorKey.self, value: .bounds) { $0 }
+            }
         }
         .background {
             if isSelected {
@@ -295,8 +380,7 @@ struct HistoryRowView: View, Equatable {
                         .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
                 }
             }
-            .shadow(color: rowGlowColor, radius: rowGlowRadius)
-            .shadow(color: rowInnerGlowColor, radius: rowInnerGlowRadius)
+            .modifier(OptionalShadow(glow: activeGlow))
         }
         .overlay {
             let border = theme.resolvedSelectedRowBorder
@@ -343,10 +427,10 @@ struct HistoryRowView: View, Equatable {
                 borderFlash = 1.0
                 withAnimation(.easeOut(duration: border.animationDuration).delay(0.05)) { borderFlash = 0 }
             }
-            if selected { appState.selectedRowAnchorView = rowNSView }
+            if selected, let v = rowNSView { appState.selectedRowAnchorView = v }
         }
         .onAppear {
-            if isSelected { appState.selectedRowAnchorView = rowNSView }
+            if isSelected, let v = rowNSView { appState.selectedRowAnchorView = v }
         }
         .contentShape(Rectangle())
         .simultaneousGesture(TapGesture(count: 2).onEnded {
@@ -365,6 +449,7 @@ struct HistoryRowView: View, Equatable {
         .onHover { hovering in
             isHovered = hovering
         }
+        .modifier(BodyEndTracker(start: _bodyT0, desc: "\(item.bundleID ?? "?")"))
     }
 
     private var rowFill: AnyShapeStyle {
@@ -387,22 +472,6 @@ struct HistoryRowView: View, Equatable {
         if isSelected { return theme.resolvedSelectedRowTextGlow }
         if isHovered { return theme.resolvedHoveredRowTextGlow }
         return nil
-    }
-
-    private var rowGlowColor: Color {
-        activeGlow?.color ?? .clear
-    }
-
-    private var rowGlowRadius: CGFloat {
-        activeGlow?.radius ?? 0
-    }
-
-    private var rowInnerGlowColor: Color {
-        activeGlow?.innerColor ?? .clear
-    }
-
-    private var rowInnerGlowRadius: CGFloat {
-        activeGlow?.innerRadius ?? 0
     }
 
     private var pasteFrequencyGauge: some View {
@@ -472,6 +541,50 @@ struct HistoryRowView: View, Equatable {
         }
     }
 
+}
+
+/// Applies up to two shadow passes only when a glow is actually configured.
+/// A plain `.shadow(color: .clear, radius: 0)` still promotes the view to a CA compositing
+/// layer — skipping it entirely for non-glowing rows eliminates hundreds of layer ops per frame.
+private struct OptionalShadow: ViewModifier {
+    let glow: Theme.ResolvedGlow?
+    func body(content: Content) -> some View {
+        if let glow {
+            content
+                .shadow(color: glow.color, radius: glow.radius)
+                .modifier(OptionalInnerShadow(glow: glow))
+        } else {
+            content
+        }
+    }
+}
+
+private struct OptionalInnerShadow: ViewModifier {
+    let glow: Theme.ResolvedGlow
+    func body(content: Content) -> some View {
+        if let innerColor = glow.innerColor, let innerRadius = glow.innerRadius {
+            content.shadow(color: innerColor, radius: innerRadius)
+        } else {
+            content
+        }
+    }
+}
+
+/// Logs body-construction time for a single row. Time captured here = SwiftUI calling body
+/// + all modifier chain construction up to this point. If `trackBodyEval` reports a row was
+/// "slow" but BodyEnd reports a fast time for it, the slowness is in SwiftUI's pipeline AFTER
+/// body returns (layout/render/diff), not in our body code.
+private struct BodyEndTracker: ViewModifier {
+    let start: CFAbsoluteTime
+    let desc: String
+    func body(content: Content) -> some View {
+        let _ = {
+            guard debugPerfEnabled else { return }
+            let ms = (CFAbsoluteTimeGetCurrent() - start) * 1000
+            if ms > 3 { print("[PERF] body.end: \(desc) \(String(format: "%.1f", ms))ms") }
+        }()
+        return content
+    }
 }
 
 @MainActor
@@ -552,9 +665,16 @@ extension Int {
     }
 }
 
+// Counts RowNSViewCapture.makeNSView calls (i.e. AppKit anchor NSViews bridged into the
+// lazy list). Printed in the render-batch summary when perf debug is on: a healthy value is
+// ~1 (only the selected row); a large value means the per-row AppKit bridge regressed.
+@MainActor
+var rowNSViewMakeCount = 0
+
 private struct RowNSViewCapture: NSViewRepresentable {
     let onReady: (NSView) -> Void
     func makeNSView(context: Context) -> NSView {
+        if debugPerfEnabled { rowNSViewMakeCount += 1 }
         let v = NSView()
         DispatchQueue.main.async { onReady(v) }
         return v
@@ -564,9 +684,17 @@ private struct RowNSViewCapture: NSViewRepresentable {
     func updateNSView(_ nsView: NSView, context: Context) {}
 }
 
+@MainActor
 private func buildHighlightAttrs(
     _ string: String, terms: [String], foreground: Color, background: Color?, glowColor: Color?
 ) -> (main: AttributedString, glow: AttributedString?) {
+    let t0 = debugPerfEnabled ? CFAbsoluteTimeGetCurrent() : 0
+    defer {
+        if debugPerfEnabled {
+            let ms = (CFAbsoluteTimeGetCurrent() - t0) * 1000
+            if ms > 1 { print("[PERF] buildHighlightAttrs: \(String(format: "%.1f", ms))ms len=\(string.count) terms=\(terms)") }
+        }
+    }
     // Fast pre-check: if no term matches at all, skip AttributedString work entirely.
     let lowered = string.lowercased()
     let hasMatch = terms.contains { lowered.range(of: $0, options: .literal) != nil }
@@ -606,7 +734,7 @@ private func buildHighlightAttrs(
     return (mainAttr, glowAttr)
 }
 
-@ViewBuilder
+@MainActor @ViewBuilder
 private func highlightedText(_ string: String, terms: [String], foreground: Color, background: Color?, textGlow: Theme.ResolvedGlow? = nil) -> some View {
     if terms.isEmpty {
         Text(string)

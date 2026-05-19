@@ -415,9 +415,6 @@ struct PanelRootView: View {
                                 appState: appState
                             )
                             .equatable()
-                            .background(GeometryReader { geo in
-                                Color.clear.preference(key: RowHeightsKey.self, value: [geo.size.height])
-                            })
                         }
                     }
                     .contextMenu {
@@ -1244,7 +1241,6 @@ private struct TabListView<Content: View>: View {
     @Environment(\.theme) private var theme
     @State private var selectedRowRect: CGRect = .zero
     @State private var scrollViewHeight: CGFloat = 0
-    @State private var renderedRowHeights: [CGFloat] = []
     @State private var scrollPending = ScrollPending()
 
     var body: some View {
@@ -1278,10 +1274,6 @@ private struct TabListView<Content: View>: View {
                     scrollPending.lastItemID = nil
                     DispatchQueue.main.async { proxy.scrollTo(id, anchor: .bottom) }
                 }
-            }
-            .onPreferenceChange(RowHeightsKey.self) { heights in
-                renderedRowHeights = heights
-                updatePageSize()
             }
             .onChange(of: appState.selectedHistoryItemID) { oldID, newID in
                 guard tab == appState.selectedTab else { return }
@@ -1351,12 +1343,10 @@ private struct TabListView<Content: View>: View {
     }
 
     private func updatePageSize() {
-        let rowHeight: CGFloat
-        if renderedRowHeights.isEmpty {
-            rowHeight = selectedRowRect.height
-        } else {
-            rowHeight = renderedRowHeights.reduce(0, +) / CGFloat(renderedRowHeights.count)
-        }
+        // Use the selected row's measured height as a representative row height. Collecting
+        // every row's height (via a per-row GeometryReader preference) forced the LazyVStack
+        // to lay out all filtered rows eagerly, which was the dominant render-time cost.
+        let rowHeight = selectedRowRect.height
         guard rowHeight > 0, scrollViewHeight > 0 else { return }
         let rowSpacing = theme.spacing.rowSpacing
         let contentPadding = theme.spacing.contentAreaPadding
@@ -1405,7 +1395,7 @@ private struct TabListView<Content: View>: View {
             Divider()
             HStack(spacing: 5) {
                 if let icon = appIcon(for: item.bundleID) {
-                    Image(nsImage: icon)
+                    Image(decorative: icon, scale: 2.0)
                         .resizable()
                         .frame(width: 12, height: 12)
                         .opacity(0.6)
