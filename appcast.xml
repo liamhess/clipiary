@@ -1,10 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<rss xmlns:ns0="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><title>Clipiary</title><item><title>Version 1.9.0</title><ns0:version>1.9.0</ns0:version><ns0:shortVersionString>1.9.0</ns0:shortVersionString><description ns0:format="markdown">### Added
-- Named separators: separators in favorites tabs can now have a text label, displayed as a full-width pill-styled badge (themeable width)
-- Theme effects: search field inner shadow setting
-- Theme fills: texture overlay support — any fill can now have a tiled image texture with configurable opacity and blend mode
+<rss xmlns:ns0="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle"><channel><title>Clipiary</title><item><title>Version 1.10.0</title><ns0:version>1.10.0</ns0:version><ns0:shortVersionString>1.10.0</ns0:shortVersionString><description ns0:format="markdown">### Added
+- Configurable thresholds for the text size bar segments (gear icon in settings)
+- Reference URL field for favorites: optionally attach a URL to any favorite item, displayed as a clickable link on the row and accessible via context menu
+- "Not for favorites" (move to top on paste) can now be limited to specific favorite tabs instead of all favorites
+
+### Changed
+- Faster tab switching and better selection/scrolling preservation
+- Bigger description field in favorites dialog
+- Reordered item details to show the date as the first element
 
 ### Fixed
-- Mouse click areas for favorite/delete buttons were misaligned
-- Drag-and-drop reorder indicator was off by one when dragging items downward
-</description><pubDate>Mon, 27 Apr 2026 13:34:30 +0000</pubDate><enclosure url="https://github.com/liamhess/clipiary/releases/download/v1.9.0/Clipiary-1.9.0.zip" ns0:edSignature="yeXGbA1yEPJaDYPKEd15g243zD/Tq6wAdPkVHSz7a/Td79leSv0Q18Cbnn5bS0kSdfB9z1s8xe/NqWL6bt/WCw==" length="3936725" type="application/octet-stream" /></item></channel></rss>
+- Occasional slow performance after several sleep/wake cycles
+- Keyboard navigation to first/last item not fully scrolling to reveal content padding
+- Favorites popup always opening below selected entry, thereby cutting it off sometimes
+</description><pubDate>Mon, 28 Sep 2026 09:36:47 +0000</pubDate><enclosure url="https://github.com/liamhess/clipiary/releases/download/v1.10.0/Clipiary-1.10.0.zip" ns0:edSignature="FmxIxAaQmjYY16RslWDNNbXPw37gITe8yT5RAk95E2PA4XbGIH4jJW658QqDvQecCen2dAXYc+0z8h40AJj4AQ==" length="4019322" type="application/octet-stream" /></item></channel></rss>

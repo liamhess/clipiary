@@ -1,5 +1,7 @@
 # Changelog
 ## [Unreleased]
+
+## [1.10.0] - 2026-09-28
 ### Added
 - Configurable thresholds for the text size bar segments (gear icon in settings)
 - Reference URL field for favorites: optionally attach a URL to any favorite item, displayed as a clickable link on the row and accessible via context menu
