@@ -3,11 +3,12 @@
 ### Added
 - Configurable thresholds for the text size bar segments (gear icon in settings)
 - Reference URL field for favorites: optionally attach a URL to any favorite item, displayed as a clickable link on the row and accessible via context menu
+- "Not for favorites" (move to top on paste) can now be limited to specific favorite tabs instead of all favorites
 
 ### Changed
-- "Not for favorites" (move to top on paste) can now be limited to specific favorite tabs instead of all favorites
 - Faster tab switching and better selection/scrolling preservation
 - Bigger description field in favorites dialog
+- Reordered item details to show the date as the first element
 
 ### Fixed
 - Occasional slow performance after several sleep/wake cycles

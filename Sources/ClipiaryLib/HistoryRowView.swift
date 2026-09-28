@@ -310,11 +310,12 @@ struct HistoryRowView: View, Equatable {
 
             if showItemDetails {
                 HStack(spacing: 6) {
-                    highlightedText(item.appName, terms: searchTerms, foreground: theme.resolvedSearchHighlight, background: theme.resolvedSearchHighlightBackground)
-                    Text(item.source == .copyOnSelect ? "(via Selection)" : "(via Clipboard)")
                     Text(Calendar.current.isDateInToday(item.createdAt)
                         ? "Today, \(item.createdAt.formatted(date: .omitted, time: .shortened))"
                         : item.createdAt.formatted(date: .abbreviated, time: .shortened))
+                    Text("·")
+                    highlightedText(item.appName, terms: searchTerms, foreground: theme.resolvedSearchHighlight, background: theme.resolvedSearchHighlightBackground)
+                    Text(item.source == .copyOnSelect ? "(via Selection)" : "(via Clipboard)")
                     Text("·  \(item.textCount.compactCharCount) chars")
                 }
                 .font(.system(size: 10, weight: .medium))
