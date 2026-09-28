@@ -986,3 +986,123 @@ func makeCaptureCoordinator(
         #expect(manager.activeTheme.name == "Custom")
     }
 }
+
+@MainActor
+@Suite struct MoveToTopSkipFavoriteTabsTests {
+    @Test func masterOffMovesFavoriteToTop() {
+        let appState = makeTestAppState()
+        appState.settings.moveToTopOnPaste = true
+        appState.settings.moveToTopSkipFavorites = false
+        let item = makeItem(favoriteTabs: ["Work"])
+        #expect(appState.shouldMoveToTopOnPaste(item) == true)
+    }
+
+    @Test func moveToTopOffNeverMoves() {
+        let appState = makeTestAppState()
+        appState.settings.moveToTopOnPaste = false
+        appState.settings.moveToTopSkipFavorites = true
+        appState.settings.moveToTopSkipFavoriteTabs = ["Work"]
+        #expect(appState.shouldMoveToTopOnPaste(makeItem(favoriteTabs: ["Work"])) == false)
+        #expect(appState.shouldMoveToTopOnPaste(makeItem()) == false)
+    }
+
+    @Test func nonFavoriteAlwaysMovesWhenEnabled() {
+        let appState = makeTestAppState()
+        appState.settings.moveToTopOnPaste = true
+        appState.settings.moveToTopSkipFavorites = true
+        appState.settings.moveToTopSkipFavoriteTabs = ["Work"]
+        #expect(appState.shouldMoveToTopOnPaste(makeItem(favoriteTabs: [])) == true)
+    }
+
+    @Test func selectedTabIsSkipped() {
+        let appState = makeTestAppState()
+        appState.settings.moveToTopOnPaste = true
+        appState.settings.moveToTopSkipFavorites = true
+        appState.settings.moveToTopSkipFavoriteTabs = ["Work"]
+        #expect(appState.shouldMoveToTopOnPaste(makeItem(favoriteTabs: ["Work"])) == false)
+    }
+
+    @Test func unselectedTabStillMoves() {
+        let appState = makeTestAppState()
+        appState.settings.moveToTopOnPaste = true
+        appState.settings.moveToTopSkipFavorites = true
+        appState.settings.moveToTopSkipFavoriteTabs = ["Work"]
+        #expect(appState.shouldMoveToTopOnPaste(makeItem(favoriteTabs: ["Personal"])) == true)
+    }
+
+    @Test func multiTabItemSkippedIfAnyTabSelected() {
+        let appState = makeTestAppState()
+        appState.settings.moveToTopOnPaste = true
+        appState.settings.moveToTopSkipFavorites = true
+        appState.settings.moveToTopSkipFavoriteTabs = ["Work"]
+        #expect(appState.shouldMoveToTopOnPaste(makeItem(favoriteTabs: ["Personal", "Work"])) == false)
+    }
+
+    @Test func emptySelectionSkipsNothing() {
+        let appState = makeTestAppState()
+        appState.settings.moveToTopOnPaste = true
+        appState.settings.moveToTopSkipFavorites = true
+        appState.settings.moveToTopSkipFavoriteTabs = []
+        #expect(appState.shouldMoveToTopOnPaste(makeItem(favoriteTabs: ["Work"])) == true)
+    }
+
+    @Test func enablingSeedsAllTabs() {
+        let appState = makeTestAppState()
+        appState.configManager.addTab(name: "Work")
+        appState.configManager.addTab(name: "Personal")
+        appState.setMoveToTopSkipFavorites(true)
+        #expect(Set(appState.settings.moveToTopSkipFavoriteTabs) == ["Work", "Personal"])
+    }
+
+    @Test func enablingKeepsExistingSelection() {
+        let appState = makeTestAppState()
+        appState.configManager.addTab(name: "Work")
+        appState.configManager.addTab(name: "Personal")
+        appState.settings.moveToTopSkipFavoriteTabs = ["Work"]
+        appState.setMoveToTopSkipFavorites(true)
+        #expect(appState.settings.moveToTopSkipFavoriteTabs == ["Work"])
+    }
+
+    @Test func migrationSeedsAllTabsWhenLegacyEnabled() {
+        let appState = makeTestAppState()
+        appState.configManager.addTab(name: "Work")
+        appState.configManager.addTab(name: "Personal")
+        appState.settings.moveToTopSkipFavorites = true
+        appState.migrateMoveToTopSkipFavoriteTabs()
+        #expect(Set(appState.settings.moveToTopSkipFavoriteTabs) == ["Work", "Personal"])
+    }
+
+    @Test func migrationNoOpWhenLegacyDisabled() {
+        let appState = makeTestAppState()
+        appState.configManager.addTab(name: "Work")
+        appState.settings.moveToTopSkipFavorites = false
+        appState.migrateMoveToTopSkipFavoriteTabs()
+        #expect(appState.settings.moveToTopSkipFavoriteTabs.isEmpty)
+    }
+
+    @Test func migrationDoesNotOverwriteConfiguredSelection() {
+        let appState = makeTestAppState()
+        appState.configManager.addTab(name: "Work")
+        appState.configManager.addTab(name: "Personal")
+        appState.settings.moveToTopSkipFavorites = true
+        appState.settings.moveToTopSkipFavoriteTabs = ["Work"]
+        appState.migrateMoveToTopSkipFavoriteTabs()
+        #expect(appState.settings.moveToTopSkipFavoriteTabs == ["Work"])
+    }
+
+    @Test func deletingTabPrunesSelection() {
+        let appState = makeTestAppState()
+        appState.configManager.addTab(name: "Work")
+        appState.settings.moveToTopSkipFavoriteTabs = ["Work", "Personal"]
+        appState.deleteFavoriteTab(name: "Work")
+        #expect(appState.settings.moveToTopSkipFavoriteTabs == ["Personal"])
+    }
+
+    @Test func renamingTabUpdatesSelection() {
+        let appState = makeTestAppState()
+        appState.configManager.addTab(name: "Work")
+        appState.settings.moveToTopSkipFavoriteTabs = ["Work"]
+        appState.renameFavoriteTab(oldName: "Work", newName: "Job")
+        #expect(appState.settings.moveToTopSkipFavoriteTabs == ["Job"])
+    }
+}

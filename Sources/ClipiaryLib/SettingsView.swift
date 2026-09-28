@@ -73,14 +73,40 @@ struct SettingsView: View {
                     set: { appState.settings.moveToTopOnPaste = $0 }
                 )
             ) {
-                settingsToggleRow(
+                settingsToggleWithDependents(
                     title: "Not for favorites",
-                    help: "Favorites are not moved to the top when pasted.",
+                    help: "Favorites in the selected tabs are not moved to the top when pasted.",
                     isOn: Binding(
                         get: { appState.settings.moveToTopSkipFavorites },
-                        set: { appState.settings.moveToTopSkipFavorites = $0 }
+                        set: { appState.setMoveToTopSkipFavorites($0) }
                     )
-                )
+                ) {
+                    if appState.configManager.favoriteTabs.isEmpty {
+                        Text("no favorite tabs yet")
+                            .font(.system(size: 10).italic())
+                            .foregroundStyle(.tertiary)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 5)
+                    } else {
+                        ForEach(appState.configManager.favoriteTabs) { tab in
+                            settingsToggleRow(
+                                title: tab.name,
+                                isOn: Binding(
+                                    get: { appState.settings.moveToTopSkipFavoriteTabs.contains(tab.name) },
+                                    set: { isOn in
+                                        var tabs = appState.settings.moveToTopSkipFavoriteTabs
+                                        if isOn {
+                                            if !tabs.contains(tab.name) { tabs.append(tab.name) }
+                                        } else {
+                                            tabs.removeAll { $0 == tab.name }
+                                        }
+                                        appState.settings.moveToTopSkipFavoriteTabs = tabs
+                                    }
+                                )
+                            )
+                        }
+                    }
+                }
             }
 
             settingMetric(title: "History limit", help: historyLimitHelp) {
@@ -795,10 +821,10 @@ final class SettingsWindowController {
             .environment(AppState.shared)
 
         let hostingView = NSHostingView(rootView: settingsView)
-        hostingView.frame = NSRect(x: 0, y: 0, width: 800, height: 700)
+        hostingView.frame = NSRect(x: 0, y: 0, width: 800, height: 720)
 
         let window = SettingsPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 800, height: 700),
+            contentRect: NSRect(x: 0, y: 0, width: 800, height: 720),
             styleMask: [.titled, .closable, .resizable],
             backing: .buffered,
             defer: false

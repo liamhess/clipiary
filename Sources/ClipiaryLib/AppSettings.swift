@@ -31,6 +31,7 @@ final class AppSettings {
         static let panelHeight = "panelHeight"
         static let moveToTopOnPaste = "moveToTopOnPaste"
         static let moveToTopSkipFavorites = "moveToTopSkipFavorites"
+        static let moveToTopSkipFavoriteTabs = "moveToTopSkipFavoriteTabs"
         static let showItemDetails = "showItemDetails"
         static let showCharCountBadge = "showCharCountBadge"
         static let showSizeBar = "showSizeBar"
@@ -113,6 +114,18 @@ final class AppSettings {
 
     var moveToTopSkipFavorites: Bool {
         didSet { defaults.set(moveToTopSkipFavorites, forKey: Keys.moveToTopSkipFavorites) }
+    }
+
+    /// Names of the favorite tabs whose items are exempt from move-to-top on paste
+    /// (only consulted when `moveToTopSkipFavorites` is on). An empty list skips nothing.
+    var moveToTopSkipFavoriteTabs: [String] {
+        didSet { defaults.set(moveToTopSkipFavoriteTabs, forKey: Keys.moveToTopSkipFavoriteTabs) }
+    }
+
+    /// True once the per-tab exemption list has been written at least once. Used to
+    /// distinguish a fresh upgrade (migrate from the old boolean) from an empty selection.
+    var moveToTopSkipFavoriteTabsConfigured: Bool {
+        defaults.object(forKey: Keys.moveToTopSkipFavoriteTabs) != nil
     }
 
     var showItemDetails: Bool {
@@ -290,6 +303,7 @@ final class AppSettings {
         panelHeight = defaults.double(forKey: Keys.panelHeight)
         moveToTopOnPaste = defaults.bool(forKey: Keys.moveToTopOnPaste)
         moveToTopSkipFavorites = defaults.bool(forKey: Keys.moveToTopSkipFavorites)
+        moveToTopSkipFavoriteTabs = defaults.stringArray(forKey: Keys.moveToTopSkipFavoriteTabs) ?? []
         showItemDetails = defaults.bool(forKey: Keys.showItemDetails)
         showCharCountBadge = defaults.bool(forKey: Keys.showCharCountBadge)
         showSizeBar = defaults.bool(forKey: Keys.showSizeBar)

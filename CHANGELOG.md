@@ -5,6 +5,7 @@
 - Reference URL field for favorites: optionally attach a URL to any favorite item, displayed as a clickable link on the row and accessible via context menu
 
 ### Changed
+- "Not for favorites" (move to top on paste) can now be limited to specific favorite tabs instead of all favorites
 - Faster tab switching and better selection/scrolling preservation
 - Bigger description field in favorites dialog
 

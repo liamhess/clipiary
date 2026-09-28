@@ -181,6 +181,7 @@ final class AppState {
         themeManager.startWatching()
         restoreMissingTabs()
         seedConfigEntries()
+        migrateMoveToTopSkipFavoriteTabs()
         history.enforceLimit(settings.historyLimit)
         permissionManager.refreshTrust()
         inputMonitoringPermissionManager.refreshTrust()
@@ -239,6 +240,7 @@ final class AppState {
         }
         configManager.deleteTab(name: name)
         history.removeTabFromAllItems(tabName: name)
+        settings.moveToTopSkipFavoriteTabs.removeAll { $0 == name }
     }
 
     func renameFavoriteTab(oldName: String, newName: String) {
@@ -247,10 +249,43 @@ final class AppState {
         }
         configManager.renameTab(oldName: oldName, newName: newName)
         history.renameTabInAllItems(oldName: oldName, newName: newName)
+        if let index = settings.moveToTopSkipFavoriteTabs.firstIndex(of: oldName) {
+            settings.moveToTopSkipFavoriteTabs[index] = newName
+        }
     }
 
     func moveFavoriteTab(from source: Int, to destination: Int) {
         configManager.moveTab(from: source, to: destination)
+    }
+
+    // MARK: - Move-to-top on paste
+
+    /// Whether pasting `item` should reorder it to the top of history.
+    /// Honors the master "move to top" toggle and the per-tab favorite exemptions.
+    func shouldMoveToTopOnPaste(_ item: HistoryItem) -> Bool {
+        guard settings.moveToTopOnPaste else { return false }
+        guard settings.moveToTopSkipFavorites, item.isFavorite else { return true }
+        return item.favoriteTabs.isDisjoint(with: Set(settings.moveToTopSkipFavoriteTabs))
+    }
+
+    /// Toggles the "Not for favorites" master. Turning it on with no tabs selected yet
+    /// seeds the exemption list with every current tab, so the feature applies to all
+    /// favorites by default (matching its historical behavior).
+    func setMoveToTopSkipFavorites(_ on: Bool) {
+        settings.moveToTopSkipFavorites = on
+        if on && settings.moveToTopSkipFavoriteTabs.isEmpty {
+            settings.moveToTopSkipFavoriteTabs = configManager.favoriteTabs.map(\.name)
+        }
+    }
+
+    /// One-time upgrade: existing users who had the old all-favorites exemption on get
+    /// every current tab pre-selected, preserving prior behavior. Runs only when the
+    /// per-tab list has never been written.
+    func migrateMoveToTopSkipFavoriteTabs() {
+        guard !settings.moveToTopSkipFavoriteTabsConfigured else { return }
+        if settings.moveToTopSkipFavorites {
+            settings.moveToTopSkipFavoriteTabs = configManager.favoriteTabs.map(\.name)
+        }
     }
 
     var historyItems: [HistoryItem] {
@@ -420,7 +455,7 @@ final class AppState {
         }
         history.markAsPasted(item)
         restore(item, plainTextOnly: plainTextOnly)
-        if settings.moveToTopOnPaste && !(settings.moveToTopSkipFavorites && item.isFavorite) {
+        if shouldMoveToTopOnPaste(item) {
             history.moveToTop(item)
         }
     }
@@ -547,7 +582,7 @@ final class AppState {
         guard let item = history.items.first(where: { $0.id == itemID }), !item.isSeparator else { return }
         history.markAsPasted(item)
         restore(item)
-        if settings.moveToTopOnPaste && !(settings.moveToTopSkipFavorites && item.isFavorite) {
+        if shouldMoveToTopOnPaste(item) {
             history.moveToTop(item)
         }
         quickPasteRequestID &+= 1
@@ -702,7 +737,7 @@ final class AppState {
         guard item.rtfData != nil || item.htmlData != nil else { return }
         history.markAsPasted(item)
         restoreRawSource(item)
-        if settings.moveToTopOnPaste && !(settings.moveToTopSkipFavorites && item.isFavorite) {
+        if shouldMoveToTopOnPaste(item) {
             history.moveToTop(item)
         }
         searchQuery = ""
@@ -715,7 +750,7 @@ final class AppState {
         guard item.rtfData != nil || item.htmlData != nil else { return }
         history.markAsPasted(item)
         restoreAsMarkdown(item)
-        if settings.moveToTopOnPaste && !(settings.moveToTopSkipFavorites && item.isFavorite) {
+        if shouldMoveToTopOnPaste(item) {
             history.moveToTop(item)
         }
         searchQuery = ""
@@ -728,7 +763,7 @@ final class AppState {
         guard let item = history.items.first(where: { !$0.isSeparator && !$0.isImage }) else { return }
         history.markAsPasted(item)
         restore(item, plainTextOnly: settings.richTextPasteDefault)
-        if settings.moveToTopOnPaste && !(settings.moveToTopSkipFavorites && item.isFavorite) {
+        if shouldMoveToTopOnPaste(item) {
             history.moveToTop(item)
         }
         quickPasteRequestID &+= 1
@@ -739,7 +774,7 @@ final class AppState {
         let item = history.items[1]
         history.markAsPasted(item)
         restore(item)
-        if settings.moveToTopOnPaste && !(settings.moveToTopSkipFavorites && item.isFavorite) {
+        if shouldMoveToTopOnPaste(item) {
             history.moveToTop(item)
         }
         quickPasteRequestID &+= 1
