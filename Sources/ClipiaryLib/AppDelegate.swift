@@ -67,7 +67,9 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
             // So we do the in-process equivalent of a relaunch: discard the window and build a
             // fresh one. All meaningful state lives in AppState, so nothing is lost. Deferred to
             // the next open so we never rebuild a visible window out from under the user.
-            self?.needsPanelRebuild = true
+            Task { @MainActor [weak self] in
+                self?.needsPanelRebuild = true
+            }
         }
         MainThreadStallDetector.shared.start()
     }
