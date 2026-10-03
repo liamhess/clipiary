@@ -78,9 +78,20 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     public func applicationDidResignActive(_ notification: Notification) {
-        if isPanelVisible {
+        if isPanelVisible, !isMouseOverStatusItem() {
             panel?.close()
         }
+    }
+
+    /// True when the pointer is currently over the menu bar status item button. Used to suppress
+    /// the auto-close-on-resign paths when the resignation is caused by clicking the status item
+    /// itself: otherwise the panel closes here, and the subsequent click handler sees a hidden
+    /// panel and reopens it — so a second click on the menu bar item would never close the panel.
+    private func isMouseOverStatusItem() -> Bool {
+        guard let button = statusItem.button, let window = button.window else { return false }
+        let rectInWindow = button.convert(button.bounds, to: nil)
+        let screenRect = window.convertToScreen(rectInWindow)
+        return screenRect.contains(NSEvent.mouseLocation)
     }
 
     private func updateStatusItem() {

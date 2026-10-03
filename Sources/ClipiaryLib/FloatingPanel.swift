@@ -177,6 +177,19 @@ final class FloatingPanel: NSPanel {
         if frame.insetBy(dx: -6, dy: -6).contains(mouseLocation) {
             return
         }
+        // Don't close if the user clicked the status bar button itself. The panel
+        // loses key before statusItemClicked runs; closing here would make the
+        // click handler see a hidden panel and immediately reopen it, so a second
+        // click on the menu bar item would never close the panel. Let the click
+        // handler's toggle be the single source of truth instead.
+        if let statusBarButton,
+           let buttonWindow = statusBarButton.window {
+            let rectInWindow = statusBarButton.convert(statusBarButton.bounds, to: nil)
+            let screenRect = buttonWindow.convertToScreen(rectInWindow)
+            if screenRect.contains(mouseLocation) {
+                return
+            }
+        }
         close()
     }
 

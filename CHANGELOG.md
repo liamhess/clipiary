@@ -1,5 +1,7 @@
 # Changelog
 ## [Unreleased]
+### Fixed
+- Clicking the menu bar icon while Clipiary is open now closes it instead of reopening it
 
 ## [1.10.0] - 2026-09-28
 ### Added
