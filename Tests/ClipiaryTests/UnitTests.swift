@@ -795,6 +795,162 @@ func makeCaptureCoordinator(
         #expect(tabNames.contains("fav:Snippets"))
         #expect(tabNames.contains("fav:Shell"))
     }
+
+    @Test func filteredItemsIsCaseInsensitive() {
+        let appState = makeTestAppState()
+        appState.history.add(makeItem(text: "Kubernetes Cluster"), limit: 100)
+        appState.searchQuery = "KUBERNETES cluster"
+        #expect(appState.filteredItems().count == 1)
+    }
+
+    @Test func filteredItemsMatchesNonASCII() {
+        let appState = makeTestAppState()
+        appState.history.add(makeItem(text: "Grüße aus Walldorf 🚀"), limit: 100)
+        appState.history.add(makeItem(text: "plain ascii"), limit: 100)
+        appState.searchQuery = "GRÜSSE"
+        #expect(appState.filteredItems().isEmpty) // no Unicode folding: ß != ss
+        appState.searchQuery = "GRÜ"
+        #expect(appState.filteredItems().map(\.text) == ["Grüße aus Walldorf 🚀"])
+        appState.searchQuery = "🚀"
+        #expect(appState.filteredItems().count == 1)
+    }
+
+    @Test func filteredItemsWidensAgainOnBackspace() {
+        let appState = makeTestAppState()
+        appState.history.add(makeItem(text: "alpha"), limit: 100)
+        appState.history.add(makeItem(text: "alphabet"), limit: 100)
+        appState.history.add(makeItem(text: "beta"), limit: 100)
+        appState.searchQuery = "a"
+        #expect(appState.filteredItems().count == 3)
+        appState.searchQuery = "alphab"
+        #expect(appState.filteredItems().count == 1)
+        appState.searchQuery = "alph"
+        #expect(appState.filteredItems().count == 2)
+        appState.searchQuery = ""
+        #expect(appState.filteredItems().count == 3)
+    }
+
+    @Test func filteredItemsReflectsMutationsWithUnchangedQuery() {
+        let appState = makeTestAppState()
+        appState.history.add(makeItem(text: "hello one"), limit: 100)
+        appState.searchQuery = "hello"
+        #expect(appState.filteredItems().count == 1)
+        #expect(appState.historyItems.count == 1)
+        appState.history.add(makeItem(text: "hello two"), limit: 100)
+        #expect(appState.filteredItems().count == 2)
+        #expect(appState.historyItems.count == 2)
+    }
+
+    @Test func tabResultsReflectFavoriteToggle() {
+        let appState = makeTestAppState()
+        appState.configManager.load()
+        let item = makeItem(text: "snippet")
+        appState.history.add(item, limit: 100)
+        #expect(appState.favoriteItems(for: "Favorites").isEmpty)
+        appState.history.toggleFavoriteTab(item, tabName: "Favorites")
+        #expect(appState.favoriteItems(for: "Favorites").count == 1)
+    }
+}
+
+// MARK: - Filtering Performance Tests
+
+/// Regression guard for search latency. The synthetic history mirrors a real heavy-use
+/// profile: 2,500 items, median ~50 chars, but ~2% of items are huge (log dumps, files)
+/// and hold the bulk of the ~8.6M chars — so non-narrowing queries scan everything.
+@MainActor
+@Suite struct FilteringPerformanceTests {
+    static func makeLargeHistoryAppState() throws -> AppState {
+        let appState = makeTestAppState()
+        let words = ["deploy", "cluster", "shoot", "seed", "garden", "node", "pod", "config", "etcd", "worker"]
+        var items: [HistoryItem] = []
+        let base = Date(timeIntervalSince1970: 1_700_000_000)
+        for i in 0..<2_500 {
+            let text: String
+            switch i % 50 {
+            case 0:
+                // ~130k chars each, two of them ~1.6M (~9M chars total)
+                let lines = i < 100 ? 50_000 : 4_000
+                text = (0..<lines).map { "\(words[$0 % words.count]) line \($0) value=\($0 &* 7919) ok" }.joined(separator: "\n")
+            case 1...5:
+                text = (0..<40).map { "\(words[($0 + i) % words.count]) \($0)" }.joined(separator: " ")
+            default:
+                text = "\(words[i % words.count]) item \(i)"
+            }
+            items.append(makeItem(text: text, appName: "App\(i % 7)", createdAt: base.addingTimeInterval(Double(i))))
+        }
+        let dir = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        try encoder.encode(items).write(to: dir.appending(path: "history.json"))
+        let store = HistoryStore(storageDirectory: dir)
+        store.load()
+        return AppState(
+            settings: appState.settings,
+            history: store,
+            configManager: ConfigManager(storageDirectory: dir),
+            permissionManager: AccessibilityPermissionManager(),
+            themeManager: ThemeManager(storageDirectory: dir)
+        )
+    }
+
+    /// Simulates typing a query that never narrows (no hits), then backspacing it away,
+    /// reading the History tab after every keystroke like the panel does.
+    @Test func typingAndBackspacingStaysFast() throws {
+        let appState = try Self.makeLargeHistoryAppState()
+        #expect(appState.history.items.count == 2_500)
+        let query = "zqxv"
+        var steps: [String] = (1...query.count).map { String(query.prefix($0)) }
+        steps += steps.reversed().dropFirst() + [""]
+
+        let clock = ContinuousClock()
+        var worst = Duration.zero
+        let total = clock.measure {
+            for step in steps {
+                let d = clock.measure {
+                    appState.searchQuery = step
+                    _ = appState.historyItems
+                    _ = appState.activeItems
+                }
+                worst = max(worst, d)
+            }
+        }
+        print("[PERF-TEST] \(steps.count) keystrokes: total=\(total), worst=\(worst)")
+        // Before optimization: ~60ms per non-narrowing keystroke on an M-series Mac.
+        #expect(worst < .milliseconds(30), "worst keystroke took \(worst)")
+    }
+
+    /// Every query is unrelated to the previous ones, so no cache or prefix narrowing helps:
+    /// measures the raw full-history scan.
+    @Test func coldFullScanStaysFast() throws {
+        let appState = try Self.makeLargeHistoryAppState()
+        let queries = ["zq", "kube", "xyzxyzqq", "value=9", "wq", "nope"]
+        let clock = ContinuousClock()
+        var worst = Duration.zero
+        for query in queries {
+            let d = clock.measure {
+                appState.searchQuery = query
+                _ = appState.historyItems
+            }
+            worst = max(worst, d)
+        }
+        print("[PERF-TEST] cold full scan: worst=\(worst)")
+        // Before optimization: ~60ms (Foundation range(of:) over ~9M chars).
+        #expect(worst < .milliseconds(30), "worst full scan took \(worst)")
+    }
+
+    @Test func largeHistoryFilterResultsAreCorrect() throws {
+        let appState = try Self.makeLargeHistoryAppState()
+        appState.searchQuery = "etcd"
+        let etcd = appState.historyItems.count
+        appState.searchQuery = "etcd value=7919"
+        let narrowed = appState.historyItems
+        #expect(etcd > narrowed.count && !narrowed.isEmpty)
+        #expect(narrowed.allSatisfy { $0.text.contains("value=7919") })
+        #expect(zip(narrowed, narrowed.dropFirst()).allSatisfy { $0.createdAt >= $1.createdAt })
+        appState.searchQuery = "APP3"
+        #expect(appState.historyItems.count == (0..<2_500).filter { $0 % 7 == 3 }.count)
+    }
 }
 
 // MARK: - Theme Tests

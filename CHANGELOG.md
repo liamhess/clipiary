@@ -1,5 +1,8 @@
 # Changelog
 ## [Unreleased]
+### Changed
+- Much faster search filtering on large histories, especially when entries contain very long text
+
 ### Fixed
 - Clicking the menu bar icon while Clipiary is open now closes it instead of reopening it
 

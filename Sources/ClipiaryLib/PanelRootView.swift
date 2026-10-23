@@ -59,6 +59,10 @@ struct PanelRootView: View {
     @State private var searchFieldText: String = ""
     @State private var highlightTerms: [String] = []
     @State private var highlightDebounceTask: Task<Void, Never>?
+    /// Last rendered content of hidden tabs, keyed by tab id. While typing, hidden tabs keep
+    /// showing this snapshot instead of re-filtering and re-rendering on every keystroke;
+    /// a tab goes live again as soon as it is selected.
+    @State private var frozenHiddenTabs: [String: TabSnapshot] = [:]
     @FocusState private var isDescriptionFieldFocused: Bool
     @State private var itemEditText: String = ""
     @FocusState private var isItemTextEditorFocused: Bool
@@ -124,19 +128,31 @@ struct PanelRootView: View {
 
             ZStack {
                 ForEach(appState.allTabs) { tab in
-                    let items = appState.filteredItems(for: tab)
+                    let snapshot = (tab == appState.selectedTab ? nil : frozenHiddenTabs[tab.id])
+                        ?? liveSnapshot(for: tab)
                     TabListView(tab: tab) {
-                        if items.isEmpty {
+                        if snapshot.items.isEmpty {
                             emptyState
                         } else {
-                            historyGroup(title: "", items: items)
+                            historyGroup(title: "", items: snapshot.items, searchTerms: snapshot.searchTerms)
                         }
                     }
                     .opacity(tab == appState.selectedTab ? 1 : 0)
                     .allowsHitTesting(tab == appState.selectedTab)
+                    .environment(\.perfTabName, tab.displayName)
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .onChange(of: appState.selectedTab) { _, newTab in
+                // Rendering already ignores the snapshot for the selected tab; dropping it
+                // makes the tab re-freeze from fresh content when it is hidden again.
+                frozenHiddenTabs[newTab.id] = nil
+            }
+            .onChange(of: appState.searchQuery) { _, query in
+                // Freezing only matters while typing. Once the search is cleared (by any
+                // path), hidden tabs go live again so other edits show up in them.
+                if query.isEmpty { frozenHiddenTabs = [:] }
+            }
             .background {
                 let cornerRadius = theme.cornerRadii.contentArea
                 ZStack {
@@ -316,6 +332,7 @@ struct PanelRootView: View {
             TextField("Search clipboard history", text: Binding(
                 get: { searchFieldText },
                 set: { newValue in
+                    freezeHiddenTabs()
                     searchFieldText = newValue
                     appState.searchQuery = newValue
                     scheduleHighlightUpdate(for: newValue)
@@ -370,7 +387,7 @@ struct PanelRootView: View {
         .innerShadow(cornerRadius: theme.cornerRadii.searchField, shadow: theme.resolvedSearchFieldInnerShadow)
     }
 
-    private func historyGroup(title: String, items: [HistoryItem]) -> some View {
+    private func historyGroup(title: String, items: [HistoryItem], searchTerms: [String]) -> some View {
         let maxPasteCount = max(items.map(\.pasteCount).max() ?? 1, 1)
         let showAppIcons = appState.settings.showAppIcons
         let showItemDetails = appState.settings.showItemDetails
@@ -384,7 +401,6 @@ struct PanelRootView: View {
         let selectedID = appState.selectedHistoryItemID
         let showingPicker = appState.showingFavoriteTabPicker
         let showFavoriteTabBadges = appState.settings.showFavoriteTabBadges && appState.selectedTab.kind == .history
-        let searchTerms = highlightTerms
 
         return LazyVStack(spacing: theme.spacing.rowSpacing) {
             ForEach(Array(items.enumerated()), id: \.element.id) { index, item in
@@ -714,6 +730,18 @@ struct PanelRootView: View {
             return "Copy something, or enable copy-on-select to capture highlighted text."
         case .favorites(let name):
             return "Mark items as \(name) so they stay separate from the stream."
+        }
+    }
+
+    private func liveSnapshot(for tab: AppState.PopoverTab) -> TabSnapshot {
+        TabSnapshot(items: appState.filteredItems(for: tab), searchTerms: highlightTerms)
+    }
+
+    /// Captures what hidden tabs currently show, before the query changes. Tabs already
+    /// frozen keep their earlier snapshot, so they stay untouched for the whole search.
+    private func freezeHiddenTabs() {
+        for tab in appState.allTabs where tab != appState.selectedTab && frozenHiddenTabs[tab.id] == nil {
+            frozenHiddenTabs[tab.id] = liveSnapshot(for: tab)
         }
     }
 
@@ -1232,6 +1260,11 @@ struct PanelRootView: View {
 
 private final class ScrollPending {
     var lastItemID: HistoryItem.ID? = nil
+}
+
+private struct TabSnapshot {
+    let items: [HistoryItem]
+    let searchTerms: [String]
 }
 
 private struct TabListView<Content: View>: View {

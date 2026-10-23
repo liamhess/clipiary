@@ -73,9 +73,12 @@ struct HistoryRowView: View, Equatable {
     @MainActor private static var lastRowStart: CFAbsoluteTime = 0
     @MainActor private static var lastRowDesc: String = ""
     @MainActor private static var slowRowCount = 0
+    @MainActor private static var rowsByTab: [String: Int] = [:]
 
-    @MainActor static func trackBodyEval(desc: String) {
+    @MainActor static func trackBodyEval(tab: String, appState: AppState, desc: String) {
         guard debugPerfEnabled else { return }
+        let desc = "[\(tab)] \(desc)"
+        rowsByTab[tab, default: 0] += 1
         let now = CFAbsoluteTimeGetCurrent()
         if bodyEvalCount > 0 {
             // Time from previous row's body start to this row's body start ≈ previous row's body cost.
@@ -101,8 +104,14 @@ struct HistoryRowView: View, Equatable {
                 slowRowCount += 1
             }
             let slowSuffix = slowRowCount > 0 ? " (\(slowRowCount) slow)" : ""
-            print("[PERF] HistoryRowView.body: \(bodyEvalCount) rows in \(String(format: "%.1f", ms))ms\(slowSuffix), nsViewMakes=\(rowNSViewMakeCount)")
+            // Read outside body so it doesn't become an observation dependency of the rows.
+            let selectedTab = appState.selectedTab.displayName
+            let tabBreakdown = rowsByTab.sorted { $0.key < $1.key }
+                .map { "\($0.key)\($0.key == selectedTab ? "" : " (hidden)")=\($0.value)" }
+                .joined(separator: " ")
+            print("[PERF] HistoryRowView.body: \(bodyEvalCount) rows in \(String(format: "%.1f", ms))ms\(slowSuffix), nsViewMakes=\(rowNSViewMakeCount), tabs: \(tabBreakdown)")
             bodyEvalCount = 0
+            rowsByTab.removeAll()
             slowRowCount = 0
             rowNSViewMakeCount = 0
         }
@@ -144,6 +153,7 @@ struct HistoryRowView: View, Equatable {
     }
 
     @Environment(\.theme) private var theme
+    @Environment(\.perfTabName) private var perfTabName
     @State private var isHovered = false
     @State private var borderFlash: Double = 0
     @State private var sweepStartDate: Date? = nil
@@ -152,7 +162,7 @@ struct HistoryRowView: View, Equatable {
 
     var body: some View {
         let _bodyT0 = debugPerfEnabled ? CFAbsoluteTimeGetCurrent() : 0
-        let _ = Self.trackBodyEval(desc: "\(item.bundleID ?? "?") icon=\(showAppIcons) search=\(!searchTerms.isEmpty) len=\(item.displayText.count) mono=\(item.isMonospace)")
+        let _ = Self.trackBodyEval(tab: perfTabName, appState: appState, desc: "\(item.bundleID ?? "?") icon=\(showAppIcons) search=\(!searchTerms.isEmpty) len=\(item.displayText.count) mono=\(item.isMonospace)")
         let _icon: CGImage? = showAppIcons ? appIcon(for: item.bundleID) : nil
         let _iconMs = debugPerfEnabled ? (CFAbsoluteTimeGetCurrent() - _bodyT0) * 1000 : 0
         let _ = debugPerfEnabled && _iconMs > 2 ? print("[PERF] body.icon: \(item.bundleID ?? "?") \(String(format: "%.1f", _iconMs))ms") : ()

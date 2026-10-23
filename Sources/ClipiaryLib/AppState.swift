@@ -2,7 +2,39 @@ import AppKit
 import Foundation
 import Observation
 
-@MainActor var debugPerfEnabled = false
+/// Enable `[PERF]` logging with `CLIPIARY_PERF=1 python3 tools/clipiary.py dev`.
+@MainActor var debugPerfEnabled = ProcessInfo.processInfo.environment["CLIPIARY_PERF"] == "1"
+
+/// Search results keyed by query, valid for a single history `mutationGeneration`.
+/// Keeping recent queries (not just the last) makes backspacing a lookup instead of a rescan.
+struct FilterCache {
+    private static let maxQueries = 32
+
+    private(set) var resultsByQuery: [String: [HistoryItem]] = [:]
+    /// Per-tab results for `query`.
+    var tabResults: [String: [HistoryItem]] = [:]
+    private var query: String?
+    private var generation = -1
+
+    mutating func prepare(query: String, generation: Int) {
+        if generation != self.generation {
+            resultsByQuery.removeAll()
+            tabResults.removeAll()
+            self.generation = generation
+            self.query = query
+        } else if query != self.query {
+            tabResults.removeAll()
+            self.query = query
+        }
+    }
+
+    mutating func store(_ result: [HistoryItem], for query: String) {
+        if resultsByQuery.count >= Self.maxQueries {
+            resultsByQuery.removeAll()
+        }
+        resultsByQuery[query] = result
+    }
+}
 
 /// Watches the main run loop for long stalls. When debug perf is on, prints which run-loop
 /// activity (beforeSources, beforeWaiting, etc.) was bracketing the stall — narrows down
@@ -31,7 +63,9 @@ final class MainThreadStallDetector {
     private func tick(activity: CFRunLoopActivity) {
         let now = CFAbsoluteTimeGetCurrent()
         let elapsed = (now - lastActivityTime) * 1000
-        if debugPerfEnabled, elapsed > 50, lastActivityTime > 0 {
+        // beforeWaiting → afterWaiting is the run loop sleeping (idle), not main-thread work.
+        let wasSleeping = lastActivity == "beforeWaiting" && activity.contains(.afterWaiting)
+        if debugPerfEnabled, elapsed > 50, lastActivityTime > 0, !wasSleeping {
             print("[PERF] STALL \(String(format: "%.0f", elapsed))ms between \(lastActivity) and \(name(activity)), nsViewMakes=\(rowNSViewMakeCount)")
         }
         lastActivityTime = now
@@ -117,9 +151,7 @@ final class AppState {
     private(set) var showContextMenuRequestID = 0
     @ObservationIgnored var selectedRowAnchorView: NSView?
     var visiblePageSize: Int = 10
-    @ObservationIgnored private var cachedBaseFilterResult: [HistoryItem]?
-    @ObservationIgnored private var cachedBaseFilterQuery: String?
-    @ObservationIgnored private var cachedBaseFilterGeneration: Int = -1
+    @ObservationIgnored private var filterCache = FilterCache()
 
     @ObservationIgnored private let captureCoordinator: CaptureCoordinator
     @ObservationIgnored private let clipboardMonitor: ClipboardMonitor
@@ -293,8 +325,7 @@ final class AppState {
     }
 
     func favoriteItems(for tabName: String) -> [HistoryItem] {
-        let tabItems = filteredItems().filter { $0.favoriteTabs.contains(tabName) }
-        return history.customOrderedItems(tabItems)
+        filteredItems(for: .favorites(tabName))
     }
 
     var activeItems: [HistoryItem] {
@@ -312,55 +343,53 @@ final class AppState {
         set { selectedItemIDByTab[selectedTab.id] = newValue }
     }
 
+    /// Called once per tab on every panel render, so results are cached per query/generation.
     func filteredItems(for tab: PopoverTab) -> [HistoryItem] {
         let baseItems = filteredItems()
+        if let cached = filterCache.tabResults[tab.id] {
+            return cached
+        }
+        let result: [HistoryItem]
         switch tab.kind {
         case .history:
-            return baseItems.filter { !$0.isSeparator }.sorted { $0.createdAt > $1.createdAt }
+            result = baseItems.filter { !$0.isSeparator }.sorted { $0.createdAt > $1.createdAt }
         case .favorites(let tabName):
-            return history.customOrderedItems(baseItems.filter { $0.favoriteTabs.contains(tabName) })
+            result = history.customOrderedItems(baseItems.filter { $0.favoriteTabs.contains(tabName) })
         }
+        filterCache.tabResults[tab.id] = result
+        return result
     }
 
     func filteredItems() -> [HistoryItem] {
         let t0 = CFAbsoluteTimeGetCurrent()
         let currentQuery = searchQuery
-        let currentGeneration = history.mutationGeneration
+        filterCache.prepare(query: currentQuery, generation: history.mutationGeneration)
 
-        if let cached = cachedBaseFilterResult,
-           cachedBaseFilterQuery == currentQuery,
-           cachedBaseFilterGeneration == currentGeneration {
+        if let cached = filterCache.resultsByQuery[currentQuery] {
             return cached
         }
 
         let terms = currentQuery.split(separator: " ", omittingEmptySubsequences: true)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
+            .map { ContiguousArray($0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased().utf8) }
             .filter { !$0.isEmpty }
 
         let result: [HistoryItem]
         if terms.isEmpty {
             result = history.items
         } else {
-            // Incremental narrowing: if the query extends the previous one and items
-            // haven't changed, scan only the prior result set.
-            let searchBase: [HistoryItem]
-            if let cached = cachedBaseFilterResult,
-               cachedBaseFilterGeneration == currentGeneration,
-               let oldQuery = cachedBaseFilterQuery,
-               !oldQuery.isEmpty,
-               currentQuery.hasPrefix(oldQuery) {
-                searchBase = cached
-            } else {
-                searchBase = history.items
-            }
+            // Incremental narrowing: results for a query are a subset of the results for
+            // any of its prefixes, so scan the longest cached prefix's results instead of
+            // the whole history. Covers both typing forward and retyping after backspace.
+            let searchBase = filterCache.resultsByQuery
+                .filter { !$0.key.isEmpty && currentQuery.hasPrefix($0.key) }
+                .max { $0.key.count < $1.key.count }?
+                .value ?? history.items
             result = searchBase.filter { item in
-                terms.allSatisfy { item.searchCorpus.range(of: $0, options: .literal) != nil }
+                terms.allSatisfy { item.searchCorpusContains($0) }
             }
         }
 
-        cachedBaseFilterResult = result
-        cachedBaseFilterQuery = currentQuery
-        cachedBaseFilterGeneration = currentGeneration
+        filterCache.store(result, for: currentQuery)
 
         if debugPerfEnabled {
             let ms = (CFAbsoluteTimeGetCurrent() - t0) * 1000
